@@ -12,29 +12,26 @@
         
         body { 
             font-family: 'Manrope', sans-serif; 
-            background-color: #F8FAFC; /* 아주 연한 블루그레이 배경 */
+            background-color: #F8FAFC; 
             color: #1e293b;
             line-height: 1.7;
             overflow-x: hidden;
         }
 
-        /* particles.js 컨테이너 */
         #particles-js {
             position: fixed;
             width: 100%;
             height: 100%;
             top: 0;
             left: 0;
-            z-index: -1; /* 콘텐츠 뒤로 보냄 */
+            z-index: -1;
         }
 
-        /* 텍스트 드래그 색상 커스텀 */
         ::selection {
             background: #3b82f6;
             color: white;
         }
 
-        /* 네비게이션 링크 스타일 */
         .nav-link {
             display: flex;
             align-items: center;
@@ -58,7 +55,6 @@
             background-color: #2563eb;
         }
 
-        /* 카드 스타일 */
         .glass-card {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
@@ -72,7 +68,6 @@
             border-color: rgba(59, 130, 246, 0.3);
         }
 
-        /* 상태 표시 점 애니메이션 */
         .pulse-dot {
             display: inline-block;
             width: 8px;
@@ -189,7 +184,7 @@
                             <p class="text-sm text-slate-500 mt-3 font-medium">MIT 18.06 (Gilbert Strang)</p>
                         </div>
                         <div class="glass-card p-6 rounded-xl group">
-                            <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest group-hover:text-blue-600">AI Foundations</span>
+                            <span class="text-[11px] font-bold text-blue-500 uppercase tracking-widest group-hover:text-blue-600">AI & ML</span>
                             <h4 class="text-lg font-bold text-slate-900 mt-2">Machine Learning</h4>
                             <p class="text-sm text-slate-500 mt-3 font-medium">SNU Junseok Lee</p>
                         </div>
@@ -199,8 +194,8 @@
                             <p class="text-sm text-slate-500 mt-3 font-medium">Stanford EE364A (Boyd)</p>
                         </div>
                         <div class="glass-card p-6 rounded-xl group">
-                            <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest group-hover:text-blue-600">Deep Learning</span>
-                            <h4 class="text-lg font-bold text-slate-900 mt-2">DL Systems</h4>
+                            <span class="text-[11px] font-bold text-blue-500 uppercase tracking-widest group-hover:text-blue-600">AI & ML</span>
+                            <h4 class="text-lg font-bold text-slate-900 mt-2">Deep Learning</h4>
                             <p class="text-sm text-slate-500 mt-3 font-medium">CMU 11-785</p>
                         </div>
                         <div class="glass-card p-6 rounded-xl group">
@@ -238,7 +233,7 @@
 
                 <footer class="pt-10 border-t border-slate-200 text-xs font-semibold text-slate-400 uppercase tracking-widest flex justify-between items-center reveal">
                     <span>© 2026 Noah Nam</span>
-                    <span>Built for the Future</span>
+                    <span>Built by Gemini ^.^</span>
                 </footer>
 
             </main>
@@ -261,14 +256,14 @@
         particlesJS("particles-js", {
             "particles": {
                 "number": {
-                    "value": 60, /* 점의 개수 */
+                    "value": 60,
                     "density": {
                         "enable": true,
                         "value_area": 1000
                     }
                 },
                 "color": {
-                    "value": "#3b82f6" /* 점 색상 (블루) */
+                    "value": "#3b82f6"
                 },
                 "shape": {
                     "type": "circle"
@@ -283,8 +278,8 @@
                 },
                 "line_linked": {
                     "enable": true,
-                    "distance": 180, /* 선 연결 거리 */
-                    "color": "#93c5fd", /* 선 색상 (연한 블루) */
+                    "distance": 180,
+                    "color": "#93c5fd",
                     "opacity": 0.25,
                     "width": 1
                 },
@@ -299,11 +294,11 @@
                 }
             },
             "interactivity": {
-                "detect_on": "canvas",
+                "detect_on": "window",
                 "events": {
                     "onhover": {
                         "enable": true,
-                        "mode": "grab" /* 마우스 근처 점들을 끌어당김 */
+                        "mode": "grab"
                     },
                     "onclick": {
                         "enable": true,
@@ -315,7 +310,7 @@
                     "grab": {
                         "distance": 200,
                         "line_linked": {
-                            "opacity": 0.6 /* 호버 시 선이 진해짐 */
+                            "opacity": 0.6
                         }
                     }
                 }
