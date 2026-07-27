@@ -2000,15 +2000,22 @@ function hideSaving(msg, delay) {
 // ── DB LOAD ───────────────────────────────────────────────────────
 async function load() {
   try {
-    const [postsRes, papersRes, catsRes, cvRes, profileRes] = await Promise.all([
-      supa.from('posts').select('id,title,category,tags,created_at,updated_at,content').order('id', { ascending: false }),
+    // 안전장치: Supabase가 비정상적으로 느리면(30초) 무한 대기 대신 중단하고 렌더링으로 넘어감
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('load timeout')), 30000));
+    const [postsRes, papersRes, catsRes, cvRes, profileRes] = await Promise.race([timeout, Promise.all([
+      // 목록엔 본문(content)이 필요 없음 — 글을 열 때 openPost()가 지연 로딩함.
+      // content를 초기에 다 받으면 글이 많을수록 로딩이 수십 초로 느려져 멈춘 것처럼 보임.
+      supa.from('posts').select('id,title,category,tags,created_at,updated_at').order('id', { ascending: false }),
+      // papers는 카드에 요약(excerpt)을 보여주므로 content 유지 (개수가 적음)
       supa.from('papers').select('id,title,category,tags,created_at,updated_at,content,authors,year,venue,arxiv,code_link,summary1,summary2,summary3').order('id', { ascending: false }),
       supa.from('categories').select('*'),
       supa.from('cv_sections').select('*').order('sort_order'),
-      supa.from('profile').select('*').eq('id', 1).single(),
-    ]);
+      // avatar_url(프로필 사진 base64)은 용량이 매우 커서 초기 로드에서 제외.
+      // 이게 포함되면 프로필 쿼리가 끝나지 않아 전체 페이지가 멈춤. 아래에서 별도 비동기 로딩.
+      supa.from('profile').select('id,name,handle,blog_name,bio,github,email,custom_links,interests,admin_pw,landing_title,landing_title_en,landing_desc,landing_desc_en,grid_cols').eq('id', 1).single(),
+    ])]);
     if (postsRes.data) posts = postsRes.data.map(r => ({
-      id: r.id, title: r.title, body: null, preview: (r.content||'').substring(0,200), cat: r.category,
+      id: r.id, title: r.title, body: null, preview: '', cat: r.category,
       tags: r.tags || [], createdAt: new Date(r.created_at).getTime(),
       updatedAt: new Date(r.updated_at).getTime()
     }));
@@ -2056,6 +2063,8 @@ async function load() {
       }
     }
 
+    // 아바타는 초기 렌더를 막지 않도록 별도로 비동기 로딩 (도착하면 화면 갱신)
+    loadAvatar();
 
   } catch(e) {
     console.error('Load error:', e);
@@ -2073,6 +2082,19 @@ async function load() {
       if(pr) profile    = {...profile,...JSON.parse(pr)};
     } catch(e2){}
   }
+}
+
+// ── AVATAR (별도 비동기 로딩) ─────────────────────────────────────
+// avatar_url이 큰 base64면 초기 로드를 막으므로 페이지가 뜬 뒤 따로 가져온다.
+async function loadAvatar() {
+  try {
+    const { data, error } = await supa.from('profile').select('avatar_url').eq('id', 1).single();
+    if (error || !data || !data.avatar_url) return;
+    profile.avatar = data.avatar_url;
+    // 현재 보이는 화면의 아바타만 갱신
+    if (currentPageName === 'home')    renderHome();
+    if (currentPageName === 'landing') renderLanding();
+  } catch(e) { console.warn('avatar load skipped:', e); }
 }
 
 // ── DB SAVE: POSTS ────────────────────────────────────────────────
