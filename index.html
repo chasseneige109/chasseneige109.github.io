@@ -2053,8 +2053,8 @@ async function load() {
         adminPw: r.admin_pw || null,
         landingTitle: r.landing_title || '생각을 기록하고,|지식을 나눕니다',
         landingTitleEn: r.landing_title_en || 'Thoughts, recorded.|Knowledge, shared.',
-        landingDesc: r.landing_desc || '공부하면서 배운 것들, 읽은 논문들, 그리고 생각들을 정리하는 공간입니다.',
-        landingDescEn: r.landing_desc_en || 'A space to organize what I study, papers I read, and thoughts along the way.'
+        landingDesc: r.landing_desc || '',
+        landingDescEn: r.landing_desc_en || ''
       };
       // grid 열 수 설정 복원
       if (r.grid_cols) {
@@ -2412,9 +2412,11 @@ function renderLanding() {
   }
   const descEl = document.getElementById('landing-hero-desc');
   if (descEl) {
-    const koDesc = profile.landingDesc || '공부하면서 배운 것들, 읽은 논문들, 그리고 생각들을 정리하는 공간입니다.';
-    const enDesc = profile.landingDescEn || 'A space to organize what I study, papers I read, and thoughts along the way.';
-    descEl.textContent = currentLang === 'en' ? enDesc : koDesc;
+    // 소개를 비워두면 기본 문구로 채우지 않고 숨김
+    const koDesc = profile.landingDesc || '';
+    const enDesc = profile.landingDescEn || '';
+    descEl.textContent = currentLang === 'en' ? (enDesc || koDesc) : koDesc;
+    descEl.style.display = descEl.textContent ? '' : 'none';
   }
   // Apply i18n labels
   applyLang();
