@@ -1622,6 +1622,41 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
   .news-text{font-size:.92rem}
 }
 
+
+/* ── 항목 이미지 (참고 사이트의 목록 썸네일) ── */
+.item-thumb{display:none}
+.item-thumb img{display:block;width:100%;height:100%;object-fit:cover;border-radius:2px;background:var(--s100)}
+/* News: 날짜 | 썸네일 | 내용 */
+.news-list.has-thumbs .news-row{grid-template-columns:120px 64px minmax(0,1fr)}
+.news-list.has-thumbs .item-thumb{display:block;width:64px;height:40px;align-self:start;margin-top:2px}
+/* Me 목록형: 날짜 | 썸네일 | 내용 */
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry{grid-template-columns:120px 64px minmax(0,1fr)}
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > *{grid-column:3}
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-header > *{grid-column:3}
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-header > .cv-entry-date{grid-column:1;grid-row:1}
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-icon{grid-column:1;grid-row:2}
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{display:block;grid-column:2;grid-row:1 / span 6;width:64px;height:40px;margin-top:3px}
+/* Me 카드형(2~4열): 카드 위쪽 이미지 */
+.cv-entries-wrap[style*="grid"] > .cv-entry > .item-thumb{display:block;aspect-ratio:16/9;max-height:220px;width:100%;margin:-2px 0 14px}
+.cv-entries-wrap[style*="grid"] > .cv-entry > .item-thumb img{border-radius:4px}
+.item-thumb img{transition:transform .35s cubic-bezier(.22,.61,.36,1)}
+.news-row:hover .item-thumb img,.cv-entry:hover .item-thumb img{transform:scale(1.04)}
+.item-thumb{overflow:hidden;border-radius:2px}
+/* 모달 이미지 입력 */
+.thumb-field{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.thumb-preview{flex:0 0 96px;height:60px;border-radius:4px;background:var(--s100);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:.7rem;color:var(--muted)}
+.thumb-preview img{width:100%;height:100%;object-fit:cover}
+.thumb-actions{flex:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.thumb-btn{display:inline-flex;align-items:center;padding:6px 12px;border:1px solid var(--rule);border-radius:999px;background:#fff;font-family:var(--sans);font-size:.78rem;color:#000;cursor:pointer}
+.thumb-btn:hover{border-color:#000}
+.thumb-remove{color:var(--muted)}
+.thumb-url{margin:0 !important;font-size:.8rem !important}
+@media(max-width:600px){
+  .news-list.has-thumbs .news-row{grid-template-columns:76px 48px minmax(0,1fr)}
+  .news-list.has-thumbs .item-thumb,.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{width:48px;height:30px}
+  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry{grid-template-columns:76px 48px minmax(0,1fr)}
+}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -2130,6 +2165,15 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <input class="form-input" id="inp-news-date" placeholder="e.g. Oct. 2026">
     <label class="form-label">News</label>
     <textarea class="form-textarea" id="inp-news-text" placeholder="What happened? Use **bold** for emphasis."></textarea>
+    <label class="form-label">Image (optional)</label>
+    <div class="thumb-field" id="news-thumb-field">
+      <div class="thumb-preview" id="news-thumb-preview"></div>
+      <div class="thumb-actions">
+        <label class="thumb-btn">Upload image<input type="file" accept="image/*" hidden onchange="pickThumb('news',this)"></label>
+        <button type="button" class="thumb-btn thumb-remove" onclick="setThumb('news','')">Remove</button>
+        <input class="form-input thumb-url" id="news-thumb-url" placeholder="or paste an image URL" oninput="setThumb('news',this.value.trim(),true)">
+      </div>
+    </div>
     <label class="form-label">Link (optional)</label>
     <div style="display:flex;gap:6px">
       <input class="form-input" id="inp-news-link-label" placeholder="Label (e.g. Paper)" style="width:36%">
@@ -2203,6 +2247,15 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <div style="margin-bottom:11px"></div>
     <label class="form-label">Tags (comma-separated, optional)</label>
     <input class="form-input" id="inp-entry-tags" placeholder="e.g. ML, PyTorch, Computer Vision">
+    <label class="form-label">Image (optional)</label>
+    <div class="thumb-field" id="entry-thumb-field">
+      <div class="thumb-preview" id="entry-thumb-preview"></div>
+      <div class="thumb-actions">
+        <label class="thumb-btn">Upload image<input type="file" accept="image/*" hidden onchange="pickThumb('entry',this)"></label>
+        <button type="button" class="thumb-btn thumb-remove" onclick="setThumb('entry','')">Remove</button>
+        <input class="form-input thumb-url" id="entry-thumb-url" placeholder="or paste an image URL" oninput="setThumb('entry',this.value.trim(),true)">
+      </div>
+    </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px">
       <div>
@@ -2894,6 +2947,34 @@ function renderLanding() {
 }
 
 
+// ── 항목 이미지 (News / Me 항목 공용) ───────────────────────────────
+const thumbValue = { news:'', entry:'' };
+function setThumb(kind, url, fromInput) {
+  thumbValue[kind] = url || '';
+  const pv = document.getElementById(kind + '-thumb-preview');
+  if (pv) pv.innerHTML = thumbValue[kind] ? `<img src="${esc(thumbValue[kind])}" alt="">` : '<span>No image</span>';
+  const inp = document.getElementById(kind + '-thumb-url');
+  if (inp && !fromInput) inp.value = /^https?:/.test(thumbValue[kind]) ? thumbValue[kind] : '';
+}
+async function pickThumb(kind, input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const pv = document.getElementById(kind + '-thumb-preview');
+  if (pv) pv.innerHTML = '<span>Uploading…</span>';
+  let url = null;
+  if (file.type === 'image/gif') {
+    // GIF는 움직임이 유지되도록 압축 없이 업로드
+    const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.gif`;
+    const { error } = await supa.storage.from('blog-images').upload(filename, file, { contentType: 'image/gif', upsert: false });
+    if (error) toast('❌ Upload failed: ' + error.message);
+    else url = supa.storage.from('blog-images').getPublicUrl(filename).data.publicUrl;
+  } else {
+    url = await uploadImageToSupabase(file);
+  }
+  setThumb(kind, url || thumbValue[kind]);
+}
+
 // ── HOME: 저장 (cv_sections 테이블의 별도 행) ───────────────────────
 async function saveHomeRow(id, items) {
   showSaving('Saving...');
@@ -2917,9 +2998,11 @@ function renderNews() {
   sec.style.display = (homeNews.length || isAdmin) ? '' : 'none';
   const shown = newsExpanded ? homeNews : homeNews.slice(0, NEWS_LIMIT);
   const drag = i => isAdmin ? `draggable="true" ondragstart="newsDragStart(event,${i})" ondragover="newsDragOver(event,${i})" ondragleave="this.classList.remove('drag-over')" ondrop="newsDrop(event,${i})" ondragend="newsDragEnd()"` : '';
+  el.classList.toggle('has-thumbs', shown.some(n => n.image));
   el.innerHTML = shown.map((n, i) => `
     <div class="news-row" id="news-${i}" ${drag(i)}>
       <div class="news-date">${esc(n.date || '')}</div>
+      <div class="item-thumb">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" decoding="async">` : ''}</div>
       <div class="news-text">${newsTextHTML(n)}</div>
       <div class="news-admin admin-only flex">
         <button class="btn-sm" onclick="openNewsModal('${n.id}')">✎</button>
@@ -2937,6 +3020,7 @@ function openNewsModal(id) {
   document.getElementById('inp-news-text').value = n ? (n.text || '') : '';
   document.getElementById('inp-news-link').value = n ? (n.link || '') : '';
   document.getElementById('inp-news-link-label').value = n ? (n.linkLabel || '') : '';
+  setThumb('news', n ? (n.image || '') : '');
   document.getElementById('modal-news').style.display = 'flex';
   setTimeout(() => document.getElementById(n ? 'inp-news-text' : 'inp-news-date').focus(), 100);
 }
@@ -2946,6 +3030,7 @@ function saveNews() {
     text: document.getElementById('inp-news-text').value.trim(),
     link: document.getElementById('inp-news-link').value.trim(),
     linkLabel: document.getElementById('inp-news-link-label').value.trim(),
+    image: thumbValue.news,
   };
   if (!item.text) { toast('Enter the news text.'); return; }
   if (editingNewsId) {
@@ -3141,7 +3226,7 @@ ${isAdmin ? `<div class="layout-toggle">
     } else {
       const gridCols = layout==='2'?2 : layout==='grid'?3 : layout==='4'?4 : null;
       const gridStyle = gridCols ? `display:grid;grid-template-columns:repeat(${gridCols},1fr);gap:12px` : 'display:flex;flex-direction:column;gap:10px';
-      html += `<div style="${gridStyle}" class="cv-entries-wrap">`;
+      html += `<div style="${gridStyle}" class="cv-entries-wrap${sec.entries.some(e=>e.image)?' has-thumbs':''}">`;
       sec.entries.forEach((entry, eIdx) => {
         const adminEntryDrag = isAdmin
           ? `draggable="true"
@@ -3168,6 +3253,7 @@ ${isAdmin ? `<div class="layout-toggle">
         const darkCls = isDark ? ' entry-dark' : '';
         const inlineStyle = [eColSpan, eColStart, eHeight, eBg].filter(Boolean).join(';');
         html += `<div class="cv-entry${(isTextStyle||isLineStyle)?' cv-entry-compact':!hasDesc&&!eHeight?' cv-entry-compact':''}${eStyle}${darkCls}" id="ent-${sIdx}-${eIdx}" style="${inlineStyle}" ${adminEntryDrag}>
+          ${entry.image ? `<div class="item-thumb cv-entry-thumb"><img src="${esc(entry.image)}" alt="" loading="lazy" decoding="async"></div>` : ''}
           ${entry.icon ? `<div class="cv-entry-icon">${esc(entry.icon)}</div>` : ''}
           <div class="cv-entry-admin">
             ${isAdmin ? `<span style="color:var(--s300);cursor:grab;font-size:.9rem;padding:2px 4px">⠿</span>` : ''}
@@ -3321,6 +3407,7 @@ function openAddEntry(secId) {
   selectColStart('auto', document.querySelector('.colstart-btn[data-col="auto"]'));
   selectColor('', document.querySelector('.color-swatch[data-color=""]'));
   selectSpan(1, document.querySelector('.span-btn[data-span="1"]'));
+  setThumb('entry', '');
   document.getElementById('modal-add-entry').style.display='flex';
   setTimeout(()=>document.getElementById('inp-entry-title').focus(),100);
 }
@@ -3344,6 +3431,7 @@ function openEditEntry(secId,entryId) {
   if(!['default','timeline','text','line'].includes(mappedStyle)) mappedStyle='default';
   selectEntryStyle(mappedStyle, document.querySelector(`.entry-style-opt[data-style="${mappedStyle}"]`));
   document.getElementById('inp-entry-icon').value = entry.icon||'';
+  setThumb('entry', entry.image||'');
   selectColor(entry.color||'', document.querySelector(`.color-swatch[data-color="${entry.color||''}"]`));
   selectSpan(entry.span||'1', document.querySelector(`.span-btn[data-span="${entry.span||'1'}"]`));
   selectHeight(entry.height||'auto', document.querySelector(`.height-btn[data-height="${entry.height||'auto'}"]`));
@@ -3366,14 +3454,15 @@ function saveEntry() {
   const entrySpan=document.getElementById('inp-entry-span').value||'1';
   const entryHeight=document.getElementById('inp-entry-height').value||'auto';
   const entryColStart=document.getElementById('inp-entry-colstart').value||'auto';
+  const entryImage=thumbValue.entry;
 
   const sec=cvSections.find(s=>s.id===editingEntrySectionId);
   if(!sec) return;
   if(editingEntryId) {
     const i=sec.entries.findIndex(e=>e.id===editingEntryId);
-    if(i>=0) sec.entries[i]={...sec.entries[i],title,sub,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart};
+    if(i>=0) sec.entries[i]={...sec.entries[i],title,sub,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage};
   } else {
-    sec.entries.push({id:'e'+Date.now(),title,sub,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart});
+    sec.entries.push({id:'e'+Date.now(),title,sub,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage});
   }
   save();saveCvSections();closeModal('modal-add-entry');renderCvArea();
 }
