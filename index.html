@@ -1719,6 +1719,17 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
   .recent-card:active::after,.landing-card:active::after,.post-row:active .pr-arrow,.news-row:active .news-arrow{transform:rotate(90deg) scale(.9);transition-duration:.1s}
 }
 
+
+/* ── News: 글자 안 링크 ── */
+.news-inline-link{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:#9a9a9a;transition:text-decoration-color .2s,color .2s}
+.news-inline-link:hover{color:#000;text-decoration-color:#000}
+.news-text-label{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.news-text-label .form-label{margin:0 auto 0 0}
+.news-fmt-btn{padding:3px 10px;border:1px solid var(--rule);border-radius:999px;background:#fff;font-family:var(--sans);font-size:.74rem;color:#000;cursor:pointer}
+.news-fmt-btn:hover{border-color:#000}
+.news-text-hint{font-size:.72rem;color:var(--muted);margin:-6px 0 12px;line-height:1.6}
+.news-text-hint code{font-family:var(--mono);font-size:.95em;background:var(--s100);padding:0 4px;border-radius:3px}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -2241,8 +2252,11 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <div class="modal-title" id="news-modal-title">Add News</div>
     <label class="form-label">Date</label>
     <input class="form-input" id="inp-news-date" placeholder="e.g. Oct. 2026">
-    <label class="form-label">News</label>
-    <textarea class="form-textarea" id="inp-news-text" placeholder="What happened? Use **bold** for emphasis."></textarea>
+    <div class="news-text-label"><label class="form-label">News</label>
+      <button type="button" class="news-fmt-btn" onmousedown="event.preventDefault()" onclick="newsWrap('**','**')" title="Bold selected text"><b>B</b></button>
+      <button type="button" class="news-fmt-btn" onmousedown="event.preventDefault()" onclick="newsLinkSelection()" title="Link selected text">🔗 Link</button></div>
+    <textarea class="form-textarea" id="inp-news-text" placeholder="What happened? Select words and press 🔗 Link to link them."></textarea>
+    <p class="news-text-hint">Select words → <b>🔗 Link</b> → paste the URL. It is written as <code>[BEAR Lab](https://...)</code>; <code>**bold**</code> for bold.</p>
     <label class="form-label">Image (optional)</label>
     <div class="thumb-field" id="news-thumb-field">
       <div class="thumb-preview" id="news-thumb-preview"></div>
@@ -3133,7 +3147,9 @@ async function saveHomeRow(id, items) {
 const NEWS_LIMIT = 5;
 let editingNewsId = null, newsDragIdx = null;
 function newsTextHTML(n) {
-  let h = esc(n.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  let h = esc(n.text || '')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+)\)/g, '<a class="news-inline-link" href="$2" target="_blank" rel="noopener" onclick="event.stopPropagation()">$1</a>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
   if (n.link) h += ` <a class="news-link" href="${esc(n.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(n.linkLabel || 'Link')}</a>`;
   return h;
 }
@@ -3163,6 +3179,22 @@ function renderNews() {
 function openNewsLink(row) {
   if (newsDragIdx !== null) return;
   window.open(row.dataset.href, '_blank', 'noopener');
+}
+// 선택한 글자를 [글자](https://) 로 감싸고, 주소 자리를 선택해 바로 붙여넣을 수 있게
+function newsLinkSelection() {
+  const ta = document.getElementById('inp-news-text');
+  const a = ta.selectionStart, b = ta.selectionEnd;
+  const label = ta.value.slice(a, b) || 'link text';
+  const url = 'https://';
+  ta.value = ta.value.slice(0, a) + `[${label}](${url})` + ta.value.slice(b);
+  const start = a + label.length + 3;
+  ta.focus(); ta.setSelectionRange(start, start + url.length);
+}
+function newsWrap(before, after) {
+  const ta = document.getElementById('inp-news-text');
+  const a = ta.selectionStart, b = ta.selectionEnd;
+  ta.value = ta.value.slice(0, a) + before + ta.value.slice(a, b) + after + ta.value.slice(b);
+  ta.focus(); ta.setSelectionRange(a + before.length, b + before.length);
 }
 function openNewsModal(id) {
   const n = id ? homeNews.find(x => x.id === id) : null;
