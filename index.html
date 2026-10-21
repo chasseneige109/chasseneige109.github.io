@@ -1730,6 +1730,57 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .news-text-hint{font-size:.72rem;color:var(--muted);margin:-6px 0 12px;line-height:1.6}
 .news-text-hint code{font-family:var(--mono);font-size:.95em;background:var(--s100);padding:0 4px;border-radius:3px}
 
+
+/* ══ 레이아웃 위치를 참고 사이트(seooyxx.com) 측정값에 맞춤 ══
+   본문 1220px(가운데) · 상단바 53px · 왼쪽 열 830 + 간격 70 + 사진 320
+   목록: 날짜 → 제목 147px, 썸네일 40×24는 날짜 → 88px */
+:root{--page-w:1268px}                       /* 1220 본문 + 좌우 24 여백 */
+.topnav{height:53px;padding:0 max(16px,calc((100% - 1250px)/2))}
+.nav-logo{font-size:18px;font-weight:400;letter-spacing:-.7px}
+.nav-tab{font-size:14px;letter-spacing:-.5px;padding:6px 10px}
+.right-panel{top:53px;height:calc(100vh - 53px)}
+
+/* Home 상단 */
+.landing-hero{padding:16px 0 21px}
+.hero-logo{height:145px;gap:8px;margin:0}
+.hero-logo svg{width:125px;height:125px}
+.landing-title{font-size:37px;line-height:1;letter-spacing:-.03em;font-weight:400;max-width:1010px;margin-top:10px}
+.landing-desc{font-size:1rem;margin-top:14px;max-width:1010px}
+.hero-social{display:flex;justify-content:flex-end;gap:22px;margin-top:21px}
+.hero-social .lau-icon{width:28px;height:28px}
+.landing-grid{grid-template-columns:minmax(0,1fr) 320px;gap:70px;padding-top:22px}
+
+/* 섹션 제목 */
+.landing-section-label,.cv-section-title,.filter-label{line-height:1}
+.landing-section-label{font-size:30px;letter-spacing:-.02em;margin-bottom:18px}
+.cv-section-title{font-size:30px;letter-spacing:-.02em}
+
+/* 사이드바 */
+.landing-aside{top:69px}
+.lau-name{font-size:24px;line-height:1;margin:50px 0 6px}
+.lau-handle{margin-bottom:28px}
+.lau-bio{font-size:14px;line-height:1.6;text-align:justify}
+#page-home .two-col{gap:70px}
+.p-name{font-size:24px;line-height:1;margin:50px 0 6px}
+.p-bio{font-size:14px;line-height:1.6;text-align:justify}
+
+/* 맨 아래 저작권 줄 */
+.site-footer{text-align:center;font-size:12px;color:var(--muted);padding:28px 16px 32px;position:relative;z-index:1}
+
+@media(min-width:769px){
+  /* 목록 열: 날짜 123 + 간격 24 = 제목 147 */
+  .list-head{grid-template-columns:123px minmax(0,1fr)}
+  .recent-card{grid-template-columns:123px minmax(0,1fr) auto 16px;padding:12px 0}
+  .news-row{grid-template-columns:123px minmax(0,1fr) 16px;padding:12px 0}
+  .cv-entries-wrap[style*="flex-direction:column"] > .cv-entry{grid-template-columns:123px minmax(0,1fr);padding:12px 0 !important}
+  .post-row{grid-template-columns:123px minmax(0,1fr) 200px 16px}
+  /* 썸네일 있는 목록: 날짜 64 | 썸네일 40(열 35) | 제목 → 썸네일 88, 제목 147 */
+  .news-list.has-thumbs .news-row{grid-template-columns:64px 35px minmax(0,1fr) 16px}
+  .news-list.has-thumbs .item-thumb{width:40px;height:24px;aspect-ratio:auto;margin-top:2px}
+  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry{grid-template-columns:64px 35px minmax(0,1fr)}
+  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{width:40px;height:24px;aspect-ratio:auto;margin-top:2px}
+}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1837,6 +1888,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       </div>
       <h1 class="landing-title" id="landing-title-text" data-edit-key="heroTitle"></h1>
       <p class="landing-desc" id="landing-hero-desc" data-edit-key="heroDesc" data-placeholder="Add a tagline…"></p>
+      <div class="lau-links hero-social" id="landing-author-links"></div>
       <div class="landing-btns">
         <button class="landing-btn-secondary admin-only" onclick="openProfileEdit()" style="border-style:dashed">✎ Edit Home</button>
       </div>
@@ -1883,7 +1935,6 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
             <div class="lau-name" id="landing-author-name" data-edit-key="profileName">Set your name</div>
             <div class="lau-handle" id="landing-author-handle" data-edit-key="profileHandle">@handle</div>
             <div class="lau-bio" id="landing-author-bio" data-edit-key="profileBio" data-placeholder="Add a short bio…"></div>
-            <div class="lau-links" id="landing-author-links"></div>
           </div>
           <button class="lau-me-btn" data-edit-key="profileBtn" data-default="Full Profile →" onclick="if(!isAdmin)showSection('home')">Full Profile →</button>
         </div>
@@ -2161,7 +2212,9 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
 </div>
 
-</div><div id="modal-pw" class="modal-overlay" style="display:none" onclick="closeModal('modal-pw',event)">
+</div><footer class="site-footer">© <span id="footer-year"></span> <span id="footer-name">Noah Nam</span>.</footer>
+
+<div id="modal-pw" class="modal-overlay" style="display:none" onclick="closeModal('modal-pw',event)">
   <div class="modal" style="max-width:340px">
 <div class="modal-drag-handle"></div>
     <div class="modal-title">🔐 Admin Login</div>
@@ -2990,6 +3043,8 @@ function renderLanding() {
     if (profile.avatar) avEl.innerHTML = `<img src="${esc(profile.avatar)}">`;
     else avEl.textContent = profile.name ? profile.name[0].toUpperCase() : '?';
   }
+  const fy = document.getElementById('footer-year'); if (fy) fy.textContent = new Date().getFullYear();
+  const fn = document.getElementById('footer-name'); if (fn) fn.textContent = (profile.name || 'Noah Nam').split('|')[0].trim();
   const nameEl = document.getElementById('landing-author-name');
   if (nameEl) nameEl.textContent = profile.name || 'Set your name';
   const handleEl = document.getElementById('landing-author-handle');
