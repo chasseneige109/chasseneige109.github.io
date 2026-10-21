@@ -1504,6 +1504,23 @@ body{background:#fff;color:#000;letter-spacing:-.005em}
 .modal{border-radius:10px}
 .mbn-fab{background:#000;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 
+
+/* ── HOME 로고 (N 모노그램 + 반응형 점) ── */
+.hero-logo{display:flex;gap:10px;height:120px;align-items:center;margin-bottom:28px}
+.hero-logo svg{width:112px;height:112px;overflow:visible}
+.hero-logo-n{fill:none;stroke:#000;stroke-width:32;stroke-linecap:round;stroke-linejoin:round;opacity:0;animation:hero-slide-in 1.1s cubic-bezier(.215,.61,.355,1) .1s forwards}
+.hero-logo-dots{cursor:pointer;opacity:0;animation:hero-spin-in 1.2s cubic-bezier(.215,.61,.355,1) .15s forwards}
+.hero-logo-ball{fill:#000;transform-box:fill-box;transform-origin:center;transition:transform .3s cubic-bezier(.22,.61,.36,1)}
+@keyframes hero-slide-in{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+@keyframes hero-spin-in{from{opacity:0;transform:rotate(-90deg) scale(.8)}to{opacity:1;transform:none}}
+@media(max-width:600px){.hero-logo{height:84px;margin-bottom:20px}.hero-logo svg{width:76px;height:76px}}
+
+/* ── 마우스를 따라다니는 원 (흰 원 + difference 블렌드 → 흰 배경에선 검정) ── */
+.sticky-cursor{position:fixed;left:0;top:0;width:15px;height:15px;border-radius:50%;background:#fff;mix-blend-mode:difference;pointer-events:none;z-index:2147483647;opacity:0;will-change:transform;transition:opacity .3s ease,width .2s cubic-bezier(.25,1,.5,1),height .2s cubic-bezier(.25,1,.5,1)}
+.sticky-cursor.is-active{opacity:1}
+.sticky-cursor.is-hidden{opacity:0}
+@media (hover:none),(pointer:coarse){.sticky-cursor{display:none}}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1544,6 +1561,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
 </div>
 <div id="particles-js"></div>
+<div class="sticky-cursor" aria-hidden="true"></div>
 <div class="z1">
 
 <nav class="topnav">
@@ -1559,19 +1577,19 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
   <div class="nav-spacer"></div>
   <div class="admin-controls" id="admin-controls">
-    <span class="admin-badge">🔓 관리자</span>
-    <button class="btn-write" id="btn-write-nav" onclick="openWrite()" style="display:none">✏ 새 글 쓰기</button>
-    <button class="btn-admin-toggle" onclick="lockAdmin()">잠금</button>
+    <span class="admin-badge">🔓 Admin</span>
+    <button class="btn-write" id="btn-write-nav" onclick="openWrite()" style="display:none">✏ New Post</button>
+    <button class="btn-admin-toggle" onclick="lockAdmin()">Lock</button>
     </div>
-  <div class="lang-toggle">
+  <div class="lang-toggle" style="display:none">
     <button id="lang-ko" class="lang-btn active" onclick="setLang('ko')">KO</button>
     <button id="lang-en" class="lang-btn" onclick="setLang('en')">EN</button>
   </div>
   <!-- 방문자 카운터 -->
-  <div class="visitor-counter-wrap" id="visitor-counter-wrap" style="display:none" title="총 방문자 수 (본인 기기 제외)">
+  <div class="visitor-counter-wrap" id="visitor-counter-wrap" style="display:none" title="Total visitors (excluding this device)">
     <span class="visitor-dot"></span>
     <span id="visitor-count-el" class="visitor-count">-</span>
-    <span>명</span>
+    <span>visitors</span>
   </div>
   <button class="btn-unlock" id="btn-unlock" onclick="openPwModal()">🔒</button>
 </nav>
@@ -1592,6 +1610,22 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <!-- Hero -->
     <div class="landing-hero">
       <div class="landing-badge">✦ Personal Space</div>
+      <div class="hero-logo" aria-hidden="true">
+        <svg class="hero-logo-n" viewBox="0 0 126 126">
+          <path d="M22 104 V22 L104 104 V22"></path>
+        </svg>
+        <svg class="hero-logo-dots" viewBox="0 0 126 126">
+          <circle class="hero-logo-ball" cx="21" cy="21" r="17"></circle>
+          <circle class="hero-logo-ball" cx="63" cy="21" r="17"></circle>
+          <circle class="hero-logo-ball" cx="105" cy="21" r="17"></circle>
+          <circle class="hero-logo-ball" cx="21" cy="63" r="17"></circle>
+          <circle class="hero-logo-ball" cx="63" cy="63" r="17"></circle>
+          <circle class="hero-logo-ball" cx="105" cy="63" r="17"></circle>
+          <circle class="hero-logo-ball" cx="21" cy="105" r="17"></circle>
+          <circle class="hero-logo-ball" cx="63" cy="105" r="17"></circle>
+          <circle class="hero-logo-ball" cx="105" cy="105" r="17"></circle>
+        </svg>
+      </div>
       <h1 class="landing-title" id="landing-title-text"></h1>
       <p class="landing-desc" id="landing-hero-desc"></p>
       <div class="landing-btns">
@@ -1631,12 +1665,12 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <div class="gc landing-author-card" id="landing-author">
           <div class="lau-avatar" id="landing-av">?</div>
           <div class="lau-info">
-            <div class="lau-name" id="landing-author-name">이름을 설정하세요</div>
+            <div class="lau-name" id="landing-author-name">Set your name</div>
             <div class="lau-handle" id="landing-author-handle">@handle</div>
             <div class="lau-bio" id="landing-author-bio"></div>
             <div class="lau-links" id="landing-author-links"></div>
           </div>
-          <button class="lau-me-btn i18n" data-ko="전체 보기 →" data-en="Full Profile →" onclick="showSection('home')">전체 보기 →</button>
+          <button class="lau-me-btn i18n" data-ko="Full Profile →" data-en="Full Profile →" onclick="showSection('home')">Full Profile →</button>
         </div>
       </aside>
     </div>
@@ -1653,10 +1687,10 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
             <div class="av" id="home-av">?</div>
             <div class="av-edit admin-only">✎</div>
           </div>
-          <div class="p-name" id="home-name">이름을 설정하세요</div>
+          <div class="p-name" id="home-name">Set your name</div>
           <div class="p-handle" id="home-handle">@handle</div>
           <div class="p-bio" id="home-bio"></div>
-          <button class="btn-ep admin-only" onclick="openProfileEdit()" style="margin-top:12px">프로필 수정</button>
+          <button class="btn-ep admin-only" onclick="openProfileEdit()" style="margin-top:12px">Edit Profile</button>
         </div>
         <div class="gc links-card" id="home-links-card">
           <div class="sec-label">Links</div>
@@ -1665,14 +1699,14 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <div class="gc links-card" id="home-interests-card" style="display:none">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div class="sec-label" style="margin-bottom:0">Research Interests</div>
-            <button class="admin-only" onclick="openInterestsEdit()" style="font-size:.62rem;color:var(--s400);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:600;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--s400)'">✎ 수정</button>
+            <button class="admin-only" onclick="openInterestsEdit()" style="font-size:.62rem;color:var(--s400);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:600;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--s400)'">✎ Edit</button>
           </div>
           <div id="home-interests"></div>
         </div>
       </div>
 
       <div class="cv-area" id="cv-area">
-        <button class="btn-add-section admin-only" onclick="openAddSection()">+ 새 섹션 추가</button>
+        <button class="btn-add-section admin-only" onclick="openAddSection()">+ Add Section</button>
       </div>
     </div>
   </div>
@@ -1687,7 +1721,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <div class="filter-bar">
           <span class="filter-label" id="posts-filter-label">Posts</span>
           <div class="post-col-control" id="posts-col-control"></div>
-          <button class="sort-btn" onclick="toggleSort('posts')">최신순 ↕</button>
+          <button class="sort-btn" onclick="toggleSort('posts')">Newest ↕</button>
         </div>
         <div id="posts-list"></div>
       </div>
@@ -1702,12 +1736,12 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <div>
         <div id="paper-mob-filter" class="mob-filter-bar"></div>
         <p class="paper-section-desc i18n"
-           data-ko="읽고 정리한 논문들을 기록하는 장소입니다."
-           data-en="Notes and summaries of papers I've read.">읽고 정리한 논문들을 기록하는 장소입니다.</p>
+           data-ko="Notes and summaries of papers I've read."
+           data-en="Notes and summaries of papers I've read.">Notes and summaries of papers I've read.</p>
         <div class="filter-bar">
           <span class="filter-label" id="paper-filter-label">Paper Review</span>
           <div class="post-col-control" id="paper-col-control"></div>
-          <button class="sort-btn" onclick="toggleSort('paper')">최신순 ↕</button>
+          <button class="sort-btn" onclick="toggleSort('paper')">Newest ↕</button>
         </div>
         <div id="paper-list"></div>
       </div>
@@ -1719,12 +1753,12 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div id="page-article" class="page">
   <div class="article-wrap">
     <div class="article-topbar">
-      <button class="btn-back" onclick="goBack()">← 목록으로</button>
+      <button class="btn-back" onclick="goBack()">← Back</button>
       <div style="display:flex;gap:8px;align-items:center">
-        <button id="article-share-btn" class="btn-sm" title="링크 복사" style="display:flex;align-items:center;gap:4px">🔗 공유</button>
+        <button id="article-share-btn" class="btn-sm" title="Copy link" style="display:flex;align-items:center;gap:4px">🔗 Share</button>
         <div id="article-admin-btns" style="display:flex;gap:8px">
-          <button class="btn-sm admin-only" onclick="editCurrentArticle()">✎ 수정</button>
-          <button class="btn-sm danger admin-only" onclick="deleteCurrentArticle()">✕ 삭제</button>
+          <button class="btn-sm admin-only" onclick="editCurrentArticle()">✎ Edit</button>
+          <button class="btn-sm danger admin-only" onclick="deleteCurrentArticle()">✕ Delete</button>
         </div>
       </div>
     </div>
@@ -1734,7 +1768,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <div id="article-paper-meta" style="display:none">
       <div class="paper-meta-box" id="article-meta-box"></div>
       <div class="paper-summary-box" id="article-summary-box" style="display:none">
-        <div class="paper-summary-title">💡 세 줄 요약</div>
+        <div class="paper-summary-title">💡 Three-line Summary</div>
         <ol class="paper-summary-list" id="article-summary-list"></ol>
       </div>
     </div>
@@ -1746,18 +1780,18 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   <div class="editor-wrap">
     <div class="editor-topbar">
       <div style="display:flex;align-items:center;gap:12px">
-        <button class="btn-back" onclick="cancelWrite()">← 취소</button>
-        <span class="editor-mode" id="editor-mode-label">새 글 작성</span>
+        <button class="btn-back" onclick="cancelWrite()">← Cancel</button>
+        <span class="editor-mode" id="editor-mode-label">New Post</span>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn-cancel" onclick="cancelWrite()">취소</button>
-        <button class="btn-pub" onclick="publishPost()">발행하기</button>
+        <button class="btn-cancel" onclick="cancelWrite()">Cancel</button>
+        <button class="btn-pub" onclick="publishPost()">Publish</button>
       </div>
     </div>
     <!-- 임시저장 목록 패널 -->
     <div class="draft-list-panel" id="draft-list-panel">
       <div class="draft-list-header">
-        <span class="draft-list-title">💾 임시저장 목록</span>
+        <span class="draft-list-title">💾 Saved Drafts</span>
         <button class="btn-draft-close" onclick="draftClosePanel()">✕</button>
       </div>
       <div class="draft-list-items" id="draft-list-items"></div>
@@ -1766,46 +1800,46 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <div class="draft-bar">
       <div class="draft-bar-left">
         <div class="draft-autosave-dot" id="draft-dot"></div>
-        <span class="draft-status" id="draft-status">자동저장 대기 중</span>
+        <span class="draft-status" id="draft-status">Autosave idle</span>
       </div>
       <div class="draft-bar-right">
-        <button class="btn-draft-save" onclick="draftSaveNow()">임시저장</button>
-        <button class="btn-draft-save" onclick="draftOpenPanel()" style="background:var(--s100);color:var(--s600);border-color:var(--s200)">목록 📋</button>
-        <button class="btn-draft-clear" onclick="draftClear()">초기화</button>
+        <button class="btn-draft-save" onclick="draftSaveNow()">Save Draft</button>
+        <button class="btn-draft-save" onclick="draftOpenPanel()" style="background:var(--s100);color:var(--s600);border-color:var(--s200)">Drafts 📋</button>
+        <button class="btn-draft-clear" onclick="draftClear()">Clear</button>
       </div>
     </div>
     <div class="editor-row">
-      <span class="editor-row-label">섹션</span>
+      <span class="editor-row-label">Section</span>
       <button class="cat-sel-btn sel" id="sec-btn-posts" onclick="selectSection('posts',this)">Posts</button>
       <button class="cat-sel-btn" id="sec-btn-paper" onclick="selectSection('paper',this)">Paper Review</button>
     </div>
     <!-- Paper Review 메타 필드 -->
     <div class="paper-fields" id="paper-fields">
-      <div class="paper-fields-title">📄 논문 정보</div>
+      <div class="paper-fields-title">📄 Paper Info</div>
       <div class="paper-fields-grid">
-        <input class="paper-field-inp" id="pf-authors" placeholder="저자 (Authors)">
-        <input class="paper-field-inp" id="pf-year" placeholder="연도 (Year)">
-        <input class="paper-field-inp" id="pf-venue" placeholder="학회 / 저널 (Venue)">
-        <input class="paper-field-inp" id="pf-arxiv" placeholder="arXiv 링크">
-        <input class="paper-field-inp paper-field-full" id="pf-code" placeholder="코드 링크 (GitHub 등)">
+        <input class="paper-field-inp" id="pf-authors" placeholder="Authors">
+        <input class="paper-field-inp" id="pf-year" placeholder="Year">
+        <input class="paper-field-inp" id="pf-venue" placeholder="Venue (conference / journal)">
+        <input class="paper-field-inp" id="pf-arxiv" placeholder="arXiv link">
+        <input class="paper-field-inp paper-field-full" id="pf-code" placeholder="Code link (GitHub, etc.)">
       </div>
       <div style="margin-top:10px">
-        <div class="paper-fields-title" style="margin-bottom:8px">💡 세 줄 요약</div>
-        <textarea class="paper-summary-inp paper-field-full" id="pf-s1" placeholder="핵심 기여 1" rows="2"></textarea>
-        <textarea class="paper-summary-inp paper-field-full" id="pf-s2" placeholder="핵심 기여 2" style="margin-top:6px" rows="2"></textarea>
-        <textarea class="paper-summary-inp paper-field-full" id="pf-s3" placeholder="핵심 기여 3" style="margin-top:6px" rows="2"></textarea>
+        <div class="paper-fields-title" style="margin-bottom:8px">💡 Three-line Summary</div>
+        <textarea class="paper-summary-inp paper-field-full" id="pf-s1" placeholder="Key contribution 1" rows="2"></textarea>
+        <textarea class="paper-summary-inp paper-field-full" id="pf-s2" placeholder="Key contribution 2" style="margin-top:6px" rows="2"></textarea>
+        <textarea class="paper-summary-inp paper-field-full" id="pf-s3" placeholder="Key contribution 3" style="margin-top:6px" rows="2"></textarea>
       </div>
     </div>
     <div class="editor-row">
-      <span class="editor-row-label">카테고리</span>
+      <span class="editor-row-label">Category</span>
       <div id="editor-cat-btns" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div>
-      <input class="cat-new-inp" id="cat-new-inp" placeholder="새 카테고리...">
-      <button class="cat-add-btn" onclick="addNewCat()">+ 추가</button>
+      <input class="cat-new-inp" id="cat-new-inp" placeholder="New category...">
+      <button class="cat-add-btn" onclick="addNewCat()">+ Add</button>
     </div>
-    <textarea class="editor-title-inp" id="editor-title" placeholder="제목을 입력하세요" rows="1" oninput="autoResize(this)"></textarea>
+    <textarea class="editor-title-inp" id="editor-title" placeholder="Enter a title" rows="1" oninput="autoResize(this)"></textarea>
     <div class="editor-tags-row">
       <span id="editor-tag-list"></span>
-      <input class="tag-inp" id="editor-tag-inp" placeholder="태그 입력 후 Enter..." onkeydown="handleTagInput(event)">
+      <input class="tag-inp" id="editor-tag-inp" placeholder="Type a tag and press Enter..." onkeydown="handleTagInput(event)">
     </div>
     <div class="editor-toolbar">
       <button class="tb-btn" onclick="ins('## ','')">H2</button>
@@ -1821,36 +1855,36 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <button class="tb-btn" onclick="ins('$$\n','\n$$')">∑ Block</button>
       <button class="tb-btn" onclick="ins('$','$')">∑ Inline</button>
       <div class="tb-sep"></div>
-      <button class="tb-btn" onclick="insertMedia('image')">🖼 사진</button>
-      <button class="tb-btn" onclick="insertMedia('video')">🎬 동영상</button>
+      <button class="tb-btn" onclick="insertMedia('image')">🖼 Image</button>
+      <button class="tb-btn" onclick="insertMedia('video')">🎬 Video</button>
       <button class="tb-btn" onclick="insertMedia('pdf')">📄 PDF</button>
-      <button class="tb-btn" onclick="insertMedia('link')">🔗 링크</button>
+      <button class="tb-btn" onclick="insertMedia('link')">🔗 Link</button>
     </div>
     <div class="lp-editor" id="lp-editor" contenteditable="true" spellcheck="false"></div>
     <textarea id="editor-body" style="display:none" aria-hidden="true" tabindex="-1"></textarea>
-    <div class="editor-hint">마크다운 지원 · $...$ 인라인 수식 · $$...$$ 블록 수식</div>
+    <div class="editor-hint">Markdown supported · $...$ inline math · $$...$$ block math</div>
   </div>
 </div>
 
 
 <!-- ── RIGHT PANEL ─────────────────────────────────────────────── -->
 <div id="right-panel" class="right-panel" style="display:none">
-  <button class="rp-tab" id="rp-tab-btn" onclick="rpToggle()" title="패널 열기/닫기"><span id="rp-arrow">‹</span></button>
+  <button class="rp-tab" id="rp-tab-btn" onclick="rpToggle()" title="Toggle panel"><span id="rp-arrow">‹</span></button>
   <div class="rp-body" id="rp-body">
     <!-- 서식 도구 + 글 관리 (에디터 전용) -->
     <div class="rp-section" id="rp-fmt-sec" style="display:none">
       <!-- 글 관리 -->
-      <div class="rp-section-title">글 관리</div>
+      <div class="rp-section-title">Post</div>
       <div class="rp-action-btns">
-        <button class="rp-action-btn rp-action-pub" onclick="publishPost()">🚀 발행하기</button>
-        <button class="rp-action-btn rp-action-draft" onclick="draftSaveNow()">💾 임시저장</button>
-        <button class="rp-action-btn rp-action-cancel" onclick="cancelWrite()">← 작성 취소</button>
+        <button class="rp-action-btn rp-action-pub" onclick="publishPost()">🚀 Publish</button>
+        <button class="rp-action-btn rp-action-draft" onclick="draftSaveNow()">💾 Save Draft</button>
+        <button class="rp-action-btn rp-action-cancel" onclick="cancelWrite()">← Discard</button>
       </div>
       <div class="rp-divider"></div>
       <!-- 서식 -->
-      <div class="rp-section-title" style="padding-top:10px">서식</div>
+      <div class="rp-section-title" style="padding-top:10px">Format</div>
       <div class="rp-fmt-group">
-        <div class="rp-fmt-label">제목</div>
+        <div class="rp-fmt-label">Headings</div>
         <div class="rp-fmt-btns">
           <button class="rp-btn" onclick="ins('# ','')">H1</button>
           <button class="rp-btn" onclick="ins('## ','')">H2</button>
@@ -1859,7 +1893,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         </div>
       </div>
       <div class="rp-fmt-group">
-        <div class="rp-fmt-label">강조</div>
+        <div class="rp-fmt-label">Emphasis</div>
         <div class="rp-fmt-btns">
           <button class="rp-btn" onclick="ins('**','**')"><b>B</b></button>
           <button class="rp-btn" onclick="ins('*','*')"><i>I</i></button>
@@ -1868,28 +1902,28 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         </div>
       </div>
       <div class="rp-fmt-group">
-        <div class="rp-fmt-label">목록 / 블록</div>
+        <div class="rp-fmt-label">Lists / Blocks</div>
         <div class="rp-fmt-btns">
-          <button class="rp-btn" onclick="ins('- ','')">•목록</button>
-          <button class="rp-btn" onclick="ins('1. ','')">1.목록</button>
-          <button class="rp-btn" onclick="ins('> ','')">❝인용</button>
-          <button class="rp-btn rp-btn-mono" onclick="ins('```\n','\n```')">코드</button>
+          <button class="rp-btn" onclick="ins('- ','')">• List</button>
+          <button class="rp-btn" onclick="ins('1. ','')">1. List</button>
+          <button class="rp-btn" onclick="ins('> ','')">❝ Quote</button>
+          <button class="rp-btn rp-btn-mono" onclick="ins('```\n','\n```')">Code</button>
         </div>
       </div>
       <div class="rp-fmt-group">
-        <div class="rp-fmt-label">수식</div>
+        <div class="rp-fmt-label">Math</div>
         <div class="rp-fmt-btns">
-          <button class="rp-btn rp-btn-mono" onclick="ins('$','$')">$ 인라인</button>
-          <button class="rp-btn rp-btn-mono" onclick="ins('$$\n','\n$$')">$$ 블록</button>
+          <button class="rp-btn rp-btn-mono" onclick="ins('$','$')">$ Inline</button>
+          <button class="rp-btn rp-btn-mono" onclick="ins('$$\n','\n$$')">$$ Block</button>
         </div>
       </div>
       <div class="rp-fmt-group">
-        <div class="rp-fmt-label">삽입</div>
+        <div class="rp-fmt-label">Insert</div>
         <div class="rp-fmt-btns">
-          <button class="rp-btn" onclick="ins('---\n','')">── 선</button>
-          <button class="rp-btn" onclick="ins('[','](url)')">🔗 링크</button>
-          <button class="rp-btn" onclick="insertMedia('image')">🖼 사진</button>
-          <button class="rp-btn" onclick="insertMedia('video')">🎬 영상</button>
+          <button class="rp-btn" onclick="ins('---\n','')">── Rule</button>
+          <button class="rp-btn" onclick="ins('[','](url)')">🔗 Link</button>
+          <button class="rp-btn" onclick="insertMedia('image')">🖼 Image</button>
+          <button class="rp-btn" onclick="insertMedia('video')">🎬 Video</button>
           <button class="rp-btn" onclick="insertMedia('pdf')">📄 PDF</button>
         </div>
       </div>
@@ -1898,14 +1932,14 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <!-- 관리자: 수정 버튼 (글 읽기 전용) -->
     <div class="rp-section" id="rp-edit-sec" style="display:none">
       <div class="rp-action-btns">
-        <button class="rp-action-btn rp-action-draft" onclick="editCurrentArticle()">✎ 글 수정하기</button>
+        <button class="rp-action-btn rp-action-draft" onclick="editCurrentArticle()">✎ Edit Post</button>
       </div>
       <div class="rp-divider"></div>
     </div>
     <!-- 목차 -->
     <div class="rp-section">
-      <div class="rp-section-title">목차 <span id="rp-toc-count" class="rp-toc-count"></span></div>
-      <div id="rp-toc"><div class="rp-empty">목차 없음</div></div>
+      <div class="rp-section-title">Contents <span id="rp-toc-count" class="rp-toc-count"></span></div>
+      <div id="rp-toc"><div class="rp-empty">No headings</div></div>
     </div>
   </div>
 </div>
@@ -1913,13 +1947,13 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 </div><div id="modal-pw" class="modal-overlay" style="display:none" onclick="closeModal('modal-pw',event)">
   <div class="modal" style="max-width:340px">
 <div class="modal-drag-handle"></div>
-    <div class="modal-title">🔐 관리자 로그인</div>
-    <label class="form-label">비밀번호</label>
-    <input class="form-input" id="pw-input" type="password" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')checkPw()">
-    <p id="pw-error" style="font-size:.7rem;color:#ef4444;margin-top:-7px;margin-bottom:9px;display:none">비밀번호가 틀렸습니다.</p>
+    <div class="modal-title">🔐 Admin Login</div>
+    <label class="form-label">Password</label>
+    <input class="form-input" id="pw-input" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPw()">
+    <p id="pw-error" style="font-size:.7rem;color:#ef4444;margin-top:-7px;margin-bottom:9px;display:none">Wrong password.</p>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-pw')">취소</button>
-      <button class="btn-primary" onclick="checkPw()">확인</button>
+      <button class="btn-secondary" onclick="closeModal('modal-pw')">Cancel</button>
+      <button class="btn-primary" onclick="checkPw()">OK</button>
     </div>
   </div>
 </div>
@@ -1927,15 +1961,15 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div id="modal-set-pw" class="modal-overlay" style="display:none" onclick="closeModal('modal-set-pw',event)">
   <div class="modal" style="max-width:340px">
 <div class="modal-drag-handle"></div>
-    <div class="modal-title">🔑 비밀번호 설정</div>
-    <p style="font-size:.78rem;color:var(--s600);margin-bottom:12px;line-height:1.6">처음 사용 시 관리자 비밀번호를 설정하세요.</p>
-    <label class="form-label">새 비밀번호</label>
-    <input class="form-input" id="set-pw1" type="password" placeholder="비밀번호 입력">
-    <label class="form-label">확인</label>
-    <input class="form-input" id="set-pw2" type="password" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')setPw()">
-    <p id="set-pw-error" style="font-size:.7rem;color:#ef4444;margin-top:-7px;margin-bottom:9px;display:none">비밀번호가 일치하지 않습니다.</p>
+    <div class="modal-title">🔑 Set Password</div>
+    <p style="font-size:.78rem;color:var(--s600);margin-bottom:12px;line-height:1.6">Set an admin password for first use.</p>
+    <label class="form-label">New password</label>
+    <input class="form-input" id="set-pw1" type="password" placeholder="Enter password">
+    <label class="form-label">Confirm</label>
+    <input class="form-input" id="set-pw2" type="password" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')setPw()">
+    <p id="set-pw-error" style="font-size:.7rem;color:#ef4444;margin-top:-7px;margin-bottom:9px;display:none">Passwords do not match.</p>
     <div class="modal-actions">
-      <button class="btn-primary" onclick="setPw()">설정</button>
+      <button class="btn-primary" onclick="setPw()">Set</button>
     </div>
   </div>
 </div>
@@ -1943,26 +1977,26 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div id="modal-profile" class="modal-overlay" style="display:none" onclick="closeModal('modal-profile',event)">
   <div class="modal">
 <div class="modal-drag-handle"></div>
-    <div class="modal-title">프로필 수정</div>
-    <label class="form-label">이름</label><input class="form-input" id="inp-name" placeholder="이름">
-    <label class="form-label">핸들 (@)</label><input class="form-input" id="inp-handle" placeholder="handle">
-    <label class="form-label">블로그 이름</label><input class="form-input" id="inp-blog-name" placeholder="My Blog">
-    <label class="form-label">자기소개</label><textarea class="form-textarea" id="inp-bio" placeholder="자기소개..."></textarea>
+    <div class="modal-title">Edit Profile</div>
+    <label class="form-label">Name</label><input class="form-input" id="inp-name" placeholder="Name">
+    <label class="form-label">Handle (@)</label><input class="form-input" id="inp-handle" placeholder="handle">
+    <label class="form-label">Blog name</label><input class="form-input" id="inp-blog-name" placeholder="My Blog">
+    <label class="form-label">Bio</label><textarea class="form-textarea" id="inp-bio" placeholder="About you..."></textarea>
     <label class="form-label">GitHub URL</label><input class="form-input" id="inp-github" placeholder="https://github.com/...">
-    <label class="form-label">이메일</label><input class="form-input" id="inp-email" placeholder="email@example.com">
+    <label class="form-label">Email</label><input class="form-input" id="inp-email" placeholder="email@example.com">
     <div style="height:1px;background:var(--s200);margin:6px 0 10px"></div>
-    <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:8px">추가 링크</div>
+    <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:8px">More Links</div>
     <div id="custom-links-wrap" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-    <button type="button" onclick="addCustomLinkRow()" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px dashed var(--s300);border-radius:var(--r);background:none;font-size:.7rem;font-weight:600;color:var(--s400);cursor:pointer;font-family:var(--sans);transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--s300)';this.style.color='var(--s400)'">+ 링크 추가</button>
+    <button type="button" onclick="addCustomLinkRow()" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px dashed var(--s300);border-radius:var(--r);background:none;font-size:.7rem;font-weight:600;color:var(--s400);cursor:pointer;font-family:var(--sans);transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--s300)';this.style.color='var(--s400)'">+ Add Link</button>
     <div style="height:1px;background:var(--s200);margin:8px 0 12px"></div>
-    <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:10px">홈 페이지 소개</div>
-    <label class="form-label">메인 타이틀 — 한국어 (| 로 줄바꿈)</label><input class="form-input" id="inp-landing-title" placeholder="생각을 기록하고,|지식을 나눕니다">
-    <label class="form-label">메인 타이틀 — English (| for line break)</label><input class="form-input" id="inp-landing-title-en" placeholder="Thoughts, recorded.|Knowledge, shared.">
-    <label class="form-label">한 줄 설명 — 한국어</label><textarea class="form-textarea" id="inp-landing-desc" placeholder="블로그 소개..." style="min-height:55px"></textarea>
-    <label class="form-label">한 줄 설명 — English</label><textarea class="form-textarea" id="inp-landing-desc-en" placeholder="Blog description in English..." style="min-height:55px"></textarea>
+    <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:10px">Home Intro</div>
+    <label class="form-label">Main title — Korean, fallback (| for line break)</label><input class="form-input" id="inp-landing-title" placeholder="Korean title (used if English is empty)">
+    <label class="form-label">Main title — English (| for line break)</label><input class="form-input" id="inp-landing-title-en" placeholder="Thoughts, recorded.|Knowledge, shared.">
+    <label class="form-label">Tagline — Korean, fallback</label><textarea class="form-textarea" id="inp-landing-desc" placeholder="Blog description..." style="min-height:55px"></textarea>
+    <label class="form-label">Tagline — English</label><textarea class="form-textarea" id="inp-landing-desc-en" placeholder="Blog description in English..." style="min-height:55px"></textarea>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-profile')">취소</button>
-      <button class="btn-primary" onclick="saveProfile()">저장</button>
+      <button class="btn-secondary" onclick="closeModal('modal-profile')">Cancel</button>
+      <button class="btn-primary" onclick="saveProfile()">Save</button>
     </div>
   </div>
 </div>
@@ -1971,11 +2005,11 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   <div class="modal" style="max-width:380px">
 <div class="modal-drag-handle"></div>
     <div class="modal-title">Research Interests</div>
-    <p style="font-size:.75rem;color:var(--s500);margin-bottom:10px;line-height:1.6">한 줄에 하나씩 입력하세요.<br>이모지로 시작하면 아이콘으로 표시됩니다.<br><span style="color:var(--s400)">예: 🤖 Machine Learning</span></p>
+    <p style="font-size:.75rem;color:var(--s500);margin-bottom:10px;line-height:1.6">One per line.<br>Start with an emoji to show it as an icon.<br><span style="color:var(--s400)">e.g. 🤖 Machine Learning</span></p>
     <textarea class="form-textarea" id="inp-interests" placeholder="🤖 Machine Learning&#10;🧬 Computational Biology&#10;📊 Data Visualization" style="min-height:160px;font-family:var(--sans);font-size:.82rem"></textarea>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-interests')">취소</button>
-      <button class="btn-primary" onclick="saveInterests()">저장</button>
+      <button class="btn-secondary" onclick="closeModal('modal-interests')">Cancel</button>
+      <button class="btn-primary" onclick="saveInterests()">Save</button>
     </div>
   </div>
 </div>
@@ -1983,12 +2017,12 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div id="modal-add-section" class="modal-overlay" style="display:none" onclick="closeModal('modal-add-section',event)">
   <div class="modal" style="max-width:360px">
 <div class="modal-drag-handle"></div>
-    <div class="modal-title" id="add-section-title">새 섹션 추가</div>
-    <label class="form-label">섹션 이름</label>
-    <input class="form-input" id="inp-section-name" placeholder="예: Education, Experience, Projects..." onkeydown="if(event.key==='Enter')saveSection()">
+    <div class="modal-title" id="add-section-title">Add Section</div>
+    <label class="form-label">Section name</label>
+    <input class="form-input" id="inp-section-name" placeholder="e.g. Education, Experience, Projects..." onkeydown="if(event.key==='Enter')saveSection()">
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-add-section')">취소</button>
-      <button class="btn-primary" onclick="saveSection()">추가</button>
+      <button class="btn-secondary" onclick="closeModal('modal-add-section')">Cancel</button>
+      <button class="btn-primary" onclick="saveSection()">Add</button>
     </div>
   </div>
 </div>
@@ -1996,68 +2030,68 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div id="modal-add-entry" class="modal-overlay" style="display:none" onclick="closeModal('modal-add-entry',event)">
   <div class="modal" style="max-width:500px">
 <div class="modal-drag-handle"></div>
-    <div class="modal-title" id="add-entry-title">항목 추가</div>
+    <div class="modal-title" id="add-entry-title">Add Entry</div>
 
-    <label class="form-label">카드 스타일</label>
+    <label class="form-label">Card style</label>
     <div class="entry-style-picker" id="entry-style-picker">
       <div class="entry-style-opt active" data-style="default" onclick="selectEntryStyle('default',this)">
-        <div class="esp-preview"><div class="esp-title">제목</div><div class="esp-sub">부제</div><div class="esp-date">2024</div></div>
-        <div class="esp-label">카드</div>
+        <div class="esp-preview"><div class="esp-title">Title</div><div class="esp-sub">Subtitle</div><div class="esp-date">2024</div></div>
+        <div class="esp-label">Card</div>
       </div>
       <div class="entry-style-opt" data-style="timeline" onclick="selectEntryStyle('timeline',this)">
-        <div class="esp-preview esp-tl-wrap"><div class="esp-tl-dot"></div><div><div class="esp-title">제목</div><div class="esp-date">2024</div></div></div>
-        <div class="esp-label">타임라인</div>
+        <div class="esp-preview esp-tl-wrap"><div class="esp-tl-dot"></div><div><div class="esp-title">Title</div><div class="esp-date">2024</div></div></div>
+        <div class="esp-label">Timeline</div>
       </div>
       <div class="entry-style-opt" data-style="text" onclick="selectEntryStyle('text',this)">
-        <div class="esp-preview esp-text"><div class="esp-title">제목</div><div class="esp-sub">부제</div></div>
-        <div class="esp-label">텍스트</div>
+        <div class="esp-preview esp-text"><div class="esp-title">Title</div><div class="esp-sub">Subtitle</div></div>
+        <div class="esp-label">Text</div>
       </div>
       <div class="entry-style-opt" data-style="line" onclick="selectEntryStyle('line',this)">
         <div class="esp-preview esp-text" style="padding:6px 8px!important">
           <div style="display:flex;justify-content:space-between;align-items:baseline;width:100%">
-            <div class="esp-title" style="font-size:.5rem">제목</div>
+            <div class="esp-title" style="font-size:.5rem">Title</div>
             <div class="esp-date" style="font-size:.42rem">2024</div>
           </div>
-          <div class="esp-sub" style="font-size:.42rem;font-style:italic">부제</div>
+          <div class="esp-sub" style="font-size:.42rem;font-style:italic">Subtitle</div>
         </div>
-        <div class="esp-label">라인</div>
+        <div class="esp-label">Line</div>
       </div>
     </div>
     <input type="hidden" id="inp-entry-style" value="default">
 
-    <label class="form-label" style="margin-top:4px">제목</label>
-    <input class="form-input" id="inp-entry-title" placeholder="예: SungKyunKwan University">
-    <label class="form-label">부제 (선택)</label>
-    <input class="form-input" id="inp-entry-sub" placeholder="예: Biomechatronics · 2023~Present">
-    <label class="form-label">날짜 / 기간 (선택)</label>
-    <input class="form-input" id="inp-entry-date" placeholder="예: 2023 ~ Present">
-    <label class="form-label">내용 (선택)</label>
-    <textarea class="form-textarea" id="inp-entry-desc" placeholder="상세 내용..."></textarea>
-    <label class="form-label">링크 (선택)</label>
+    <label class="form-label" style="margin-top:4px">Title</label>
+    <input class="form-input" id="inp-entry-title" placeholder="e.g. SungKyunKwan University">
+    <label class="form-label">Subtitle (optional)</label>
+    <input class="form-input" id="inp-entry-sub" placeholder="e.g. Biomechatronics · 2023~Present">
+    <label class="form-label">Date / period (optional)</label>
+    <input class="form-input" id="inp-entry-date" placeholder="e.g. 2023 ~ Present">
+    <label class="form-label">Description (optional)</label>
+    <textarea class="form-textarea" id="inp-entry-desc" placeholder="Details..."></textarea>
+    <label class="form-label">Link (optional)</label>
     <div style="display:flex;gap:6px">
-      <input class="form-input" id="inp-entry-link-label" placeholder="링크 이름 (예: GitHub)" style="width:36%;margin-bottom:0">
+      <input class="form-input" id="inp-entry-link-label" placeholder="Link name (e.g. GitHub)" style="width:36%;margin-bottom:0">
       <input class="form-input" id="inp-entry-link-url" placeholder="https://..." style="flex:1;margin-bottom:0">
     </div>
     <div style="margin-bottom:11px"></div>
-    <label class="form-label">태그 (쉼표로 구분, 선택)</label>
-    <input class="form-input" id="inp-entry-tags" placeholder="예: ML, PyTorch, Computer Vision">
+    <label class="form-label">Tags (comma-separated, optional)</label>
+    <input class="form-input" id="inp-entry-tags" placeholder="e.g. ML, PyTorch, Computer Vision">
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px">
       <div>
-        <label class="form-label">아이콘 / 이모지 (선택)</label>
-        <input class="form-input" id="inp-entry-icon" placeholder="예: 🎓 📌 ⚡" style="font-size:1.1rem">
+        <label class="form-label">Icon / emoji (optional)</label>
+        <input class="form-input" id="inp-entry-icon" placeholder="e.g. 🎓 📌 ⚡" style="font-size:1.1rem">
       </div>
       <div>
-        <label class="form-label">배경색 (선택)</label>
+        <label class="form-label">Background (optional)</label>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding-top:4px" id="color-swatches">
-          <span class="color-swatch active" data-color="" style="background:white;border:2px solid var(--s300)" onclick="selectColor('',this)" title="기본"></span>
-          <span class="color-swatch" data-color="#eff6ff" style="background:#eff6ff" onclick="selectColor('#eff6ff',this)" title="파랑"></span>
-          <span class="color-swatch" data-color="#f0fdf4" style="background:#f0fdf4" onclick="selectColor('#f0fdf4',this)" title="초록"></span>
-          <span class="color-swatch" data-color="#fefce8" style="background:#fefce8" onclick="selectColor('#fefce8',this)" title="노랑"></span>
-          <span class="color-swatch" data-color="#fff1f2" style="background:#fff1f2" onclick="selectColor('#fff1f2',this)" title="빨강"></span>
-          <span class="color-swatch" data-color="#faf5ff" style="background:#faf5ff" onclick="selectColor('#faf5ff',this)" title="보라"></span>
-          <span class="color-swatch" data-color="#f8fafc" style="background:#f8fafc" onclick="selectColor('#f8fafc',this)" title="회색"></span>
-          <span class="color-swatch" data-color="#1e293b" style="background:#1e293b" onclick="selectColor('#1e293b',this)" title="다크"></span>
+          <span class="color-swatch active" data-color="" style="background:white;border:2px solid var(--s300)" onclick="selectColor('',this)" title="Default"></span>
+          <span class="color-swatch" data-color="#eff6ff" style="background:#eff6ff" onclick="selectColor('#eff6ff',this)" title="Blue"></span>
+          <span class="color-swatch" data-color="#f0fdf4" style="background:#f0fdf4" onclick="selectColor('#f0fdf4',this)" title="Green"></span>
+          <span class="color-swatch" data-color="#fefce8" style="background:#fefce8" onclick="selectColor('#fefce8',this)" title="Yellow"></span>
+          <span class="color-swatch" data-color="#fff1f2" style="background:#fff1f2" onclick="selectColor('#fff1f2',this)" title="Red"></span>
+          <span class="color-swatch" data-color="#faf5ff" style="background:#faf5ff" onclick="selectColor('#faf5ff',this)" title="Purple"></span>
+          <span class="color-swatch" data-color="#f8fafc" style="background:#f8fafc" onclick="selectColor('#f8fafc',this)" title="Gray"></span>
+          <span class="color-swatch" data-color="#1e293b" style="background:#1e293b" onclick="selectColor('#1e293b',this)" title="Dark"></span>
         </div>
         <input type="hidden" id="inp-entry-color" value="">
       </div>
@@ -2065,40 +2099,40 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
       <div>
-        <label class="form-label">카드 너비</label>
+        <label class="form-label">Card width</label>
         <div class="span-picker">
-          <button class="span-btn active" data-span="1" onclick="selectSpan(1,this)">1칸</button>
-          <button class="span-btn" data-span="2" onclick="selectSpan(2,this)">2칸</button>
-          <button class="span-btn" data-span="3" onclick="selectSpan(3,this)">3칸</button>
-          <button class="span-btn" data-span="full" onclick="selectSpan('full',this)">전체</button>
+          <button class="span-btn active" data-span="1" onclick="selectSpan(1,this)">1 col</button>
+          <button class="span-btn" data-span="2" onclick="selectSpan(2,this)">2 cols</button>
+          <button class="span-btn" data-span="3" onclick="selectSpan(3,this)">3 cols</button>
+          <button class="span-btn" data-span="full" onclick="selectSpan('full',this)">Full</button>
         </div>
         <input type="hidden" id="inp-entry-span" value="1">
       </div>
       <div>
-        <label class="form-label">카드 높이</label>
+        <label class="form-label">Card height</label>
         <div class="span-picker">
-          <button class="height-btn active" data-height="auto" onclick="selectHeight('auto',this)">자동</button>
-          <button class="height-btn" data-height="160" onclick="selectHeight('160',this)">중간</button>
-          <button class="height-btn" data-height="240" onclick="selectHeight('240',this)">높게</button>
-          <button class="height-btn" data-height="340" onclick="selectHeight('340',this)">아주 높게</button>
+          <button class="height-btn active" data-height="auto" onclick="selectHeight('auto',this)">Auto</button>
+          <button class="height-btn" data-height="160" onclick="selectHeight('160',this)">Medium</button>
+          <button class="height-btn" data-height="240" onclick="selectHeight('240',this)">Tall</button>
+          <button class="height-btn" data-height="340" onclick="selectHeight('340',this)">Extra tall</button>
         </div>
         <input type="hidden" id="inp-entry-height" value="auto">
       </div>
     </div>
 
-    <label class="form-label" style="margin-top:10px">열 시작 위치 (그리드 레이아웃일 때)</label>
+    <label class="form-label" style="margin-top:10px">Start column (grid layout)</label>
     <div class="span-picker">
-      <button class="colstart-btn active" data-col="auto" onclick="selectColStart('auto',this)">자동</button>
-      <button class="colstart-btn" data-col="1" onclick="selectColStart('1',this)">1열</button>
-      <button class="colstart-btn" data-col="2" onclick="selectColStart('2',this)">2열</button>
-      <button class="colstart-btn" data-col="3" onclick="selectColStart('3',this)">3열</button>
-      <button class="colstart-btn" data-col="4" onclick="selectColStart('4',this)">4열</button>
+      <button class="colstart-btn active" data-col="auto" onclick="selectColStart('auto',this)">Auto</button>
+      <button class="colstart-btn" data-col="1" onclick="selectColStart('1',this)">Col 1</button>
+      <button class="colstart-btn" data-col="2" onclick="selectColStart('2',this)">Col 2</button>
+      <button class="colstart-btn" data-col="3" onclick="selectColStart('3',this)">Col 3</button>
+      <button class="colstart-btn" data-col="4" onclick="selectColStart('4',this)">Col 4</button>
     </div>
     <input type="hidden" id="inp-entry-colstart" value="auto">
 
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-add-entry')">취소</button>
-      <button class="btn-primary" onclick="saveEntry()">저장</button>
+      <button class="btn-secondary" onclick="closeModal('modal-add-entry')">Cancel</button>
+      <button class="btn-primary" onclick="saveEntry()">Save</button>
     </div>
   </div>
 </div>
@@ -2106,7 +2140,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div id="modal-media" class="modal-overlay" style="display:none" onclick="closeModal('modal-media',event)">
   <div class="modal" style="max-width:460px">
 <div class="modal-drag-handle"></div>
-    <div class="modal-title" id="media-modal-title">미디어 삽입</div>
+    <div class="modal-title" id="media-modal-title">Insert Media</div>
 
     <div id="media-image">
       <div class="upload-zone" id="img-upload-zone"
@@ -2115,18 +2149,18 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         ondrop="handleImgDrop(event)">
         <input type="file" accept="image/*" multiple onchange="handleMediaFile(event)">
         <span class="upload-zone-icon">🖼</span>
-        <div class="upload-zone-text"><strong>클릭하거나 사진을 드래그</strong></div>
-        <div class="upload-zone-sub">JPG · PNG · GIF · WEBP · 자동 압축 적용 · 여러 장 가능</div>
+        <div class="upload-zone-text"><strong>Click or drag images here</strong></div>
+        <div class="upload-zone-sub">JPG · PNG · GIF · WEBP · auto-compressed · multiple allowed</div>
       </div>
       <div class="upload-progress-wrap" id="img-upload-progress">
         <div class="upload-progress-bar-outer"><div class="upload-progress-bar-inner" id="img-progress-bar"></div></div>
-        <div class="upload-progress-label" id="img-upload-status">업로드 중...</div>
+        <div class="upload-progress-label" id="img-upload-status">Uploading...</div>
       </div>
       <div class="upload-thumb-grid" id="img-thumb-grid"></div>
-      <label class="form-label" style="margin-top:8px">캡션 (선택 — 여러 장이면 공통 캡션)</label>
-      <input class="form-input" id="media-caption-inp" placeholder="사진 설명...">
+      <label class="form-label" style="margin-top:8px">Caption (optional — shared for multiple images)</label>
+      <input class="form-input" id="media-caption-inp" placeholder="Image description...">
       <details style="margin-top:6px">
-        <summary style="font-size:.68rem;color:var(--s400);cursor:pointer">URL로 직접 입력</summary>
+        <summary style="font-size:.68rem;color:var(--s400);cursor:pointer">Enter a URL instead</summary>
         <input class="form-input" style="margin-top:6px" id="media-url-inp" placeholder="https://..." oninput="onImgUrlInput(this.value)">
         <div id="media-preview" style="display:none;margin:6px 0"><img id="media-preview-img" style="max-width:100%;border-radius:var(--r);border:1px solid var(--s200)"></div>
       </details>
@@ -2139,33 +2173,33 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <img id="yt-preview-img" src="" alt="">
         <div class="yt-preview-play">▶</div>
       </div>
-      <label class="form-label" style="margin-top:8px">캡션 (선택)</label>
-      <input class="form-input" id="media-video-caption" placeholder="동영상 설명...">
+      <label class="form-label" style="margin-top:8px">Caption (optional)</label>
+      <input class="form-input" id="media-video-caption" placeholder="Video description...">
     </div>
 
     <div id="media-pdf" style="display:none">
       <p style="font-size:.75rem;color:var(--s500);line-height:1.7;margin-bottom:10px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--r);border-left:3px solid var(--blue)">
-        📎 arXiv · Google Drive · 학회 사이트 등 링크를 그대로 붙여넣으세요.<br>
-        <span style="font-size:.68rem;color:var(--s400)">예) arxiv.org/abs/2301.xxxxx &nbsp;·&nbsp; drive.google.com/file/d/...</span>
+        📎 Paste a link from arXiv, Google Drive, a conference site, etc.<br>
+        <span style="font-size:.68rem;color:var(--s400)">e.g. arxiv.org/abs/2301.xxxxx &nbsp;·&nbsp; drive.google.com/file/d/...</span>
       </p>
       <label class="form-label">PDF URL</label>
-      <input class="form-input" id="media-pdf-url" placeholder="https://arxiv.org/abs/... 또는 Google Drive 링크" oninput="onPdfUrlInput(this.value)">
+      <input class="form-input" id="media-pdf-url" placeholder="https://arxiv.org/abs/... or a Google Drive link" oninput="onPdfUrlInput(this.value)">
       <div id="pdf-link-preview" style="display:none;margin:6px 0;padding:8px 12px;background:var(--s100);border-radius:var(--r);font-size:.75rem;color:var(--s600);word-break:break-all"></div>
-      <label class="form-label" style="margin-top:8px">표시 이름</label>
-      <input class="form-input" id="media-pdf-label" placeholder="논문 제목 등...">
+      <label class="form-label" style="margin-top:8px">Display name</label>
+      <input class="form-input" id="media-pdf-label" placeholder="Paper title, etc...">
       <span id="media-pdf-name" style="font-size:.7rem;color:var(--blue);margin-top:4px;display:block"></span>
     </div>
 
     <div id="media-link" style="display:none">
       <label class="form-label">URL</label>
       <input class="form-input" id="media-link-url" placeholder="https://...">
-      <label class="form-label">표시 텍스트</label>
-      <input class="form-input" id="media-link-text" placeholder="링크 이름">
+      <label class="form-label">Display text</label>
+      <input class="form-input" id="media-link-text" placeholder="Link text">
     </div>
 
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-media')">취소</button>
-      <button class="btn-primary" onclick="confirmInsertMedia()">삽입</button>
+      <button class="btn-secondary" onclick="closeModal('modal-media')">Cancel</button>
+      <button class="btn-primary" onclick="confirmInsertMedia()">Insert</button>
     </div>
   </div>
 </div>
@@ -2173,11 +2207,11 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div id="modal-delete" class="modal-overlay" style="display:none" onclick="closeModal('modal-delete',event)">
   <div class="modal" style="max-width:320px">
 <div class="modal-drag-handle"></div>
-    <div class="modal-title">삭제할까요?</div>
-    <p style="font-size:.82rem;color:var(--s500);line-height:1.6">삭제하면 복구할 수 없습니다.</p>
+    <div class="modal-title">Delete this?</div>
+    <p style="font-size:.82rem;color:var(--s500);line-height:1.6">This cannot be undone.</p>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-delete')">취소</button>
-      <button class="btn-primary" style="background:#ef4444" onclick="confirmDelete()">삭제</button>
+      <button class="btn-secondary" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn-primary" style="background:#ef4444" onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>
@@ -2188,23 +2222,23 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <div class="modal-drag-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div>
-        <div class="modal-title" style="margin-bottom:2px">👥 방문자 기록</div>
-        <p style="font-size:.7rem;color:var(--s400);margin:0">본인 기기를 제외한 외부 방문자 · 최근 200명</p>
+        <div class="modal-title" style="margin-bottom:2px">👥 Visitor Log</div>
+        <p style="font-size:.7rem;color:var(--s400);margin:0">External visitors, excluding this device · last 200</p>
       </div>
-      <button onclick="clearVisitorLog()" style="padding:6px 14px;border-radius:8px;font-size:.65rem;font-weight:700;background:none;color:#ef4444;border:1px solid #fecaca;cursor:pointer;flex-shrink:0">초기화</button>
+      <button onclick="clearVisitorLog()" style="padding:6px 14px;border-radius:8px;font-size:.65rem;font-weight:700;background:none;color:#ef4444;border:1px solid #fecaca;cursor:pointer;flex-shrink:0">Clear</button>
     </div>
     <div class="vlog-stats">
-      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-total">-</div><div class="vlog-stat-label">총 방문</div></div>
-      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-users">-</div><div class="vlog-stat-label">고유 유저</div></div>
-      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-today">-</div><div class="vlog-stat-label">오늘</div></div>
-      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-new">-</div><div class="vlog-stat-label">1시간 내</div></div>
-      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-article">-</div><div class="vlog-stat-label">글 읽음</div></div>
+      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-total">-</div><div class="vlog-stat-label">Total</div></div>
+      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-users">-</div><div class="vlog-stat-label">Unique</div></div>
+      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-today">-</div><div class="vlog-stat-label">Today</div></div>
+      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-new">-</div><div class="vlog-stat-label">Last hour</div></div>
+      <div class="vlog-stat"><div class="vlog-stat-num" id="vlog-stat-article">-</div><div class="vlog-stat-label">Read a post</div></div>
     </div>
     <div class="vlog-list" id="vlog-list">
-      <div class="vlog-empty">불러오는 중...</div>
+      <div class="vlog-empty">Loading...</div>
     </div>
     <div class="modal-actions" style="margin-top:16px">
-      <button class="btn-secondary" onclick="closeModal('modal-visitor-log')">닫기</button>
+      <button class="btn-secondary" onclick="closeModal('modal-visitor-log')">Close</button>
     </div>
   </div>
 </div>
@@ -2225,7 +2259,7 @@ function showSaving(msg) {
     el.className = 'saving-indicator';
     document.body.appendChild(el);
   }
-  el.textContent = msg || '저장 중...';
+  el.textContent = msg || 'Saving...';
   el.classList.add('show');
 }
 function hideSaving(msg, delay) {
@@ -2289,8 +2323,8 @@ async function load() {
         customLinks: r.custom_links || [],
         interests: r.interests || [],
         adminPw: r.admin_pw || null,
-        landingTitle: r.landing_title || '생각을 기록하고,|지식을 나눕니다',
-        landingTitleEn: r.landing_title_en || 'Thoughts, recorded.|Knowledge, shared.',
+        landingTitle: r.landing_title || 'Thoughts, recorded.|Knowledge, shared.',
+        landingTitleEn: r.landing_title_en || '',
         landingDesc: r.landing_desc || '',
         landingDescEn: r.landing_desc_en || ''
       };
@@ -2337,7 +2371,7 @@ async function loadAvatar() {
 
 // ── DB SAVE: POSTS ────────────────────────────────────────────────
 async function savePost(post, section) {
-  showSaving('저장 중...');
+  showSaving('Saving...');
   const base = {
     id: post.id,
     title: post.title,
@@ -2361,15 +2395,15 @@ async function savePost(post, section) {
   const row = { ...base, ...paperFields };
   const table = section === 'posts' ? 'posts' : 'papers';
   const { error } = await supa.from(table).upsert(row);
-  if (error) { hideSaving('❌ 저장 실패: ' + error.message, 0); return false; }
-  hideSaving('✅ 저장됨');
+  if (error) { hideSaving('❌ Save failed: ' + error.message, 0); return false; }
+  hideSaving('✅ Saved');
   return true;
 }
 
 async function deletePost(id, section) {
   const table = section === 'posts' ? 'posts' : 'papers';
   const { error } = await supa.from(table).delete().eq('id', id);
-  if (error) toast('❌ 삭제 실패');
+  if (error) toast('❌ Delete failed');
 }
 
 // ── DB SAVE: CATEGORIES ───────────────────────────────────────────
@@ -2382,7 +2416,7 @@ async function saveCategories() {
 
 // ── DB SAVE: CV ───────────────────────────────────────────────────
 async function saveCvSections() {
-  showSaving('저장 중...');
+  showSaving('Saving...');
   const rows = cvSections.map((sec, i) => ({
     id: sec.id, title: sec.name, items: sec.entries || [], sort_order: i, layout: sec.layout || 'list'
   }));
@@ -2390,7 +2424,7 @@ async function saveCvSections() {
   if (rows.length > 0) {
     await supa.from('cv_sections').upsert(rows);
   }
-  hideSaving('✅ 저장됨');
+  hideSaving('✅ Saved');
 }
 
 async function deleteCvSection(secId) {
@@ -2399,7 +2433,7 @@ async function deleteCvSection(secId) {
 
 // ── DB SAVE: PROFILE ──────────────────────────────────────────────
 async function saveProfileToDB() {
-  showSaving('저장 중...');
+  showSaving('Saving...');
   const row = {
     id: 1,
     name: profile.name,
@@ -2419,8 +2453,8 @@ async function saveProfileToDB() {
     grid_cols: postGridCols,
   };
   const { error } = await supa.from('profile').upsert(row);
-  if (error) { hideSaving('❌ 저장 실패', 0); return; }
-  hideSaving('✅ 저장됨');
+  if (error) { hideSaving('❌ Save failed', 0); return; }
+  hideSaving('✅ Saved');
 }
 
 // ── IMAGE UPLOAD ──────────────────────────────────────────────────
@@ -2453,16 +2487,16 @@ async function uploadImageToSupabase(file, progressEl, barEl, labelEl) {
   const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
   if (progressEl) { progressEl.style.display = 'block'; }
   if (barEl) barEl.style.width = '40%';
-  if (labelEl) labelEl.textContent = '업로드 중...';
+  if (labelEl) labelEl.textContent = 'Uploading...';
   const { data, error } = await supa.storage.from('blog-images').upload(filename, compressed, {
     contentType: 'image/jpeg', upsert: false
   });
   if (error) {
     if (progressEl) progressEl.style.display = 'none';
-    toast('❌ 업로드 실패: ' + error.message); return null;
+    toast('❌ Upload failed: ' + error.message); return null;
   }
   if (barEl) barEl.style.width = '100%';
-  if (labelEl) labelEl.textContent = '✓ 완료';
+  if (labelEl) labelEl.textContent = '✓ Done';
   const { data: urlData } = supa.storage.from('blog-images').getPublicUrl(filename);
   setTimeout(() => { if (progressEl) progressEl.style.display = 'none'; }, 1200);
   return urlData.publicUrl;
@@ -2473,7 +2507,7 @@ async function uploadPdfToSupabase(file) {
   const { data, error } = await supa.storage.from('blog-images').upload(filename, file, {
     contentType: 'application/pdf', upsert: false
   });
-  if (error) { toast('❌ PDF 업로드 실패: ' + error.message); return null; }
+  if (error) { toast('❌ PDF upload failed: ' + error.message); return null; }
   const { data: urlData } = supa.storage.from('blog-images').getPublicUrl(filename);
   return urlData.publicUrl;
 }
@@ -2483,7 +2517,7 @@ let posts      = [];
 let papers     = [];
 let categories = { posts:[], paper:[] };
 let cvSections = [];
-let profile    = { name:'',handle:'',bio:'',blogName:'My Blog',github:'',email:'',avatar:'',customLinks:[],interests:[],adminPw:null,landingTitle:'생각을 기록하고,|지식을 나눕니다',landingTitleEn:'Thoughts, recorded.|Knowledge, shared.',landingDesc:'공부하면서 배운 것들, 읽은 논문들, 그리고 생각들을 정리하는 공간입니다.',landingDescEn:'A space to organize what I study, papers I read, and thoughts along the way.' };
+let profile    = { name:'',handle:'',bio:'',blogName:'My Blog',github:'',email:'',avatar:'',customLinks:[],interests:[],adminPw:null,landingTitle:'Thoughts, recorded.|Knowledge, shared.',landingTitleEn:'',landingDesc:'',landingDescEn:'' };
 
 let currentPostId   = null;
 let currentSection  = null;
@@ -2539,13 +2573,13 @@ function openPwModal() {
 async function setPw() {
   const v1=document.getElementById('set-pw1').value;
   const v2=document.getElementById('set-pw2').value;
-  if(!v1){toast('비밀번호를 입력하세요.');return;}
+  if(!v1){toast('Enter a password.');return;}
   if(v1!==v2){document.getElementById('set-pw-error').style.display='block';return;}
   // 이미 DB에 비번이 있으면 설정 불가 (다른 기기에서 설정 시도 방지)
   const {data} = await supa.from('profile').select('admin_pw').eq('id',1).single();
   if(data && data.admin_pw) {
     closeModal('modal-set-pw');
-    toast('이미 비밀번호가 설정되어 있습니다.');
+    toast('A password is already set.');
     // 로그인 모달로 전환
     profile.adminPw = data.admin_pw;
     setTimeout(openPwModal, 400);
@@ -2556,7 +2590,7 @@ async function setPw() {
   await supa.from('profile').upsert({id:1, admin_pw: hashed});
   closeModal('modal-set-pw');
   enterAdmin();
-  toast('비밀번호가 설정되었습니다.');
+  toast('Password set.');
 }
 function checkPw() {
   const input=document.getElementById('pw-input').value;
@@ -2573,7 +2607,7 @@ function enterAdmin() {
   document.getElementById('admin-controls').classList.add('visible');
   document.getElementById('btn-unlock').style.display='none';
   updateWriteBtn();
-  toast('🔓 편집 모드');
+  toast('🔓 Edit mode');
   renderCurrentPage();
 }
 function lockAdmin() {
@@ -2581,7 +2615,7 @@ function lockAdmin() {
   document.body.classList.remove('admin-mode');
   document.getElementById('admin-controls').classList.remove('visible');
   document.getElementById('btn-unlock').style.display='';
-  toast('🔒 잠금');
+  toast('🔒 Locked');
   renderCurrentPage();
 }
 function updateWriteBtn() {
@@ -2619,7 +2653,8 @@ function renderCurrentPage() {
 
 
 // ── LANGUAGE ──────────────────────────────────────────────────────
-let currentLang = localStorage.getItem('blog_lang') || 'ko';
+// 사이트 전체를 영어로 고정 (KO/EN 토글 숨김)
+let currentLang = 'en';
 
 function setLang(lang) {
   currentLang = lang;
@@ -2640,8 +2675,9 @@ function renderLanding() {
   // Hero title & desc from profile (bilingual)
   const titleEl = document.getElementById('landing-title-text');
   if (titleEl) {
-    const koTitle = profile.landingTitle || '생각을 기록하고,|지식을 나눕니다';
-    const enTitle = profile.landingTitleEn || 'Thoughts, recorded.|Knowledge, shared.';
+    const koTitle = profile.landingTitle || 'Thoughts, recorded.|Knowledge, shared.';
+    // 영어 타이틀이 비어 있으면 기존(한국어 칸) 타이틀을 그대로 사용
+    const enTitle = profile.landingTitleEn || profile.landingTitle || 'Thoughts, recorded.|Knowledge, shared.';
     const raw = currentLang === 'en' ? enTitle : koTitle;
     const parts = raw.split('|');
     titleEl.innerHTML = parts.map((p,i) =>
@@ -2666,7 +2702,7 @@ function renderLanding() {
     else avEl.textContent = profile.name ? profile.name[0].toUpperCase() : '?';
   }
   const nameEl = document.getElementById('landing-author-name');
-  if (nameEl) nameEl.textContent = profile.name || '이름을 설정하세요';
+  if (nameEl) nameEl.textContent = profile.name || 'Set your name';
   const handleEl = document.getElementById('landing-author-handle');
   if (handleEl) handleEl.textContent = '@' + (profile.handle || 'handle');
   const bioEl = document.getElementById('landing-author-bio');
@@ -2687,7 +2723,7 @@ function renderLanding() {
   const el = document.getElementById('landing-recent');
   if (!el) return;
   if (!recent.length) {
-    el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 0;font-size:.8rem;color:var(--s400)">아직 작성된 글이 없습니다.</div>';
+    el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 0;font-size:.8rem;color:var(--s400)">No posts yet.</div>';
     return;
   }
   el.innerHTML = recent.map(p => {
@@ -2713,7 +2749,7 @@ function goBack() {
 // ── HOME ──────────────────────────────────────────────────────────
 function renderHome() {
   // Profile sidebar
-  document.getElementById('home-name').textContent   = profile.name||'이름을 설정하세요';
+  document.getElementById('home-name').textContent   = profile.name||'Set your name';
   document.getElementById('home-handle').textContent = '@'+(profile.handle||'handle');
   document.getElementById('home-bio').innerHTML    = esc(profile.bio||'').replace(/\|/g,'<br>');
   document.getElementById('nav-blog-name').textContent  = profile.blogName||'My Blog';
@@ -2728,7 +2764,7 @@ function renderHome() {
   if(profile.github) linkItems.push(`<a class="link-item" href="${esc(profile.github)}" target="_blank"><span class="link-icon">GH</span>${esc(profile.github.replace('https://github.com/','@'))}</a>`);
   if(profile.email)  linkItems.push(`<a class="link-item" href="mailto:${esc(profile.email)}"><span class="link-icon">@</span>${esc(profile.email)}</a>`);
   (profile.customLinks||[]).forEach(l=>{ if(l.url) linkItems.push(`<a class="link-item" href="${esc(l.url)}" target="_blank"><span class="link-icon">${esc((l.label||'🔗').slice(0,3))}</span>${esc(l.label||l.url)}</a>`); });
-  linksEl.innerHTML=linkItems.length?linkItems.join(''):'<span style="font-size:.72rem;color:var(--s400)">링크 없음</span>';
+  linksEl.innerHTML=linkItems.length?linkItems.join(''):'<span style="font-size:.72rem;color:var(--s400)">No links</span>';
   document.getElementById('home-links-card').style.display=linkItems.length||isAdmin?'block':'none';
 
   // Research Interests
@@ -2738,7 +2774,7 @@ function renderHome() {
   if(interestsEl) {
     interestsEl.innerHTML=interests.length
       ? interests.map(it=>`<span class="interest-chip">${it.icon?`<span class="interest-icon">${esc(it.icon)}</span>`:''} ${esc(it.label)}</span>`).join('')
-      : (isAdmin?'<span style="font-size:.72rem;color:var(--s400)">수정 버튼으로 추가하세요</span>':'');
+      : (isAdmin?'<span style="font-size:.72rem;color:var(--s400)">Add them with the edit button</span>':'');
   }
   if(interestsCard) interestsCard.style.display=interests.length||isAdmin?'block':'none';
 
@@ -2774,20 +2810,20 @@ const layout = sec.layout || 'list';
         </div>
         <div class="cv-section-actions">
 ${isAdmin ? `<div class="layout-toggle">
-            <button class="layout-btn ${layout==='list'?'active':''}" onclick="setSecLayout('${sec.id}','list')" title="목록">≡</button>
-            <button class="layout-btn ${layout==='2'?'active':''}" onclick="setSecLayout('${sec.id}','2')" title="2열">⊟</button>
-            <button class="layout-btn ${layout==='grid'?'active':''}" onclick="setSecLayout('${sec.id}','grid')" title="3열">⊞</button>
-            <button class="layout-btn ${layout==='4'?'active':''}" onclick="setSecLayout('${sec.id}','4')" title="4열">⊟⊟</button>
+            <button class="layout-btn ${layout==='list'?'active':''}" onclick="setSecLayout('${sec.id}','list')" title="List">≡</button>
+            <button class="layout-btn ${layout==='2'?'active':''}" onclick="setSecLayout('${sec.id}','2')" title="2 columns">⊟</button>
+            <button class="layout-btn ${layout==='grid'?'active':''}" onclick="setSecLayout('${sec.id}','grid')" title="3 columns">⊞</button>
+            <button class="layout-btn ${layout==='4'?'active':''}" onclick="setSecLayout('${sec.id}','4')" title="4 columns">⊟⊟</button>
           </div>` : ''}
-          <button class="btn-sm admin-only" onclick="openAddEntry('${sec.id}')">+ 항목 추가</button>
+          <button class="btn-sm admin-only" onclick="openAddEntry('${sec.id}')">+ Add Entry</button>
           <button class="btn-sm admin-only" onclick="openEditSection('${sec.id}')">✎</button>
           <button class="btn-sm danger admin-only" onclick="askDeleteCvSection('${sec.id}')">✕</button>
         </div>
       </div>`;
     if (!sec.entries || !sec.entries.length) {
       html += `<div style="font-size:.78rem;color:var(--s400);padding:10px 0">
-        항목이 없습니다.
-        <span class="admin-only" style="color:var(--blue);cursor:pointer" onclick="openAddEntry('${sec.id}')"> + 추가</span>
+        No entries yet.
+        <span class="admin-only" style="color:var(--blue);cursor:pointer" onclick="openAddEntry('${sec.id}')"> + Add</span>
       </div>`;
     } else {
       const gridCols = layout==='2'?2 : layout==='grid'?3 : layout==='4'?4 : null;
@@ -2843,10 +2879,10 @@ ${isAdmin ? `<div class="layout-toggle">
     html += `</div>`;
   });
 
-  html += `<button class="btn-add-section admin-only" onclick="openAddSection()">+ 새 섹션 추가</button>`;
+  html += `<button class="btn-add-section admin-only" onclick="openAddSection()">+ Add Section</button>`;
 
   if (!cvSections.length && !isAdmin) {
-    html = `<div class="empty-state"><div class="empty-icon">📋</div><h3>아직 내용이 없습니다</h3></div>`;
+    html = `<div class="empty-state"><div class="empty-icon">📋</div><h3>Nothing here yet</h3></div>`;
   }
 
   area.innerHTML = html;
@@ -2937,7 +2973,7 @@ function onDragEnd() {
 // ── CV SECTION CRUD ───────────────────────────────────────────────
 function openAddSection() {
   editingSectionId=null;
-  document.getElementById('add-section-title').textContent='새 섹션 추가';
+  document.getElementById('add-section-title').textContent='Add Section';
   document.getElementById('inp-section-name').value='';
   document.getElementById('modal-add-section').style.display='flex';
   setTimeout(()=>document.getElementById('inp-section-name').focus(),100);
@@ -2946,13 +2982,13 @@ function openEditSection(secId) {
   const sec=cvSections.find(s=>s.id===secId);
   if(!sec) return;
   editingSectionId=secId;
-  document.getElementById('add-section-title').textContent='섹션 이름 수정';
+  document.getElementById('add-section-title').textContent='Rename Section';
   document.getElementById('inp-section-name').value=sec.name;
   document.getElementById('modal-add-section').style.display='flex';
 }
 function saveSection() {
   const name=document.getElementById('inp-section-name').value.trim();
-  if(!name){toast('이름을 입력하세요.');return;}
+  if(!name){toast('Enter a name.');return;}
   if(editingSectionId) {
     const s=cvSections.find(x=>x.id===editingSectionId);
     if(s) s.name=name;
@@ -2965,7 +3001,7 @@ function saveSection() {
 // ── CV ENTRY CRUD ─────────────────────────────────────────────────
 function openAddEntry(secId) {
   editingEntrySectionId=secId; editingEntryId=null;
-  document.getElementById('add-entry-title').textContent='항목 추가';
+  document.getElementById('add-entry-title').textContent='Add Entry';
   ['inp-entry-title','inp-entry-sub','inp-entry-date','inp-entry-desc','inp-entry-tags','inp-entry-link-label','inp-entry-link-url','inp-entry-icon'].forEach(id=>document.getElementById(id).value='');
   selectEntryStyle('default', document.querySelector('.entry-style-opt[data-style="default"]'));
   selectHeight('auto', document.querySelector('.height-btn[data-height="auto"]'));
@@ -2980,7 +3016,7 @@ function openEditEntry(secId,entryId) {
   const entry=sec&&sec.entries.find(e=>e.id===entryId);
   if(!entry) return;
   editingEntrySectionId=secId; editingEntryId=entryId;
-  document.getElementById('add-entry-title').textContent='항목 수정';
+  document.getElementById('add-entry-title').textContent='Edit Entry';
   document.getElementById('inp-entry-title').value=entry.title||'';
   document.getElementById('inp-entry-sub').value=entry.sub||'';
   document.getElementById('inp-entry-date').value=entry.date||'';
@@ -3003,7 +3039,7 @@ function openEditEntry(secId,entryId) {
 }
 function saveEntry() {
   const title=document.getElementById('inp-entry-title').value.trim();
-  if(!title){toast('제목을 입력하세요.');return;}
+  if(!title){toast('Enter a title.');return;}
   const sub  =document.getElementById('inp-entry-sub').value.trim();
   const date =document.getElementById('inp-entry-date').value.trim();
   const desc =document.getElementById('inp-entry-desc').value.trim();
@@ -3135,10 +3171,10 @@ function renderFolderNode(node, list, section, fc, level) {
       <span class="folder-icon">${isOpen?'📂':'📁'}</span>
       <span class="folder-name">${esc(node.name)}</span>
       <span class="folder-count">${cnt}</span>
-      <button class="folder-add-sub" title="하위 폴더 추가" onclick="event.stopPropagation();addSubFolder('${section}','${escapedPath.replace(/'/g,"\\'")}')">+</button>
+      <button class="folder-add-sub" title="Add subfolder" onclick="event.stopPropagation();addSubFolder('${section}','${escapedPath.replace(/'/g,"\\'")}')">+</button>
       <div class="folder-mgmt" onclick="event.stopPropagation()">
-        <button class="folder-mgmt-btn" title="이름 변경" onclick="renameFolderCat('${section}','${path.replace(/'/g,"\\'")}')">✎</button>
-        <button class="folder-mgmt-btn danger" title="폴더 삭제" onclick="deleteFolderCat('${section}','${path.replace(/'/g,"\\'")}')">✕</button>
+        <button class="folder-mgmt-btn" title="Rename" onclick="renameFolderCat('${section}','${path.replace(/'/g,"\\'")}')">✎</button>
+        <button class="folder-mgmt-btn danger" title="Delete folder" onclick="deleteFolderCat('${section}','${path.replace(/'/g,"\\'")}')">✕</button>
       </div>
     </div>`;
 
@@ -3180,7 +3216,7 @@ function buildFilterSidebar(containerId, section) {
     <div class="sec-label" style="margin-bottom:8px">Categories</div>
     <div class="folder-root-dropzone" id="folder-root-dz-${section}"
       ondragover="dndOverRoot(event,'${section}')" ondragleave="dndLeaveRoot(event,'${section}')" ondrop="dndDropRoot(event,'${section}')">
-      ↑ 최상위로 이동
+      ↑ Move to top level
     </div>
     <div class="folder-all ${!fc?'active':''}" onclick="setCatFilter('${section}',null)">
       <span class="folder-all-icon">🗂</span>
@@ -3194,7 +3230,7 @@ function buildFilterSidebar(containerId, section) {
       html += renderFolderNode(node, list, section, fc, 1);
     });
   } else {
-    html+=`<div style="font-size:.75rem;color:var(--s400);padding:8px">카테고리 없음</div>`;
+    html+=`<div style="font-size:.75rem;color:var(--s400);padding:8px">No categories</div>`;
   }
 
   html+=`</div>`;
@@ -3220,7 +3256,7 @@ function toggleFolder(section, path) {
 
 function addSubFolder(section, parentPath) {
   if (!isAdmin) return;
-  const name = prompt(`"${parentPath}" 아래 새 폴더 이름:`);
+  const name = prompt(`New folder name under "${parentPath}":`);
   if (!name || !name.trim()) return;
   const newPath = parentPath + '/' + name.trim();
   if (!categories[section]) categories[section] = [];
@@ -3228,7 +3264,7 @@ function addSubFolder(section, parentPath) {
     categories[section].push(newPath);
     save(); saveCategories();
     section === 'posts' ? renderPostsPage() : renderPaperPage();
-    toast('폴더 추가됨');
+    toast('Folder added');
   }
 }
 
@@ -3247,7 +3283,7 @@ function renderPostsPage() {
   const gridCls=cols>1?`posts-grid-wrap cols-${cols}`:'posts-grid-wrap';
   document.getElementById('posts-list').innerHTML=list.length
     ?`<div class="${gridCls}">`+list.map(p=>postCardHTML(p,'posts')).join('')+`</div>`
-    :`<div class="empty-state"><div class="empty-icon">✍️</div><h3>글이 없습니다</h3></div>`;
+    :`<div class="empty-state"><div class="empty-icon">✍️</div><h3>No posts</h3></div>`;
 }
 function renderPaperPage() {
   buildFilterSidebar('paper-filter-sidebar','paper');
@@ -3264,7 +3300,7 @@ function renderPaperPage() {
   const gridCls=cols>1?`posts-grid-wrap cols-${cols}`:'posts-grid-wrap';
   document.getElementById('paper-list').innerHTML=list.length
     ?`<div class="${gridCls}">`+list.map(p=>postCardHTML(p,'paper')).join('')+`</div>`
-    :`<div class="empty-state"><div class="empty-icon">📄</div><h3>리뷰가 없습니다</h3></div>`;
+    :`<div class="empty-state"><div class="empty-icon">📄</div><h3>No reviews</h3></div>`;
 }
 
 async function setPostCols(section, cols) {
@@ -3280,7 +3316,7 @@ function renderColBtns(section) {
   const cur = postGridCols[section];
   el.innerHTML = [1,2,3,4].map(n => {
     const icons = ['▬','⊟','⊞','⊟⊟'];
-    return `<button class="col-btn ${cur===n?'active':''}" onclick="setPostCols('${section}',${n})" title="${n}열">${icons[n-1]}</button>`;
+    return `<button class="col-btn ${cur===n?'active':''}" onclick="setPostCols('${section}',${n})" title="${n} columns">${icons[n-1]}</button>`;
   }).join('');
 }
 
@@ -3366,7 +3402,7 @@ function saveInterests() {
   }).filter(Boolean);
   save(); saveProfileToDB();
   closeModal('modal-interests');
-  renderHome(); toast('저장되었습니다.');
+  renderHome(); toast('Saved.');
 }
 
 // ── CUSTOM LINKS ─────────────────────────────────────────────────
@@ -3375,7 +3411,7 @@ function renderCustomLinkInputs(links) {
   if(!wrap) return;
   wrap.innerHTML = (links||[]).map((l,i)=>`
     <div class="custom-link-row" id="clr-${i}">
-      <input class="form-input" style="width:32%" placeholder="이름 (예: LinkedIn)" value="${esc(l.label||'')}" data-ci="${i}" data-field="label">
+      <input class="form-input" style="width:32%" placeholder="Name (e.g. LinkedIn)" value="${esc(l.label||'')}" data-ci="${i}" data-field="label">
       <input class="form-input" style="flex:1" placeholder="https://..." value="${esc(l.url||'')}" data-ci="${i}" data-field="url">
       <button class="custom-link-del" onclick="removeCustomLinkRow(${i})">×</button>
     </div>`).join('');
@@ -3477,7 +3513,7 @@ async function openPost(id,section) {
   if(shareBtn){
     const shareUrl=location.origin+location.pathname+'#'+section+'/'+id;
     shareBtn.onclick=function(){
-      navigator.clipboard.writeText(shareUrl).then(()=>toast('🔗 링크가 복사됐습니다!')).catch(()=>toast(shareUrl));
+      navigator.clipboard.writeText(shareUrl).then(()=>toast('🔗 Link copied!')).catch(()=>toast(shareUrl));
     };
   }
   renderPaperMeta(p, section);
@@ -3489,10 +3525,10 @@ async function openPost(id,section) {
 
   const bodyEl=document.getElementById('article-body');
   if(!p.body) {
-    bodyEl.innerHTML='<div style="color:var(--s400);font-size:.85rem;padding:20px 0">불러오는 중...</div>';
+    bodyEl.innerHTML='<div style="color:var(--s400);font-size:.85rem;padding:20px 0">Loading...</div>';
     const table=section==='posts'?'posts':'papers';
     const {data,error}=await supa.from(table).select('content').eq('id',id).single();
-    if(error||!data){ bodyEl.innerHTML='<div style="color:#ef4444">불러오기 실패</div>'; return; }
+    if(error||!data){ bodyEl.innerHTML='<div style="color:#ef4444">Failed to load</div>'; return; }
     p.body=data.content;
   }
   bodyEl.innerHTML=parseMd((p.body||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n'));
@@ -3515,7 +3551,7 @@ function openWrite(sectionHint) {
   else editingSection='posts';
   document.getElementById('editor-title').value='';
   LPE.setValue('');
-  document.getElementById('editor-mode-label').textContent='새 글 작성';
+  document.getElementById('editor-mode-label').textContent='New Post';
   clearPaperFields();
   selectSection(editingSection,document.getElementById('sec-btn-'+editingSection));
   renderEditorCats(); renderEditorTags();
@@ -3536,10 +3572,10 @@ async function openEdit(id,section) {
   if(!p) return;
   editingPostId=id; editingSection=section; editorTags=[...(p.tags||[])]; editorCat=p.cat||'';
   document.getElementById('editor-title').value=p.title;
-  document.getElementById('editor-mode-label').textContent='글 수정 중';
+  document.getElementById('editor-mode-label').textContent='Editing Post';
   // 본문 캐시 없으면 fetch
   if(!p.body) {
-    LPE.setValue('불러오는 중...');
+    LPE.setValue('Loading...');
     const table=section==='posts'?'posts':'papers';
     const {data}=await supa.from(table).select('content').eq('id',id).single();
     if(data){ p.body=data.content; }
@@ -3623,10 +3659,10 @@ async function draftSaveNow() {
   if (draftSaving) return;
   const d = draftGetFields();
   if (!d.title.trim() && !d.body.trim()) {
-    draftSetStatus('', '내용 없음 — 저장 건너뜀'); return;
+    draftSetStatus('', 'Empty — skipped saving'); return;
   }
   draftSaving = true;
-  draftSetStatus('saving', '저장 중...');
+  draftSetStatus('saving', 'Saving...');
   try {
     const now = new Date().toISOString();
     let error;
@@ -3642,12 +3678,12 @@ async function draftSaveNow() {
     if (error) throw error;
     const t  = new Date();
     const ts = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}:${t.getSeconds().toString().padStart(2,'0')}`;
-    draftSetStatus('saved', `저장됨 ${ts}`);
+    draftSetStatus('saved', `Saved ${ts}`);
     draftDirty = false;
     setTimeout(() => { const dot=document.getElementById('draft-dot'); if(dot) dot.classList.remove('saved'); }, 2000);
   } catch(e) {
     console.error('draft save error:', e);
-    draftSetStatus('', '저장 실패: ' + (e.message || e));
+    draftSetStatus('', 'Save failed: ' + (e.message || e));
   } finally {
     draftSaving = false;
   }
@@ -3678,7 +3714,7 @@ function draftStopWatcher() {
 
 // 에디터 초기화 (새 글)
 function draftClear() {
-  if (!confirm('작성 중인 내용을 모두 지우시겠습니까?')) return;
+  if (!confirm('Clear everything you have written?')) return;
   document.getElementById('editor-title').value = '';
   LPE.setValue('');
   editorCat=''; editorTags=[];
@@ -3688,7 +3724,7 @@ function draftClear() {
   });
   currentDraftId = null;
   draftDirty = false;
-  draftSetStatus('', '초기화됨');
+  draftSetStatus('', 'Cleared');
 }
 
 // 목록 패널 열기
@@ -3696,19 +3732,19 @@ async function draftOpenPanel() {
   const panel = document.getElementById('draft-list-panel');
   const items = document.getElementById('draft-list-items');
   if (!panel || !items) return;
-  items.innerHTML = '<div class="draft-list-empty">불러오는 중...</div>';
+  items.innerHTML = '<div class="draft-list-empty">Loading...</div>';
   panel.classList.add('show');
   try {
     const { data, error } = await supa.from('drafts').select('id, data, updated_at').order('updated_at', { ascending: false });
     if (error) throw error;
     if (!data || !data.length) {
-      items.innerHTML = '<div class="draft-list-empty">저장된 임시글이 없습니다.</div>'; return;
+      items.innerHTML = '<div class="draft-list-empty">No saved drafts.</div>'; return;
     }
     items.innerHTML = data.map(row => {
       const d   = row.data || {};
       const t   = new Date(row.updated_at);
       const ts  = `${t.getFullYear()}.${(t.getMonth()+1).toString().padStart(2,'0')}.${t.getDate().toString().padStart(2,'0')} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
-      const ttl = d.title?.trim() || '(제목 없음)';
+      const ttl = d.title?.trim() || '(Untitled)';
       const sec = d.section === 'paper' ? '📄 Papers' : '✍️ Posts';
       return `<div class="draft-item">
         <div class="draft-item-left">
@@ -3716,14 +3752,14 @@ async function draftOpenPanel() {
           <div class="draft-item-meta">${sec} · ${ts}</div>
         </div>
         <div class="draft-item-right">
-          <button class="btn-draft-restore" onclick="draftLoadRow(${row.id})">불러오기</button>
+          <button class="btn-draft-restore" onclick="draftLoadRow(${row.id})">Load</button>
           <button class="btn-draft-discard" onclick="draftDeleteRow(${row.id}, this)">✕</button>
         </div>
       </div>`;
     }).join('');
   } catch(e) {
     console.error('draft list error:', e);
-    items.innerHTML = `<div class="draft-list-empty">불러오기 실패: ${e.message||e}</div>`;
+    items.innerHTML = `<div class="draft-list-empty">Failed to load: ${e.message||e}</div>`;
   }
 }
 
@@ -3735,13 +3771,13 @@ function draftClosePanel() {
 async function draftLoadRow(id) {
   try {
     const { data, error } = await supa.from('drafts').select('data').eq('id', id).single();
-    if (error || !data) { toast('불러오기 실패'); return; }
+    if (error || !data) { toast('Failed to load'); return; }
     draftSetFields(data.data);
     currentDraftId = id; // 이 draft를 계속 수정
     draftClosePanel();
-    toast('임시저장을 불러왔습니다.');
-    draftSetStatus('', '임시저장 복원됨');
-  } catch(e) { console.error('draft load error:', e); toast('불러오기 실패: ' + (e.message || e)); }
+    toast('Draft loaded.');
+    draftSetStatus('', 'Draft restored');
+  } catch(e) { console.error('draft load error:', e); toast('Failed to load: ' + (e.message || e)); }
 }
 
 async function draftDeleteRow(id, btn) {
@@ -3750,7 +3786,7 @@ async function draftDeleteRow(id, btn) {
   if (currentDraftId === id) currentDraftId = null;
   // 목록 새로고침
   draftOpenPanel();
-  toast('임시저장 삭제됨');
+  toast('Draft deleted');
 }
 
 // 글쓰기 열 때 draft 개수 표시
@@ -3758,7 +3794,7 @@ async function draftCheckRestore() {
   try {
     const { count } = await supa.from('drafts').select('id', { count: 'exact', head: true });
     if (!count) return;
-    draftSetStatus('', `임시저장 ${count}개 — 목록 버튼으로 확인`);
+    draftSetStatus('', `${count} saved draft(s) — see the Drafts button`);
   } catch(e) {}
 }
 
@@ -3769,15 +3805,15 @@ async function draftClearAfterPublish() {
     await supa.from('drafts').delete().eq('id', currentDraftId);
     currentDraftId = null;
   }
-  draftSetStatus('', '발행 완료 — 임시저장 삭제됨');
+  draftSetStatus('', 'Published — draft deleted');
 }
 // ────────────────────────────────────────────────────────────────
 
 function publishPost() {
   const title=document.getElementById('editor-title').value.trim();
   const body=LPE.getValue().trim();
-  if(!title){toast('제목을 입력하세요.');return;}
-  if(!body){toast('본문을 입력하세요.');return;}
+  if(!title){toast('Enter a title.');return;}
+  if(!body){toast('Enter some content.');return;}
   const list=editingSection==='posts'?posts:papers;
 
   if(editingPostId!==null) {
@@ -3789,7 +3825,7 @@ function publishPost() {
     
     savePost(updated, editingSection).then(ok=>{
       if(ok){
-        toast('수정되었습니다.');
+        toast('Updated.');
         draftClearAfterPublish();
         // 수정 완료 후 즉각적인 UI 반영을 위한 렌더링 호출
         if(editingSection === 'posts') renderPostsPage();
@@ -3812,7 +3848,7 @@ function publishPost() {
     
     savePost(np, editingSection).then(ok=>{
       if(ok){
-        toast('발행되었습니다.');
+        toast('Published.');
         draftClearAfterPublish();
         // 발행 완료 후 즉각적인 UI 반영을 위한 렌더링 호출
         if(editingSection === 'posts') renderPostsPage();
@@ -3846,7 +3882,7 @@ function renderEditorCats() {
     const prefix = depth > 0 ? '<span style="color:var(--s300);font-size:.6rem;margin-right:3px">└</span>' : '';
     return `<span class="cat-sel-wrap" ${indent}>
       ${prefix}<button class="cat-sel-btn ${editorCat===c?'sel':''}" onclick="selectCat('${esc(c)}')" title="${esc(c)}">${esc(label)}</button>
-      <button class="cat-del-btn" onclick="deleteCat('${esc(c)}')" title="삭제">×</button>
+      <button class="cat-del-btn" onclick="deleteCat('${esc(c)}')" title="Delete">×</button>
     </span>`;
   }).join('');
 }
@@ -3864,12 +3900,12 @@ async function deleteCat(cat){
   if(editorCat===cat) editorCat='';
   save(); renderEditorCats();
   await supa.from('categories').delete().eq('id', editingSection+'_'+cat);
-  toast('카테고리 삭제됨');
+  toast('Category deleted');
 }
 
 // ── FOLDER RENAME / DELETE (사이드바용) ───────────────────────────
 async function renameFolderCat(section, oldPath) {
-  const newName = prompt(`"${oldPath}" 폴더 이름 변경:`, oldPath.split('/').pop());
+  const newName = prompt(`Rename folder "${oldPath}":`, oldPath.split('/').pop());
   if (!newName || !newName.trim()) return;
   const parts = oldPath.split('/');
   parts[parts.length - 1] = newName.trim();
@@ -3895,11 +3931,11 @@ async function renameFolderCat(section, oldPath) {
     await supa.from(section === 'posts' ? 'posts' : 'papers').update({ cat: p.cat }).eq('id', p.id);
   }
   section === 'posts' ? renderPostsPage() : renderPaperPage();
-  toast('폴더 이름 변경됨');
+  toast('Folder renamed');
 }
 
 async function deleteFolderCat(section, path) {
-  if (!confirm(`"${path}" 폴더를 삭제할까요?\n글은 삭제되지 않으며, 해당 글들은 미분류 상태가 됩니다.`)) return;
+  if (!confirm(`Delete folder "${path}"?\nPosts are kept and become uncategorized.`)) return;
   const cats = categories[section] || [];
   // 이 폴더와 하위 폴더 카테고리 모두 제거
   const removed = cats.filter(c => c === path || c.startsWith(path + '/'));
@@ -3923,7 +3959,7 @@ async function deleteFolderCat(section, path) {
     await supa.from('categories').delete().eq('id', section + '_' + c);
   }
   section === 'posts' ? renderPostsPage() : renderPaperPage();
-  toast(`폴더 삭제됨 (글 ${affected.length}개는 미분류로 이동)`);
+  toast(`Folder deleted (${affected.length} post(s) moved to Uncategorized)`);
 }
 
 // ── FOLDER DRAG-AND-DROP ──────────────────────────────────────────
@@ -4010,7 +4046,7 @@ async function moveFolderTo(section, srcPath, targetPath, pos) {
   }
 
   if (newPath === srcPath) return;
-  if (cats.includes(newPath)) { toast('같은 이름의 폴더가 이미 있어요'); return; }
+  if (cats.includes(newPath)) { toast('A folder with that name already exists'); return; }
 
   // 경로 재매핑: srcPath/* → newPath/*
   const remap = old => {
@@ -4046,7 +4082,7 @@ async function moveFolderTo(section, srcPath, targetPath, pos) {
     await supa.from(section === 'posts' ? 'posts' : 'papers').update({ cat: p.cat }).eq('id', p.id);
   }
   section === 'posts' ? renderPostsPage() : renderPaperPage();
-  toast('폴더 이동됨');
+  toast('Folder moved');
 }
 
 // ── 뷰 모드 토글 ─────────────────────────────────────────────────
@@ -4071,7 +4107,7 @@ function renderGroupedPosts(fullList, section, cols) {
   const uncategorized = fullList.filter(p => !p.cat || !cats.some(c => c === p.cat));
 
   if (!tree.length && !uncategorized.length)
-    return `<div class="empty-state"><div class="empty-icon">✍️</div><h3>글이 없습니다</h3></div>`;
+    return `<div class="empty-state"><div class="empty-icon">✍️</div><h3>No posts</h3></div>`;
 
   // 루트 폴더 카드 그리드
   let folderGrid = `<div class="folder-grid">`;
@@ -4083,15 +4119,15 @@ function renderGroupedPosts(fullList, section, cols) {
     folderGrid += `<div class="folder-grid-card${isOpen?' active':''}" onclick="togglePostGroup('${section}','${sp}')">
       <span class="folder-grid-icon">${isOpen?'📂':'📁'}</span>
       <div class="folder-grid-name">${esc(node.name)}</div>
-      <span class="folder-grid-count">${cnt}개</span>
+      <span class="folder-grid-count">${cnt}</span>
     </div>`;
   });
   if (uncategorized.length) {
     const isOpen = !!postGroupOpen[section]['__none__'];
     folderGrid += `<div class="folder-grid-card${isOpen?' active':''}" style="border-color:var(--s200)" onclick="togglePostGroup('${section}','__none__')">
       <span class="folder-grid-icon">${isOpen?'📂':'📁'}</span>
-      <div class="folder-grid-name" style="color:var(--s600)">미분류</div>
-      <span class="folder-grid-count" style="background:var(--s100);border-color:var(--s200);color:var(--s500)">${uncategorized.length}개</span>
+      <div class="folder-grid-name" style="color:var(--s600)">Uncategorized</div>
+      <span class="folder-grid-count" style="background:var(--s100);border-color:var(--s200);color:var(--s500)">${uncategorized.length}</span>
     </div>`;
   }
   folderGrid += `</div>`;
@@ -4115,7 +4151,7 @@ function renderGroupedPosts(fullList, section, cols) {
         expandHtml += `<div class="subfolder-card${cOpen?' active':''}" onclick="togglePostGroup('${section}','${csp}')">
           <span class="subfolder-icon">${cOpen?'📂':'📁'}</span>
           <div class="subfolder-name">${esc(child.name)}</div>
-          <div class="subfolder-count">${ccnt}개</div>
+          <div class="subfolder-count">${ccnt}</div>
         </div>`;
       });
       expandHtml += `</div>`;
@@ -4136,7 +4172,7 @@ function renderGroupedPosts(fullList, section, cols) {
   // 미분류 열린 경우
   if (postGroupOpen[section]['__none__'] && uncategorized.length) {
     expandHtml += `<div class="folder-expand-wrap">
-      <div class="folder-expand-label">📂 미분류</div>
+      <div class="folder-expand-label">📂 Uncategorized</div>
       <div class="${gridCls}">${uncategorized.map(p=>postCardHTML(p,section)).join('')}</div>
     </div>`;
   }
@@ -4554,14 +4590,14 @@ function saveProfile(){
   profile.github         =document.getElementById('inp-github').value.trim();
   profile.email          =document.getElementById('inp-email').value.trim();
   profile.customLinks = collectCustomLinks();
-  profile.landingTitle   =document.getElementById('inp-landing-title').value.trim()||'생각을 기록하고,|지식을 나눕니다';
+  profile.landingTitle   =document.getElementById('inp-landing-title').value.trim()||'Thoughts, recorded.|Knowledge, shared.';
   profile.landingTitleEn =document.getElementById('inp-landing-title-en').value.trim()||'Thoughts, recorded.|Knowledge, shared.';
   profile.landingDesc    =document.getElementById('inp-landing-desc').value.trim();
   profile.landingDescEn  =document.getElementById('inp-landing-desc-en').value.trim();
   save();closeModal('modal-profile');
   document.getElementById('nav-blog-name').textContent=profile.blogName||'My Blog';
   saveProfileToDB();
-  renderHome();renderLanding();toast('저장되었습니다.');
+  renderHome();renderLanding();toast('Saved.');
 }
 function openAvatarEdit(){
   if(!isAdmin) return;
@@ -4573,19 +4609,19 @@ function openAvatarEdit(){
     reader.onload=ev=>{ profile.avatar=ev.target.result; renderHome(); };
     reader.readAsDataURL(f);
     // Supabase Storage 업로드
-    toast('⏳ 업로드 중...');
+    toast('⏳ Uploading...');
     const ext=f.name.split('.').pop();
     const filename=`avatar/profile_${Date.now()}.${ext}`;
     const {data,error}=await supa.storage.from('blog-images').upload(filename,f,{upsert:true,contentType:f.type});
     if(error){
       // storage 없으면 base64 fallback으로 DB 저장
       profile.avatar=profile.avatar; // 이미 base64로 set됨
-      save(); saveProfileToDB(); toast('사진 변경됨 (로컬).');
+      save(); saveProfileToDB(); toast('Photo changed (local).');
       return;
     }
     const {data:urlData}=supa.storage.from('blog-images').getPublicUrl(filename);
     profile.avatar=urlData.publicUrl;
-    save(); saveProfileToDB(); renderHome(); toast('✅ 사진 변경됨.');
+    save(); saveProfileToDB(); renderHome(); toast('✅ Photo changed.');
   };
   inp.click();
 }
@@ -4604,7 +4640,7 @@ function confirmDelete(){
     const sec=cvSections.find(s=>s.id===deleteExtra);
     if(sec) sec.entries=sec.entries.filter(e=>e.id!==deleteTargetId);
   }
-  save();closeModal('modal-delete');toast('삭제되었습니다.');
+  save();closeModal('modal-delete');toast('Deleted.');
   
   // UI 즉각 갱신 로직 추가
   if(deleteType==='post') { deletePost(deleteTargetId,'posts'); showSection('posts'); renderPostsPage(); }
@@ -4683,7 +4719,7 @@ function parseMd(md){
       parts.push(`<div class="media-video-wrap"><iframe src="${mm[1]}" allowfullscreen></iframe>${mm[2]?`<div class="media-caption">${mm[2]}</div>`:''}</div>`);continue;
     }
     if((mm=raw.match(/^%%PDF%%([^%]+)%%([^%]*)%%/))){
-      parts.push(`<div class="media-pdf-wrap"><a class="media-pdf-link" href="#" onclick="openPdf('${mm[1].length>100?'blob':mm[1]}',${JSON.stringify(mm[1])});return false;"><span class="media-pdf-icon">📄</span>${mm[2]}<span style="font-size:.65rem;color:var(--s400);margin-left:8px">새 탭에서 열기 ↗</span></a></div>`);continue;
+      parts.push(`<div class="media-pdf-wrap"><a class="media-pdf-link" href="#" onclick="openPdf('${mm[1].length>100?'blob':mm[1]}',${JSON.stringify(mm[1])});return false;"><span class="media-pdf-icon">📄</span>${mm[2]}<span style="font-size:.65rem;color:var(--s400);margin-left:8px">Open in new tab ↗</span></a></div>`);continue;
     }
     // Heading
     const hm=raw.match(/^(#{1,6}) +(.*)/);
@@ -4717,7 +4753,7 @@ function insertMedia(type) {
   ['image','video','pdf','link'].forEach(t => {
     document.getElementById('media-' + t).style.display = t === type ? 'block' : 'none';
   });
-  const titles = { image:'🖼 사진 삽입', video:'🎬 동영상 삽입', pdf:'📄 PDF 삽입', link:'🔗 링크 삽입' };
+  const titles = { image:'🖼 Insert Image', video:'🎬 Insert Video', pdf:'📄 Insert PDF', link:'🔗 Insert Link' };
   document.getElementById('media-modal-title').textContent = titles[type];
   // reset
   document.getElementById('media-url-inp').value = '';
@@ -4768,9 +4804,9 @@ function onPdfUrlInput(url) {
   url = url.trim();
   if (!url) { preview.style.display = 'none'; return; }
   let hint = url;
-  if (/arxiv\.org\/abs\//.test(url)) hint = '📄 arXiv 논문 — PDF로 자동 변환됩니다';
-  else if (/drive\.google\.com/.test(url)) hint = '📁 Google Drive 링크 — 뷰어로 자동 변환됩니다';
-  else if (url.endsWith('.pdf')) hint = '📄 직접 PDF 링크';
+  if (/arxiv\.org\/abs\//.test(url)) hint = '📄 arXiv paper — converted to PDF automatically';
+  else if (/drive\.google\.com/.test(url)) hint = '📁 Google Drive link — opens in the viewer';
+  else if (url.endsWith('.pdf')) hint = '📄 Direct PDF link';
   preview.textContent = hint;
   preview.style.display = 'block';
 }
@@ -4799,7 +4835,7 @@ async function uploadImageFiles(files) {
   progress.style.display = 'block';
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    label.textContent = `${i+1}/${files.length} 업로드 중...`;
+    label.textContent = `Uploading ${i+1}/${files.length}...`;
     bar.style.width = `${Math.round((i/files.length)*100)}%`;
     const url = await uploadImageToSupabase(file, null, null, null);
     if (url) {
@@ -4812,7 +4848,7 @@ async function uploadImageFiles(files) {
     }
   }
   bar.style.width = '100%';
-  label.textContent = `✓ ${uploadedImageUrls.length}장 완료`;
+  label.textContent = `✓ ${uploadedImageUrls.length} uploaded`;
   setTimeout(() => { progress.style.display = 'none'; }, 1500);
 }
 
@@ -4839,20 +4875,20 @@ function confirmInsertMedia() {
     const urlInp = document.getElementById('media-url-inp').value.trim();
     // Use uploaded URLs first, fall back to URL input
     const urls = uploadedImageUrls.length ? uploadedImageUrls : (urlInp ? [urlInp] : []);
-    if (!urls.length) { toast('사진을 업로드하거나 URL을 입력하세요.'); return; }
+    if (!urls.length) { toast('Upload an image or enter a URL.'); return; }
     tag = urls.map(u => `\n%%IMG%%${u}%%${caption}%%`).join('') + '\n';
   }
   else if (currentMediaType === 'video') {
     let url = document.getElementById('media-video-url').value.trim();
     const caption = document.getElementById('media-video-caption').value.trim();
-    if (!url) { toast('YouTube URL을 입력하세요.'); return; }
+    if (!url) { toast('Enter a YouTube URL.'); return; }
     url = url.replace(/watch\?v=/,'embed/').replace('youtu.be/','www.youtube-nocookie.com/embed/').replace('www.youtube.com/embed/','www.youtube-nocookie.com/embed/');
     tag = `\n%%VID%%${url}%%${caption}%%\n`;
   }
   else if (currentMediaType === 'pdf') {
     let src = document.getElementById('media-pdf-url').value.trim();
-    const label = document.getElementById('media-pdf-label').value.trim() || 'PDF 파일';
-    if (!src) { toast('PDF URL을 입력하세요.'); return; }
+    const label = document.getElementById('media-pdf-label').value.trim() || 'PDF file';
+    if (!src) { toast('Enter a PDF URL.'); return; }
     // arXiv abs → pdf URL로 변환
     src = src.replace(/arxiv\.org\/abs\/([^\s?]+)/, 'arxiv.org/pdf/$1');
     // Google Drive 공유 링크 → embed URL로 변환
@@ -4863,7 +4899,7 @@ function confirmInsertMedia() {
   else if (currentMediaType === 'link') {
     const url  = document.getElementById('media-link-url').value.trim();
     const text = document.getElementById('media-link-text').value.trim() || url;
-    if (!url) { toast('URL을 입력하세요.'); return; }
+    if (!url) { toast('Enter a URL.'); return; }
     tag = `[${text}](${url})`;
   }
 
@@ -4871,7 +4907,7 @@ function confirmInsertMedia() {
   const pos = ta.selectionStart;
   ta.value = ta.value.substring(0, pos) + tag + ta.value.substring(pos);
   closeModal('modal-media');
-  toast('삽입되었습니다.');
+  toast('Inserted.');
 }
 function openPdf(type, src) {
   if (src.startsWith('data:')) {
@@ -5061,7 +5097,7 @@ async function loadVisitorCount() {
 async function openVisitorLog() {
   document.getElementById('modal-visitor-log').style.display = 'flex';
   const list = document.getElementById('vlog-list');
-  list.innerHTML = '<div class="vlog-empty">불러오는 중...</div>';
+  list.innerHTML = '<div class="vlog-empty">Loading...</div>';
 
   try {
     const { data, count, error } = await supa
@@ -5095,7 +5131,7 @@ async function openVisitorLog() {
     document.getElementById('vlog-stat-article').textContent = statArticle.toLocaleString();
 
     if (!data || !data.length) {
-      list.innerHTML = '<div class="vlog-empty">방문 기록이 없습니다.</div>';
+      list.innerHTML = '<div class="vlog-empty">No visits yet.</div>';
       return;
     }
 
@@ -5110,25 +5146,25 @@ async function openVisitorLog() {
       const userNum = row.uid && uidMap[row.uid] ? uidMap[row.uid] : null;
       const badges = [
         userNum ? `<span class="vlog-badge user">U#${userNum}</span>` : '',
-        isNew   ? '<span class="vlog-badge new">NEW</span>' : isToday ? '<span class="vlog-badge today">오늘</span>' : '',
-        row.is_return ? '<span class="vlog-badge ret">재방문</span>' : '',
+        isNew   ? '<span class="vlog-badge new">NEW</span>' : isToday ? '<span class="vlog-badge today">Today</span>' : '',
+        row.is_return ? '<span class="vlog-badge ret">Returning</span>' : '',
       ].filter(Boolean).join('');
 
-      const deviceInfo = [row.device, row.os, row.browser].filter(Boolean).join(' · ') || '알 수 없음';
+      const deviceInfo = [row.device, row.os, row.browser].filter(Boolean).join(' · ') || 'Unknown';
       const extras = [row.screen, row.lang, row.connection].filter(Boolean).join(' · ');
       const locParts = [row.city, row.country].filter(Boolean);
-      const location = locParts.length ? '📍 ' + locParts.join(', ') : '📍 위치 알 수 없음';
+      const location = locParts.length ? '📍 ' + locParts.join(', ') : '📍 Unknown location';
       const tz = row.timezone || '';
 
       let ref = row.referrer || '';
       if (ref && ref !== '직접 방문') {
         try { ref = new URL(ref).hostname; } catch(e) {}
       }
-      const refLine = ref ? `↪ ${ref}` : '↪ 직접 방문';
+      const refLine = ref ? `↪ ${ref}` : '↪ Direct';
 
       const articleHtml = row.article
-        ? `<div class="vlog-article-box"><div class="vlog-article-lbl">읽은 글</div><div class="vlog-article-ttl" title="${esc(row.article)}">${esc(row.article.length > 40 ? row.article.slice(0,40)+'…' : row.article)}</div></div>`
-        : `<div class="vlog-no-article">글 읽지 않음</div>`;
+        ? `<div class="vlog-article-box"><div class="vlog-article-lbl">Read</div><div class="vlog-article-ttl" title="${esc(row.article)}">${esc(row.article.length > 40 ? row.article.slice(0,40)+'…' : row.article)}</div></div>`
+        : `<div class="vlog-no-article">No post read</div>`;
 
       return `<div class="vlog-card">
         <div class="vlog-card-meta">
@@ -5146,25 +5182,25 @@ async function openVisitorLog() {
       </div>`;
     }).join('');
   } catch(e) {
-    list.innerHTML = `<div class="vlog-empty">불러오기 실패: ${esc(e.message)}</div>`;
+    list.innerHTML = `<div class="vlog-empty">Failed to load: ${esc(e.message)}</div>`;
   }
 }
 
 // 방문자 로그 초기화 (관리자 전용)
 async function clearVisitorLog() {
-  if (!confirm('방문자 기록을 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  if (!confirm('Delete the entire visitor log?\nThis cannot be undone.')) return;
   try {
     const { data: deleted, error } = await supa.from('visitors').delete().not('id', 'is', null).select('id');
     if (error) throw error;
     if (!deleted || deleted.length === 0) {
-      toast('삭제 권한 없음 — Supabase에서 DELETE 정책을 추가해주세요.');
+      toast('No delete permission — add a DELETE policy in Supabase.');
       return;
     }
-    toast('방문자 기록이 초기화됐습니다.');
+    toast('Visitor log cleared.');
     openVisitorLog();
     loadVisitorCount();
   } catch(e) {
-    toast('초기화 실패: ' + e.message);
+    toast('Clear failed: ' + e.message);
   }
 }
 
@@ -5240,7 +5276,7 @@ function _rpBuildToc(isEditor) {
   if (count) count.textContent = headings.length || '';
 
   if (!headings.length) {
-    toc.innerHTML = '<div class="rp-empty">목차 없음</div>';
+    toc.innerHTML = '<div class="rp-empty">No headings</div>';
     return;
   }
 
@@ -5278,14 +5314,14 @@ window.enterAdmin = function() {
     const btn = document.createElement('button');
     btn.id = 'btn-visitor-log';
     btn.className = 'btn-admin-toggle';
-    btn.textContent = '👥 방문자';
+    btn.textContent = '👥 Visitors';
     btn.onclick = openVisitorLog;
     adminControls.insertBefore(btn, adminControls.firstChild);
   }
 };
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function excerpt(b){if(!b) return '';return b.replace(/#{1,6} /g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/`/g,'').replace(/\$\$[\s\S]*?\$\$/g,'[수식]').replace(/\$[^$]+\$/g,'[수식]').substring(0,110).trim()+'...';}
+function excerpt(b){if(!b) return '';return b.replace(/#{1,6} /g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/`/g,'').replace(/\$\$[\s\S]*?\$\$/g,'[math]').replace(/\$[^$]+\$/g,'[math]').substring(0,110).trim()+'...';}
 function fmtDate(ts){const d=new Date(ts);return`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
 
@@ -5315,9 +5351,9 @@ window.addEventListener('popstate', function() {
 
 // ── INIT ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  showSaving('⏳ 데이터 불러오는 중...');
+  showSaving('⏳ Loading...');
   await load();
-  hideSaving('✅ 불러오기 완료', 800);
+  hideSaving('✅ Loaded', 800);
   document.getElementById('nav-blog-name').textContent = profile.blogName || profile.name || 'My Blog';
   if (!handleHash()) {
     showSection('landing');
@@ -5341,13 +5377,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const file = imgItem.getAsFile();
     if (!file) return;
-    toast('📤 사진 업로드 중...');
+    toast('📤 Uploading image...');
     const url = await uploadImageToSupabase(file, null, null, null);
     if (url) {
       LPE.syncHidden();
       const tag = `\n%%IMG%%${url}%%캡처%%\n`;
       LPE.insertAtCursor(tag, '');
-      toast('✅ 사진 삽입됨');
+      toast('✅ Image inserted');
     }
   });
 });
@@ -5532,5 +5568,94 @@ particlesJS("particles-js",{
 })();
 </script>
 
+<script>
+// ── 마우스를 따라다니는 원: 약간 늦게 따라오고, 메뉴 근처에선 커지며 달라붙음 ──
+(function(){
+  var dot = document.querySelector('.sticky-cursor');
+  if (!dot) return;
+  if (window.matchMedia('(hover:none),(pointer:coarse)').matches) return;
+  var mouse = {x:-100, y:-100}, pos = {x:-100, y:-100}, scale = {x:1, y:1}, angle = 0;
+  var targets = [], snap = null, started = false;
+  var EASE = .15, SMALL = 15, BIG = 40;
+  function measure(){
+    targets = Array.prototype.map.call(document.querySelectorAll('.nav-tab, .nav-logo'), function(el){
+      var r = el.getBoundingClientRect();
+      return {el:el, cx:r.left + r.width/2, cy:r.top + r.height/2, range:Math.max(r.width, r.height)/2 + 36};
+    }).filter(function(t){ return t.cx > 0; });
+  }
+  window.addEventListener('resize', measure);
+  window.addEventListener('scroll', measure, {passive:true});
+  setInterval(measure, 1000); measure();
+  window.addEventListener('mousemove', function(e){
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    if (!started){ started = true; pos.x = mouse.x; pos.y = mouse.y; dot.classList.add('is-active'); }
+    var best = null, bestD = Infinity;
+    targets.forEach(function(t){
+      var d = Math.hypot(mouse.x - t.cx, mouse.y - t.cy);
+      if (d < t.range && d < bestD){ bestD = d; best = t; }
+    });
+    if (snap && snap !== best){ snap.el.style.transition = 'transform .3s cubic-bezier(.25,1,.5,1)'; snap.el.style.transform = ''; }
+    snap = best;
+    // 입력칸 위에서는 숨겨서 글쓰기에 방해되지 않게
+    var tag = e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], .lp-editor');
+    dot.classList.toggle('is-hidden', !!tag);
+  });
+  document.addEventListener('mouseleave', function(){ dot.classList.remove('is-active'); started = false; });
+  function tick(){
+    var tx = mouse.x, ty = mouse.y, sx = 1, sy = 1, a = angle, size = SMALL;
+    if (snap){
+      var dx = mouse.x - snap.cx, dy = mouse.y - snap.cy, d = Math.hypot(dx, dy);
+      tx = snap.cx + dx * .3; ty = snap.cy + dy * .3;
+      a = Math.atan2(dy, dx);
+      var k = Math.min(d / (snap.range * .6), 1);
+      sx = Math.min(1 + .25 * k, 1.3); sy = Math.max(1 - .15 * k, .8);
+      snap.el.style.transition = 'none';
+      snap.el.style.transform = 'translate3d(' + dx * .15 + 'px,' + dy * .15 + 'px,0)';
+      size = BIG;
+    }
+    dot.style.width = dot.style.height = size + 'px';
+    pos.x += (tx - pos.x) * EASE; pos.y += (ty - pos.y) * EASE;
+    scale.x += (sx - scale.x) * EASE; scale.y += (sy - scale.y) * EASE;
+    var da = a - angle;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    angle += da * EASE;
+    dot.style.transform = 'translate3d(' + pos.x + 'px,' + pos.y + 'px,0) translate(-50%,-50%) rotate(' + angle + 'rad) scale(' + scale.x + ',' + scale.y + ')';
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+// ── Home 로고 점들: 마우스 쪽으로 살짝 끌려오고, 가장 가까운 점은 늘어남 ──
+(function(){
+  var svg = document.querySelector('.hero-logo-dots');
+  if (!svg) return;
+  var balls = Array.prototype.slice.call(svg.querySelectorAll('.hero-logo-ball'));
+  var RANGE = 120;
+  function lerp(v, a, b, c, d){ if (b === a) return c; var t = Math.max(0, Math.min(1, (v - a) / (b - a))); return c + (d - c) * t; }
+  function move(x, y){
+    var info = balls.map(function(b){
+      var r = b.getBoundingClientRect(), dx = x - (r.left + r.width/2), dy = y - (r.top + r.height/2);
+      return {b:b, r:r, dx:dx, dy:dy, d:Math.hypot(dx, dy) || 1e-4};
+    });
+    var near = info.reduce(function(m, i){ return i.d < m.d ? i : m; }, info[0]);
+    info.forEach(function(i){
+      var f = Math.max(0, 1 - i.d / RANGE), k = .12, sx = 1, sy = 1;
+      if (i === near && i.d < RANGE){
+        k = .18;
+        var m = Math.max(Math.abs(i.dx), Math.abs(i.dy)), half = Math.max(i.r.width, i.r.height) / 2;
+        sx = lerp(m, 0, half, 1, 1.3); sy = lerp(m, 0, half, 1, .8);
+      }
+      i.b.style.transform = 'translate(' + i.dx * k * f + 'px,' + i.dy * k * f + 'px) scale(' + sx + ',' + sy + ')';
+    });
+  }
+  function reset(){ balls.forEach(function(b){ b.style.transform = ''; }); }
+  var hero = document.querySelector('.hero-logo');
+  hero.addEventListener('mousemove', function(e){ move(e.clientX, e.clientY); });
+  hero.addEventListener('mouseleave', reset);
+  hero.addEventListener('touchmove', function(e){ var t = e.touches[0]; move(t.clientX, t.clientY); }, {passive:true});
+  hero.addEventListener('touchend', reset);
+})();
+</script>
 </body>
 </html>
