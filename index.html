@@ -1521,6 +1521,68 @@ body{background:#fff;color:#000;letter-spacing:-.005em}
 .sticky-cursor.is-hidden{opacity:0}
 @media (hover:none),(pointer:coarse){.sticky-cursor{display:none}}
 
+
+/* ── POSTS / PAPER: publications 스타일 ── */
+.filter-bar{border-bottom:none;padding-bottom:0;margin-bottom:6px;align-items:flex-end}
+.filter-label{font-size:clamp(2.2rem,4vw,3rem);font-weight:400;letter-spacing:-.045em;line-height:1.05}
+.fl-count{font-size:.9rem;letter-spacing:0;color:var(--muted);vertical-align:super;margin-left:6px;font-weight:400}
+.paper-section-desc{margin:4px 0 0}
+.list-filter{display:block;width:100%;max-width:360px;margin:22px 0 30px;padding:10px 14px;border:none;border-radius:4px;background:#efefef;font-family:var(--sans);font-size:.95rem;color:#000;outline:none;transition:background .2s}
+.list-filter::placeholder{color:#8a8a8a}
+.list-filter:focus{background:#e6e6e6}
+.post-year{border-top:1px solid var(--rule);padding:18px 0 28px}
+.post-year-label{text-align:right;font-size:2.2rem;font-weight:400;letter-spacing:-.04em;color:#a3a3a3;line-height:1;margin-bottom:14px}
+.post-row{position:relative;display:grid;grid-template-columns:76px minmax(0,1fr) 200px 16px;column-gap:24px;align-items:baseline;padding:14px 0;cursor:pointer}
+.pr-date{font-size:.88rem;color:var(--muted);white-space:nowrap}
+.pr-title-line{display:flex;align-items:baseline;gap:12px;min-width:0}
+.pr-title{font-size:1.1rem;font-weight:500;letter-spacing:-.015em;color:#000;line-height:1.4;transition:color .2s}
+.pr-leader{flex:1;min-width:24px;border-bottom:1px dotted #bdbdbd;transform:translateY(-4px)}
+.pr-sub{font-size:.88rem;color:var(--muted);margin-top:4px;line-height:1.55}
+.pr-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pr-tag{font-size:.72rem;font-weight:500;color:#555;background:var(--tag);border-radius:4px;padding:2px 8px}
+.pr-meta{font-size:.85rem;font-weight:500;color:#555;line-height:1.4}
+.pr-arrow{font-size:.95rem;text-align:right;transition:transform .25s cubic-bezier(.22,.61,.36,1)}
+.post-row:hover .pr-title{color:var(--muted)}
+.post-row:hover .pr-arrow{transform:translate(3px,-3px)}
+.pr-actions{position:absolute;top:10px;right:28px}
+.post-row:hover .pr-actions{opacity:1}
+
+/* 2~4열 카드: 상단 검은 선 + 큰 제목 (projects 스타일) */
+.posts-grid-wrap[class*="cols-"]{column-gap:28px;row-gap:40px}
+.posts-grid-wrap[class*="cols-"] .post-card{position:relative;border:none;border-top:1px solid #000;border-radius:0;padding:16px 0 0;display:flex;flex-direction:column;min-height:180px}
+.posts-grid-wrap[class*="cols-"] .post-card::after{content:'↗';position:absolute;top:14px;right:0;font-size:.95rem;transition:transform .25s cubic-bezier(.22,.61,.36,1)}
+.posts-grid-wrap[class*="cols-"] .post-card:hover::after{transform:translate(3px,-3px)}
+.posts-grid-wrap[class*="cols-"] .pc-top{padding-right:24px}
+.posts-grid-wrap[class*="cols-"] .pc-cat,.posts-grid-wrap[class*="cols-"] .pc-tag{background:none;padding:0;color:var(--muted);font-size:.78rem;margin-right:6px}
+.posts-grid-wrap[class*="cols-"] .pc-title{font-size:1.3rem;font-weight:500;letter-spacing:-.025em;line-height:1.3;margin:10px 0 8px}
+.posts-grid-wrap[class*="cols-"] .pc-footer{margin-top:auto;border-top:none;padding-top:14px}
+
+/* 모바일 필터 칩: 테두리 알약 (projects 필터 스타일) */
+.mob-filter-label{text-transform:none !important;letter-spacing:0 !important;font-size:.78rem !important;color:#000 !important;font-weight:500 !important}
+.mob-filter-chip{background:none !important;border:1px solid var(--rule) !important;color:#000 !important;font-weight:400 !important}
+.mob-filter-chip.active{background:#000 !important;border-color:#000 !important;color:#fff !important}
+
+/* 사이드바: 이모지 아이콘 없이 텍스트 목록 */
+.folder-icon,.folder-all-icon{display:none}
+.folder-all,.folder-row{padding:5px 8px 5px 0}
+.folder-all.active,.folder-row.active{background:none}
+.folder-all.active .folder-all-name,.folder-row.active .folder-name{font-weight:600}
+.folder-all.active .folder-all-name::before,.folder-row.active .folder-name::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#000;margin-right:8px;vertical-align:middle}
+.folder-row:hover,.folder-all:hover{background:none}
+.folder-row:hover .folder-name,.folder-all:hover .folder-all-name{color:var(--muted)}
+.folder-count,.folder-all-count,.cat-count{font-family:var(--sans);font-size:.75rem}
+.tag-chip{background:none;border:1px solid var(--rule);border-radius:999px;color:#000;padding:3px 11px;font-weight:400}
+.tag-chip:hover,.tag-chip.active{background:#000;border-color:#000;color:#fff}
+
+@media(max-width:768px){
+  .post-row{grid-template-columns:62px minmax(0,1fr) 14px;column-gap:14px}
+  .pr-meta{grid-column:2;grid-row:2;font-size:.78rem;margin-top:4px}
+  .pr-arrow{grid-column:3;grid-row:1}
+  .pr-leader{display:none}
+  .post-year-label{font-size:1.7rem}
+  .list-filter{max-width:none;margin:16px 0 20px}
+}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1723,6 +1785,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
           <div class="post-col-control" id="posts-col-control"></div>
           <button class="sort-btn" onclick="toggleSort('posts')">Newest ↕</button>
         </div>
+        <input class="list-filter" type="search" placeholder="Type to filter" oninput="setTextFilter('posts',this.value)">
         <div id="posts-list"></div>
       </div>
     </div>
@@ -1735,14 +1798,15 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <div class="filter-sidebar" id="paper-filter-sidebar"></div>
       <div>
         <div id="paper-mob-filter" class="mob-filter-bar"></div>
-        <p class="paper-section-desc i18n"
-           data-ko="Notes and summaries of papers I've read."
-           data-en="Notes and summaries of papers I've read.">Notes and summaries of papers I've read.</p>
         <div class="filter-bar">
           <span class="filter-label" id="paper-filter-label">Paper Review</span>
           <div class="post-col-control" id="paper-col-control"></div>
           <button class="sort-btn" onclick="toggleSort('paper')">Newest ↕</button>
         </div>
+        <p class="paper-section-desc i18n"
+           data-ko="Notes and summaries of papers I've read."
+           data-en="Notes and summaries of papers I've read.">Notes and summaries of papers I've read.</p>
+        <input class="list-filter" type="search" placeholder="Type to filter" oninput="setTextFilter('paper',this.value)">
         <div id="paper-list"></div>
       </div>
     </div>
@@ -2531,6 +2595,7 @@ let deleteExtra     = null;
 let sortDesc        = { posts:true, paper:true };
 let filterCat       = { posts:null, paper:null };
 let filterTag       = { posts:null, paper:null };
+let filterText      = { posts:'', paper:'' };
 let postGridCols    = { posts:1, paper:1 };
 let isAdmin         = false;
 
@@ -3275,15 +3340,13 @@ function renderPostsPage() {
   let list=[...posts];
   const fc=filterCat.posts;
   if(fc) list=list.filter(p=>p.cat&&(p.cat===fc||p.cat.startsWith(fc+'/')));
+  list=applyTextFilter(list,'posts');
   list.sort((a,b)=>sortDesc.posts?b.id-a.id:a.id-b.id);
-  let label=fc?`${fc} (${list.length})`:`Posts (${list.length})`;
-  document.getElementById('posts-filter-label').textContent=label;
+  setListLabel('posts-filter-label', fc||'Posts', list.length);
   renderColBtns('posts');
-  const cols=postGridCols.posts;
-  const gridCls=cols>1?`posts-grid-wrap cols-${cols}`:'posts-grid-wrap';
   document.getElementById('posts-list').innerHTML=list.length
-    ?`<div class="${gridCls}">`+list.map(p=>postCardHTML(p,'posts')).join('')+`</div>`
-    :`<div class="empty-state"><div class="empty-icon">✍️</div><h3>No posts</h3></div>`;
+    ? postListHTML(list,'posts')
+    : `<div class="empty-state"><div class="empty-icon">✍️</div><h3>No posts</h3></div>`;
 }
 function renderPaperPage() {
   buildFilterSidebar('paper-filter-sidebar','paper');
@@ -3292,15 +3355,66 @@ function renderPaperPage() {
   const fc=filterCat.paper,ft=filterTag.paper;
   if(fc) list=list.filter(p=>p.cat&&(p.cat===fc||p.cat.startsWith(fc+'/')));
   if(ft) list=list.filter(p=>(p.tags||[]).includes(ft));
+  list=applyTextFilter(list,'paper');
   list.sort((a,b)=>sortDesc.paper?b.id-a.id:a.id-b.id);
-  let label=fc||ft?`${fc||('#'+ft)} (${list.length})`:`Paper Review (${list.length})`;
-  document.getElementById('paper-filter-label').textContent=label;
+  setListLabel('paper-filter-label', fc||(ft?'#'+ft:'Paper Review'), list.length);
   renderColBtns('paper');
-  const cols=postGridCols.paper;
-  const gridCls=cols>1?`posts-grid-wrap cols-${cols}`:'posts-grid-wrap';
   document.getElementById('paper-list').innerHTML=list.length
-    ?`<div class="${gridCls}">`+list.map(p=>postCardHTML(p,'paper')).join('')+`</div>`
-    :`<div class="empty-state"><div class="empty-icon">📄</div><h3>No reviews</h3></div>`;
+    ? postListHTML(list,'paper')
+    : `<div class="empty-state"><div class="empty-icon">📄</div><h3>No reviews</h3></div>`;
+}
+
+// 제목 + 작은 위첨자 개수
+function setListLabel(id, name, n) {
+  document.getElementById(id).innerHTML = `${esc(name)}<sup class="fl-count">${n}</sup>`;
+}
+// "Type to filter" — 제목/카테고리/태그/학회/저자에서 검색
+function setTextFilter(section, value) {
+  filterText[section] = value.trim().toLowerCase();
+  section==='posts' ? renderPostsPage() : renderPaperPage();
+}
+function applyTextFilter(list, section) {
+  const q = filterText[section];
+  if (!q) return list;
+  return list.filter(p => [p.title, p.cat, p.venue, p.authors, p.year, ...(p.tags||[])]
+    .filter(Boolean).join(' ').toLowerCase().includes(q));
+}
+// 1열: 연도별 목록 / 2~4열: 카드 그리드
+function postListHTML(list, section) {
+  const cols = postGridCols[section];
+  if (cols > 1) return `<div class="posts-grid-wrap cols-${cols}">` + list.map(p=>postCardHTML(p,section)).join('') + `</div>`;
+  const groups = [];
+  list.forEach(p => {
+    const y = new Date(p.createdAt).getFullYear();
+    if (!groups.length || groups[groups.length-1].year !== y) groups.push({ year:y, items:[] });
+    groups[groups.length-1].items.push(p);
+  });
+  return `<div class="post-years">` + groups.map(g => `
+    <section class="post-year">
+      <div class="post-year-label">${g.year}</div>
+      ${g.items.map(p=>postRowHTML(p,section)).join('')}
+    </section>`).join('') + `</div>`;
+}
+const MONTHS = ['Jan.','Feb.','Mar.','Apr.','May','Jun.','Jul.','Aug.','Sep.','Oct.','Nov.','Dec.'];
+function postRowHTML(p, section) {
+  const d = new Date(p.createdAt);
+  const meta = section==='paper' ? [p.venue, p.year].filter(Boolean).join(' · ') : (p.cat ? p.cat.split('/').pop() : '');
+  const sub = section==='paper' ? (p.authors || excerpt(p.preview||p.body)) : '';
+  const tags = section==='paper' ? (p.tags||[]).slice(0,4).map(t=>`<span class="pr-tag"># ${esc(t)}</span>`).join('') : '';
+  return `<div class="post-row" onclick="openPost(${p.id},'${section}')">
+    <div class="pr-date">${MONTHS[d.getMonth()]} ${String(d.getDate()).padStart(2,'0')}</div>
+    <div class="pr-main">
+      <div class="pr-title-line"><span class="pr-title">${esc(p.title)}</span><span class="pr-leader"></span></div>
+      ${sub ? `<div class="pr-sub">${esc(sub)}</div>` : ''}
+      ${tags ? `<div class="pr-tags">${tags}</div>` : ''}
+    </div>
+    <div class="pr-meta">${esc(meta)}</div>
+    <div class="pr-arrow">↗</div>
+    <div class="pc-actions pr-actions admin-only" onclick="event.stopPropagation()">
+      <button class="btn-sm" onclick="openEdit(${p.id},'${section}')">✎</button>
+      <button class="btn-sm danger" onclick="askDelete(${p.id},'${section}')">✕</button>
+    </div>
+  </div>`;
 }
 
 async function setPostCols(section, cols) {
