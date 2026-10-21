@@ -1663,6 +1663,25 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .btn-unlock svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .btn-unlock:hover{color:var(--muted);transform:translateY(-1px)}
 
+
+/* ── HOME: Recent Posts 직접 고르기 ── */
+.recent-card{position:relative}
+.rc-admin{position:absolute;top:12px;right:28px;gap:5px;opacity:0;transition:opacity .2s}
+.recent-card:hover .rc-admin{opacity:1}
+.admin-mode .recent-card[draggable="true"]{cursor:grab}
+.recent-card.drag-over{box-shadow:inset 0 2px 0 #000}
+.admin-mode .recent-posts-grid{margin-bottom:12px}
+.btn-choose-posts{margin:0 0 72px}
+.feat-hint{font-size:.82rem;color:var(--muted);line-height:1.6;margin:-6px 0 12px}
+.feat-list{max-height:52vh;overflow-y:auto;border-top:1px solid var(--rule);margin-bottom:14px}
+.feat-item{display:grid;grid-template-columns:18px 84px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:10px 2px;border-bottom:1px solid var(--rule);cursor:pointer;font-size:.88rem}
+.feat-item input{accent-color:#000;transform:translateY(2px)}
+.feat-item.on .feat-title{font-weight:600}
+.feat-date{color:var(--muted);font-size:.8rem}
+.feat-title{color:#000;line-height:1.4}
+.feat-type{font-size:.72rem;color:#555;background:var(--tag);border-radius:4px;padding:1px 7px}
+.feat-empty{padding:16px 2px;color:var(--muted);font-size:.85rem}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1788,6 +1807,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <div class="landing-section-label is-link" data-edit-key="recentLabel" data-default="Recent Posts" onclick="if(!isAdmin)showSection('posts')">Recent Posts</div>
         <div class="list-head"><span data-edit-key="dateHead" data-default="Date">Date</span><span data-edit-key="titleHead" data-default="Title">Title</span></div>
         <div class="recent-posts-grid" id="landing-recent"></div>
+        <button class="btn-add-news btn-choose-posts admin-only" onclick="openFeaturedModal()">✎ Choose posts</button>
 
         <!-- Section rows -->
         <div class="landing-section-label" data-edit-key="hereLabel" data-default="What's here">What's here</div>
@@ -2163,6 +2183,21 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
 </div>
 
+<div id="modal-featured" class="modal-overlay" style="display:none" onclick="closeModal('modal-featured',event)">
+  <div class="modal" style="max-width:560px">
+<div class="modal-drag-handle"></div>
+    <div class="modal-title">Choose posts for Home</div>
+    <p class="feat-hint">Checked posts appear on Home. Drag rows on Home to reorder. Leave everything unchecked to show the latest posts automatically.</p>
+    <input class="form-input" id="feat-search" placeholder="Type to filter" oninput="renderFeaturedPicker()">
+    <div class="feat-list" id="feat-list"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="clearFeatured()" style="margin-right:auto">Use latest posts</button>
+      <button class="btn-secondary" onclick="closeModal('modal-featured')">Cancel</button>
+      <button class="btn-primary" onclick="saveFeatured()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-news" class="modal-overlay" style="display:none" onclick="closeModal('modal-news',event)">
   <div class="modal" style="max-width:440px">
 <div class="modal-drag-handle"></div>
@@ -2502,6 +2537,8 @@ async function load() {
       const newsRow  = cvRes.data.find(r => r.id === 'home_news');
       const textsRow = cvRes.data.find(r => r.id === 'home_texts');
       homeNews  = (newsRow && newsRow.items) || [];
+      const featRow = cvRes.data.find(r => r.id === 'home_featured');
+      homeFeatured = (featRow && featRow.items) || [];
       homeTexts = {};
       ((textsRow && textsRow.items) || []).forEach(t => { if (t && t.key) homeTexts[t.key] = t.value; });
       cvSections = cvRes.data.filter(r => !HOME_ROWS.includes(r.id)).map(r => ({
@@ -2727,7 +2764,8 @@ let sortDesc        = { posts:true, paper:true };
 let filterCat       = { posts:null, paper:null };
 let filterTag       = { posts:null, paper:null };
 let filterText      = { posts:'', paper:'' };
-const HOME_ROWS     = ['home_news','home_texts'];
+const HOME_ROWS     = ['home_news','home_texts','home_featured'];
+let homeFeatured    = [];   // Home에 띄울 글 [{section:'posts'|'paper', id}] — 비어 있으면 최신 글 자동
 let homeNews        = [];   // [{id,date,text,link,linkLabel}]
 let homeTexts       = {};   // Home에서 직접 고친 문구 {key: value}
 let newsExpanded    = false;
@@ -2930,27 +2968,84 @@ function renderLanding() {
   applyHomeTexts();
   renderNews();
 
-  // Recent posts
-  const recent = [...posts, ...papers]
-    .sort((a,b) => b.createdAt - a.createdAt)
-    .slice(0, 6);
+  // Recent posts — 직접 고른 글(homeFeatured)이 있으면 그 순서대로, 없으면 최신 6개
+  const curated = homeFeatured.length > 0;
+  const recent = curated
+    ? homeFeatured.map(f => findFeatured(f)).filter(Boolean)
+    : [...posts.map(p => ({ p, section:'posts' })), ...papers.map(p => ({ p, section:'paper' }))]
+        .sort((a,b) => b.p.createdAt - a.p.createdAt).slice(0, 6);
   const el = document.getElementById('landing-recent');
   if (!el) return;
   if (!recent.length) {
     el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 0;font-size:.8rem;color:var(--s400)">No posts yet.</div>';
     return;
   }
-  el.innerHTML = recent.map(p => {
-    const isPaper = papers.includes(p);
-    const section = isPaper ? 'paper' : 'posts';
-    const typeLabel = isPaper ? 'Paper Review' : 'Post';
-    return `<div class="gc gc-hover recent-card" onclick="openPost(${p.id},'${section}')">
+  const drag = i => (isAdmin && curated) ? `draggable="true" ondragstart="featDragStart(event,${i})" ondragover="featDragOver(event,${i})" ondragleave="this.classList.remove('drag-over')" ondrop="featDrop(event,${i})" ondragend="featDragEnd()"` : '';
+  el.innerHTML = recent.map(({ p, section }, i) => {
+    const typeLabel = section === 'paper' ? 'Paper Review' : 'Post';
+    return `<div class="gc gc-hover recent-card" id="feat-${i}" onclick="openPost(${p.id},'${section}')" ${drag(i)}>
       <div class="rc-type">${typeLabel}</div>
       <div class="rc-title">${esc(p.title)}</div>
       <div class="rc-date">${fmtDate(p.createdAt)}</div>
+      ${curated ? `<div class="rc-admin admin-only flex" onclick="event.stopPropagation()"><button class="btn-sm danger" title="Remove from Home" onclick="removeFeatured(${i})">✕</button></div>` : ''}
     </div>`;
   }).join('');
 }
+
+// ── HOME: Recent Posts 직접 고르기 ──────────────────────────────────
+function findFeatured(f) {
+  const list = f.section === 'paper' ? papers : posts;
+  const p = list.find(x => String(x.id) === String(f.id));
+  return p ? { p, section: f.section } : null;
+}
+let featDraft = [], featDragIdx = null;
+function openFeaturedModal() {
+  featDraft = homeFeatured.filter(f => findFeatured(f)).map(f => ({ ...f }));
+  document.getElementById('feat-search').value = '';
+  renderFeaturedPicker();
+  document.getElementById('modal-featured').style.display = 'flex';
+}
+function renderFeaturedPicker() {
+  const q = document.getElementById('feat-search').value.trim().toLowerCase();
+  const all = [...posts.map(p => ({ p, section:'posts' })), ...papers.map(p => ({ p, section:'paper' }))]
+    .sort((a,b) => b.p.createdAt - a.p.createdAt)
+    .filter(x => !q || [x.p.title, x.p.cat, ...(x.p.tags||[])].filter(Boolean).join(' ').toLowerCase().includes(q));
+  const isOn = x => featDraft.some(f => f.section === x.section && String(f.id) === String(x.p.id));
+  document.getElementById('feat-list').innerHTML = all.map(x => `
+    <label class="feat-item${isOn(x) ? ' on' : ''}">
+      <input type="checkbox" ${isOn(x) ? 'checked' : ''} onchange="toggleFeatured('${x.section}', '${esc(String(x.p.id))}', this.checked)">
+      <span class="feat-date">${fmtDate(x.p.createdAt)}</span>
+      <span class="feat-title">${esc(x.p.title)}</span>
+      <span class="feat-type">${x.section === 'paper' ? 'Paper Review' : 'Post'}</span>
+    </label>`).join('') || '<div class="feat-empty">No matching posts.</div>';
+}
+function toggleFeatured(section, id, on) {
+  featDraft = featDraft.filter(f => !(f.section === section && String(f.id) === id));
+  if (on) featDraft.push({ section, id });   // 새로 고른 글은 맨 뒤에 추가
+  renderFeaturedPicker();
+}
+function saveFeatured() {
+  homeFeatured = featDraft;
+  saveHomeRow('home_featured', homeFeatured); closeModal('modal-featured'); renderLanding();
+}
+function clearFeatured() {
+  homeFeatured = []; featDraft = [];
+  saveHomeRow('home_featured', homeFeatured); closeModal('modal-featured'); renderLanding();
+}
+function removeFeatured(i) {
+  homeFeatured.splice(i, 1);
+  saveHomeRow('home_featured', homeFeatured); renderLanding();
+}
+function featDragStart(e, i) { featDragIdx = i; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => { const r = document.getElementById('feat-' + i); if (r) r.style.opacity = '.45'; }, 0); }
+function featDragOver(e, i) { if (featDragIdx === null) return; e.preventDefault(); document.querySelectorAll('.recent-card').forEach(r => r.classList.remove('drag-over')); document.getElementById('feat-' + i).classList.add('drag-over'); }
+function featDrop(e, i) {
+  e.preventDefault();
+  if (featDragIdx === null || featDragIdx === i) { featDragEnd(); return; }
+  const moved = homeFeatured.splice(featDragIdx, 1)[0];
+  homeFeatured.splice(i, 0, moved);
+  featDragIdx = null; saveHomeRow('home_featured', homeFeatured); renderLanding();
+}
+function featDragEnd() { featDragIdx = null; document.querySelectorAll('.recent-card').forEach(r => { r.style.opacity = ''; r.classList.remove('drag-over'); }); }
 
 
 // ── 항목 이미지 (News / Me 항목 공용) ───────────────────────────────
