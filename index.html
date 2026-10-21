@@ -2960,19 +2960,27 @@ async function pickThumb(kind, input) {
   const file = input.files && input.files[0];
   input.value = '';
   if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('Please choose an image file.'); return; }
   const pv = document.getElementById(kind + '-thumb-preview');
   if (pv) pv.innerHTML = '<span>Uploading…</span>';
-  let url = null;
-  if (file.type === 'image/gif') {
-    // GIF는 움직임이 유지되도록 압축 없이 업로드
-    const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.gif`;
-    const { error } = await supa.storage.from('blog-images').upload(filename, file, { contentType: 'image/gif', upsert: false });
-    if (error) toast('❌ Upload failed: ' + error.message);
-    else url = supa.storage.from('blog-images').getPublicUrl(filename).data.publicUrl;
-  } else {
-    url = await uploadImageToSupabase(file);
-  }
+  const url = await uploadThumbFile(file);
   setThumb(kind, url || thumbValue[kind]);
+}
+// 1순위: Supabase Storage 업로드. 저장소 보안 규칙(RLS)에 막히면
+// 2순위: 작게 줄인 이미지를 항목 데이터 안에 직접 저장(data URL)
+async function uploadThumbFile(file) {
+  const isGif = file.type === 'image/gif';
+  const body = isGif ? file : await compressImage(file, 1200, 0.85);
+  const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${isGif ? 'gif' : 'jpg'}`;
+  const { error } = await supa.storage.from('blog-images').upload(filename, body, { contentType: isGif ? 'image/gif' : 'image/jpeg', upsert: false });
+  if (!error) return supa.storage.from('blog-images').getPublicUrl(filename).data.publicUrl;
+  console.warn('[thumb] storage upload blocked, storing inline instead:', error.message);
+  if (isGif) {
+    if (file.size > 900 * 1024) { toast('❌ GIF is too large (max 900KB without storage access).'); return null; }
+    return await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(file); });
+  }
+  const small = await compressImage(file, 480, 0.8);
+  return await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(small); });
 }
 
 // ── HOME: 저장 (cv_sections 테이블의 별도 행) ───────────────────────
