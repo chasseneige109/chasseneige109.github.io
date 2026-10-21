@@ -1625,26 +1625,23 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 
 /* ── 항목 이미지 (참고 사이트의 목록 썸네일) ── */
 .item-thumb{display:none}
-.item-thumb img{display:block;width:100%;height:100%;object-fit:contain;cursor:zoom-in}
+.item-thumb img{display:block;width:100%;height:100%;object-fit:cover;border-radius:2px;background:var(--s100)}
 /* News: 날짜 | 썸네일 | 내용 */
-.news-list.has-thumbs .news-row{grid-template-columns:120px 176px minmax(0,1fr)}
-.news-list.has-thumbs .item-thumb{display:block;width:176px;aspect-ratio:16/10;align-self:start;margin-top:2px}
+.news-list.has-thumbs .news-row{grid-template-columns:120px 64px minmax(0,1fr)}
+.news-list.has-thumbs .item-thumb{display:block;width:64px;height:40px;align-self:start;margin-top:2px}
 /* Me 목록형: 날짜 | 썸네일 | 내용 */
-.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry{grid-template-columns:120px 176px minmax(0,1fr)}
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry{grid-template-columns:120px 64px minmax(0,1fr)}
 .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > *{grid-column:3}
 .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-header > *{grid-column:3}
 .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-header > .cv-entry-date{grid-column:1;grid-row:1}
 .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-icon{grid-column:1;grid-row:2}
-.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{display:block;grid-column:2;grid-row:1 / span 6;width:176px;aspect-ratio:16/10;margin-top:3px}
+.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{display:block;grid-column:2;grid-row:1 / span 6;width:64px;height:40px;margin-top:3px}
 /* Me 카드형(2~4열): 카드 위쪽 이미지 */
 .cv-entries-wrap[style*="grid"] > .cv-entry > .item-thumb{display:block;aspect-ratio:16/9;max-height:220px;width:100%;margin:-2px 0 14px}
 .cv-entries-wrap[style*="grid"] > .cv-entry > .item-thumb img{border-radius:4px}
 .item-thumb img{transition:transform .35s cubic-bezier(.22,.61,.36,1)}
-.news-row:hover .item-thumb img,.cv-entry:hover .item-thumb img{transform:scale(1.03)}
-.item-thumb{overflow:hidden;border-radius:4px;border:1px solid var(--rule);background:#fff}
-/* 썸네일 클릭 → 크게 보기 */
-.img-lightbox{position:fixed;inset:0;z-index:100000;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;padding:32px;cursor:zoom-out;animation:fadeIn .15s ease}
-.img-lightbox img{max-width:min(1100px,100%);max-height:100%;object-fit:contain;border-radius:4px;box-shadow:0 12px 48px rgba(0,0,0,.12)}
+.news-row:hover .item-thumb img,.cv-entry:hover .item-thumb img{transform:scale(1.04)}
+.item-thumb{overflow:hidden;border-radius:2px}
 /* 모달 이미지 입력 */
 .thumb-field{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
 .thumb-preview{flex:0 0 96px;height:60px;border-radius:4px;background:var(--s100);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:.7rem;color:var(--muted)}
@@ -1655,15 +1652,9 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .thumb-remove{color:var(--muted)}
 .thumb-url{margin:0 !important;font-size:.8rem !important}
 @media(max-width:600px){
-  .news-list.has-thumbs .news-row{grid-template-columns:76px minmax(0,1fr)}
-  .news-list.has-thumbs .item-thumb{grid-column:2;width:100%;max-width:280px;margin:0 0 10px}
-  .news-list.has-thumbs .news-text{grid-column:2}
-  .news-list.has-thumbs .news-date{grid-column:1;grid-row:1}
-  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry{grid-template-columns:76px minmax(0,1fr)}
-  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > *,
-  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-header > *{grid-column:2}
-  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .cv-entry-header > .cv-entry-date{grid-column:1;grid-row:1}
-  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{grid-column:2;grid-row:auto;width:100%;max-width:280px;margin:0 0 10px}
+  .news-list.has-thumbs .news-row{grid-template-columns:76px 48px minmax(0,1fr)}
+  .news-list.has-thumbs .item-thumb,.cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{width:48px;height:30px}
+  .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry{grid-template-columns:76px 48px minmax(0,1fr)}
 }
 
 /* ── 반응형 ── */
@@ -2991,21 +2982,6 @@ async function uploadThumbFile(file) {
   const small = await compressImage(file, 480, 0.8);
   return await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(small); });
 }
-
-// 썸네일 클릭 → 크게 보기 (아무 데나 클릭하거나 Esc로 닫기)
-document.addEventListener('click', e => {
-  const img = e.target.closest && e.target.closest('.item-thumb img');
-  if (!img || e.defaultPrevented) return;
-  e.stopPropagation();
-  const box = document.createElement('div');
-  box.className = 'img-lightbox';
-  box.innerHTML = `<img src="${img.src}" alt="">`;
-  const close = () => { box.remove(); document.removeEventListener('keydown', onKey); };
-  const onKey = ev => { if (ev.key === 'Escape') close(); };
-  box.addEventListener('click', close);
-  document.addEventListener('keydown', onKey);
-  document.body.appendChild(box);
-});
 
 // ── HOME: 저장 (cv_sections 테이블의 별도 행) ───────────────────────
 async function saveHomeRow(id, items) {
