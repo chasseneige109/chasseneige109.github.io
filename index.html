@@ -1958,7 +1958,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <!-- Author (오른쪽 사이드바) -->
       <aside class="landing-aside">
         <div class="gc landing-author-card" id="landing-author">
-          <div class="lau-avatar" id="landing-av">?</div>
+          <div class="lau-avatar" id="landing-av"><img src="assets/profile.jpg" alt="Noah Nam" decoding="async"></div>
           <div class="lau-info">
             <div class="lau-name" id="landing-author-name" data-edit-key="profileName">Set your name</div>
             <div class="lau-handle" id="landing-author-handle" data-edit-key="profileHandle">@handle</div>
@@ -1978,7 +1978,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <div class="profile-sidebar">
         <div class="gc profile-card">
           <div class="av-wrap" onclick="if(isAdmin)openAvatarEdit()">
-            <div class="av" id="home-av">?</div>
+            <div class="av" id="home-av"><img src="assets/profile.jpg" alt="Noah Nam" decoding="async"></div>
             <div class="av-edit admin-only">✎</div>
           </div>
           <div class="p-name" id="home-name">Set your name</div>
@@ -2700,7 +2700,6 @@ async function load() {
     }
 
     // 아바타는 초기 렌더를 막지 않도록 별도로 비동기 로딩 (도착하면 화면 갱신)
-    loadAvatar();
 
   } catch(e) {
     console.error('Load error:', e);
@@ -2720,7 +2719,10 @@ async function load() {
   }
 }
 
-// ── AVATAR (별도 비동기 로딩) ─────────────────────────────────────
+// ── AVATAR ────────────────────────────────────────────────────────
+// 프로필 사진은 저장소의 assets/profile.jpg로 하드코딩 → 페이지가 열리자마자 바로 보임.
+// (DB의 큰 base64 사진은 더 이상 불러오지 않음. 사진을 바꾸려면 이 파일을 교체)
+const AVATAR_IMG = '<img src="assets/profile.jpg" alt="Noah Nam" decoding="async">';
 // avatar_url이 큰 base64면 초기 로드를 막으므로 페이지가 뜬 뒤 따로 가져온다.
 async function loadAvatar() {
   try {
@@ -3068,8 +3070,7 @@ function renderLanding() {
   // Author card
   const avEl = document.getElementById('landing-av');
   if (avEl) {
-    if (profile.avatar) avEl.innerHTML = `<img src="${esc(profile.avatar)}">`;
-    else avEl.textContent = profile.name ? profile.name[0].toUpperCase() : '?';
+    avEl.innerHTML = AVATAR_IMG;   // 하드코딩된 프로필 사진 (assets/profile.jpg)
   }
   const fy = document.getElementById('footer-year'); if (fy) fy.textContent = new Date().getFullYear();
   const fn = document.getElementById('footer-name'); if (fn) fn.textContent = (profile.name || 'Noah Nam').split('|')[0].trim();
@@ -3420,8 +3421,7 @@ function renderHome() {
   document.getElementById('nav-blog-name').textContent  = profile.blogName||'My Blog';
 
   const av=document.getElementById('home-av');
-  if(profile.avatar) av.innerHTML=`<img src="${esc(profile.avatar)}">`;
-  else av.textContent=profile.name?profile.name[0].toUpperCase():'?';
+  av.innerHTML=AVATAR_IMG;   // 하드코딩된 프로필 사진
 
   // Links
   const linksEl=document.getElementById('home-links');
