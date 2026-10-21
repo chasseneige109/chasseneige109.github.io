@@ -1782,27 +1782,31 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 }
 
 
-/* ── 링크: 밑줄 대신 형광펜 띠 → 마우스를 올리면 검은색이 아래에서 차오르며 글자가 흰색으로 ── */
+/* ── 링크: 굵은 글자 + 검은 원 ↗ 배지. 마우스를 올리면 글자가 섞였다가 해독되듯 맞춰짐(스크램블) ── */
 .news-inline-link,.news-link,.cv-entry-link,.media-link-inline{
-  color:#000;text-decoration:none;border:none;border-radius:2px;
-  padding:0 .14em;margin:0 -.04em;
-  background-color:transparent;
-  background-image:linear-gradient(#000,#000),linear-gradient(#e4e4e4,#e4e4e4);
-  background-repeat:no-repeat;background-position:0 100%,0 100%;
-  background-size:100% 0,100% .34em;
-  -webkit-box-decoration-break:clone;box-decoration-break:clone;
-  transition:background-size .38s cubic-bezier(.22,.61,.36,1),color .2s ease .04s}
-.news-inline-link,.news-link,.cv-entry-link,.media-link-inline{white-space:normal}
-.news-inline-link:hover,.news-link:hover,.cv-entry-link:hover,.media-link-inline:hover{
-  color:#fff;background-size:100% 100%,100% .34em;text-decoration:none}
-/* 작은 ↗ — 올리면 ↘로 회전 (사이트의 다른 화살표와 같은 움직임) */
-.news-inline-link::after,.news-link::after,.media-link-inline::after{
-  content:'↗';display:inline-block;font-size:.7em;margin-left:.18em;transform:translateY(-.32em);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.news-inline-link:hover::after,.news-link:hover::after,.media-link-inline:hover::after{transform:translateY(-.32em) rotate(90deg)}
-.news-row.has-link:hover .news-text .news-inline-link{color:#000}
-.news-row.has-link .news-text .news-inline-link:hover{color:#fff}
+  color:#000;font-weight:600;text-decoration:none;border:none;background:none;padding:0;margin:0;border-radius:0;
+  transition:color .2s}
+.news-inline-link::after,.news-link::after,.cv-entry-link::after,.media-link-inline::after{
+  content:'↗';display:inline-flex;align-items:center;justify-content:center;
+  width:1.15em;height:1.15em;margin:0 .2em 0 .3em;border-radius:50%;
+  background:#000;color:#fff;font-size:.62em;font-weight:500;line-height:1;vertical-align:.18em;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),background .2s}
+.news-inline-link:hover::after,.news-link:hover::after,.cv-entry-link:hover::after,.media-link-inline:hover::after{transform:rotate(90deg) scale(1.18)}
+.link-scrambling{display:inline-block;white-space:nowrap;text-align:left}
 .cv-entry-link{justify-self:start;align-self:start;width:fit-content;margin-top:8px}
+
+
+/* ── 로고: N · O(점) · [AH / M] — 위로 읽으면 NOAH, 아래로 읽으면 NAM ── */
+.hero-logo .hero-logo-stack{width:119px;height:125px;overflow:visible;fill:none;stroke:#000;stroke-width:16;stroke-linecap:round;stroke-linejoin:round}
+.hero-logo-stack .stack-top{opacity:0;animation:stack-in-top .9s cubic-bezier(.215,.61,.355,1) .35s forwards}
+.hero-logo-stack .stack-bottom{opacity:0;animation:stack-in-bottom .9s cubic-bezier(.215,.61,.355,1) .5s forwards}
+@keyframes stack-in-top{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+@keyframes stack-in-bottom{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@media(max-width:600px){
+  .hero-logo{height:96px}
+  .hero-logo svg{width:88px;height:88px}
+  .hero-logo .hero-logo-stack{width:84px;height:88px}
+}
 
 /* ── 반응형 ── */
 @media(max-width:860px){
@@ -1907,6 +1911,11 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
           <circle class="hero-logo-ball" cx="21" cy="105" r="17"></circle>
           <circle class="hero-logo-ball" cx="63" cy="105" r="17"></circle>
           <circle class="hero-logo-ball" cx="105" cy="105" r="17"></circle>
+        </svg>
+        <!-- O 높이의 절반씩: 위 AH(→ N·O·AH = NOAH), 아래 M(→ N·O(A)·M = NAM) -->
+        <svg class="hero-logo-stack" viewBox="0 0 120 126">
+          <path class="stack-top" d="M14 50 V31 A17 17 0 0 1 48 31 V50 M14 39 H48 M74 14 V50 M106 14 V50 M74 32 H106"></path>
+          <path class="stack-bottom" d="M14 112 V76 L60 104 L106 76 V112"></path>
         </svg>
       </div>
       <h1 class="landing-title" id="landing-title-text" data-edit-key="heroTitle"></h1>
@@ -3531,7 +3540,7 @@ ${isAdmin ? `<div class="layout-toggle">
           ${entry.tags && entry.tags.length
             ? `<div class="cv-entry-tags">${entry.tags.map(t=>`<span class="cv-entry-tag">${esc(t)}</span>`).join('')}</div>`
             : ''}
-          ${entry.linkUrl ? `<a class="cv-entry-link" href="${esc(entry.linkUrl)}" target="_blank" onclick="event.stopPropagation()">↗ ${esc(entry.linkLabel||entry.linkUrl)}</a>` : ''}
+          ${entry.linkUrl ? `<a class="cv-entry-link" href="${esc(entry.linkUrl)}" target="_blank" onclick="event.stopPropagation()">${esc(entry.linkLabel||entry.linkUrl)}</a>` : ''}
         </div>`;
       });
       html += `</div>`;
@@ -6374,6 +6383,37 @@ particlesJS("particles-js",{
   hero.addEventListener('mouseleave', reset);
   hero.addEventListener('touchmove', function(e){ var t = e.touches[0]; move(t.clientX, t.clientY); }, {passive:true});
   hero.addEventListener('touchend', reset);
+})();
+</script>
+<script>
+// ── 링크 스크램블: 마우스를 올리면 글자가 무작위로 섞였다가 왼쪽부터 원래 글자로 맞춰짐 ──
+(function(){
+  var SEL = '.news-inline-link,.news-link,.cv-entry-link,.media-link-inline';
+  var POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#%&*+=<>/';
+  var DURATION = 420;
+  document.addEventListener('mouseover', function(e){
+    var a = e.target.closest && e.target.closest(SEL);
+    if (!a || a.contains(e.relatedTarget) || a.dataset.scrambling) return;
+    if (a.children.length) return;                       // 글자만 있는 링크에만
+    var text = a.textContent;
+    if (!text.trim()) return;
+    a.dataset.scrambling = '1';
+    a.style.minWidth = a.getBoundingClientRect().width + 'px';   // 글자 폭이 바뀌어도 줄이 흔들리지 않게
+    a.classList.add('link-scrambling');
+    var t0 = performance.now();
+    (function frame(now){
+      var p = Math.min(1, (now - t0) / DURATION);
+      var reveal = Math.floor(p * text.length);
+      var out = '';
+      for (var i = 0; i < text.length; i++) {
+        var c = text[i];
+        out += (i < reveal || c === ' ') ? c : POOL[(Math.random() * POOL.length) | 0];
+      }
+      a.textContent = out;
+      if (p < 1) requestAnimationFrame(frame);
+      else { a.textContent = text; a.classList.remove('link-scrambling'); a.style.minWidth = ''; delete a.dataset.scrambling; }
+    })(t0);
+  });
 })();
 </script>
 </body>
