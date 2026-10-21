@@ -1584,6 +1584,44 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
   .list-filter{max-width:none;margin:16px 0 20px}
 }
 
+
+/* ── HOME: NEWS ── */
+.news-section{margin-bottom:72px}
+.news-list{border-top:1px solid var(--rule)}
+.news-row{position:relative;display:grid;grid-template-columns:120px minmax(0,1fr);column-gap:24px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.news-date{font-size:.88rem;color:var(--muted);white-space:nowrap}
+.news-text{font-size:.98rem;line-height:1.6;color:#000}
+.news-text strong{font-weight:600}
+.news-link{color:#000;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.news-link:hover{color:var(--muted)}
+.news-admin{position:absolute;top:10px;right:0;gap:5px;opacity:0;transition:opacity .2s}
+.news-row:hover .news-admin{opacity:1}
+.admin-mode .news-row{cursor:grab}
+.news-row.drag-over{box-shadow:inset 0 2px 0 #000}
+.news-more{margin-top:12px;background:none;border:none;padding:0;font-family:var(--sans);font-size:.88rem;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.news-more:hover{color:#000}
+.news-empty{padding:16px 0;font-size:.9rem;color:var(--muted);border-bottom:1px solid var(--rule)}
+.btn-add-news{margin-top:12px;padding:8px 14px;border:1px dashed var(--s300);border-radius:6px;background:none;font-family:var(--sans);font-size:.82rem;color:var(--muted);cursor:pointer}
+.btn-add-news:hover{border-color:#000;color:#000}
+
+/* ── HOME: 관리자 모드 글자 직접 수정 ── */
+.admin-mode #page-landing [data-edit-key]{cursor:text;outline:1px dashed transparent;outline-offset:4px;border-radius:2px;transition:outline-color .15s}
+.admin-mode #page-landing [data-edit-key]:hover{outline-color:#bbb}
+.admin-mode #page-landing [data-edit-key].is-editing{outline:1px solid #000;white-space:pre-wrap}
+.admin-mode #page-landing [data-edit-key]:empty::before{content:attr(data-placeholder);color:#aaa}
+
+/* ── 소개 카드: 검은 아이콘 링크 ── */
+.lau-links{gap:16px;justify-content:flex-end;margin-top:22px}
+.lau-icon{display:inline-flex;width:28px;height:28px;color:#000;transition:transform .25s cubic-bezier(.22,.61,.36,1),color .2s}
+.lau-icon svg{width:100%;height:100%;fill:currentColor}
+.lau-icon:hover{transform:translateY(-3px);color:#555}
+
+@media(max-width:600px){
+  .news-row{grid-template-columns:76px minmax(0,1fr);column-gap:14px}
+  .news-date{font-size:.78rem}
+  .news-text{font-size:.92rem}
+}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1689,8 +1727,8 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
           <circle class="hero-logo-ball" cx="105" cy="105" r="17"></circle>
         </svg>
       </div>
-      <h1 class="landing-title" id="landing-title-text"></h1>
-      <p class="landing-desc" id="landing-hero-desc"></p>
+      <h1 class="landing-title" id="landing-title-text" data-edit-key="heroTitle"></h1>
+      <p class="landing-desc" id="landing-hero-desc" data-edit-key="heroDesc" data-placeholder="Add a tagline…"></p>
       <div class="landing-btns">
         <button class="landing-btn-secondary admin-only" onclick="openProfileEdit()" style="border-style:dashed">✎ Edit Home</button>
       </div>
@@ -1698,24 +1736,31 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 
     <div class="landing-grid">
       <div class="landing-main">
+        <!-- News -->
+        <div class="news-section" id="landing-news-section">
+          <div class="landing-section-label" data-edit-key="newsLabel" data-default="News">News</div>
+          <div class="news-list" id="landing-news"></div>
+          <button class="btn-add-news admin-only" onclick="openNewsModal()">+ Add News</button>
+        </div>
+
         <!-- Recent posts -->
-        <div class="landing-section-label is-link i18n" data-ko="최근 글" data-en="Recent Posts" onclick="showSection('posts')"></div>
-        <div class="list-head"><span class="i18n" data-ko="날짜" data-en="Date"></span><span class="i18n" data-ko="제목" data-en="Title"></span></div>
+        <div class="landing-section-label is-link" data-edit-key="recentLabel" data-default="Recent Posts" onclick="if(!isAdmin)showSection('posts')">Recent Posts</div>
+        <div class="list-head"><span data-edit-key="dateHead" data-default="Date">Date</span><span data-edit-key="titleHead" data-default="Title">Title</span></div>
         <div class="recent-posts-grid" id="landing-recent"></div>
 
         <!-- Section rows -->
-        <div class="landing-section-label i18n" data-ko="이런 공간이에요" data-en="What's here"></div>
+        <div class="landing-section-label" data-edit-key="hereLabel" data-default="What's here">What's here</div>
         <div class="landing-cards">
           <div class="gc gc-hover landing-card" onclick="showSection('posts')">
             <div class="lc-icon">✍️</div>
-            <div class="lc-title">Posts</div>
-            <div class="lc-desc i18n" data-ko="공부하며 정리한 글들, 개발 기록, 그리고 생각들을 담습니다." data-en="Notes on what I study, dev logs, and everyday thoughts."></div>
+            <div class="lc-title" data-edit-key="postsCardTitle" data-default="Posts">Posts</div>
+            <div class="lc-desc" data-edit-key="postsCardDesc" data-default="Notes on what I study, dev logs, and everyday thoughts.">Notes on what I study, dev logs, and everyday thoughts.</div>
             <div class="lc-arrow i18n" data-ko="둘러보기 →" data-en="Browse →"></div>
           </div>
           <div class="gc gc-hover landing-card" onclick="showSection('paper')">
             <div class="lc-icon">📄</div>
-            <div class="lc-title">Paper Review</div>
-            <div class="lc-desc i18n" data-ko="읽은 논문들을 정리하고 핵심 내용을 요약한 리뷰를 올립니다." data-en="Summaries and reviews of papers I've read."></div>
+            <div class="lc-title" data-edit-key="paperCardTitle" data-default="Paper Review">Paper Review</div>
+            <div class="lc-desc" data-edit-key="paperCardDesc" data-default="Summaries and reviews of papers I've read.">Summaries and reviews of papers I've read.</div>
             <div class="lc-arrow i18n" data-ko="둘러보기 →" data-en="Browse →"></div>
           </div>
         </div>
@@ -1726,12 +1771,12 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <div class="gc landing-author-card" id="landing-author">
           <div class="lau-avatar" id="landing-av">?</div>
           <div class="lau-info">
-            <div class="lau-name" id="landing-author-name">Set your name</div>
-            <div class="lau-handle" id="landing-author-handle">@handle</div>
-            <div class="lau-bio" id="landing-author-bio"></div>
+            <div class="lau-name" id="landing-author-name" data-edit-key="profileName">Set your name</div>
+            <div class="lau-handle" id="landing-author-handle" data-edit-key="profileHandle">@handle</div>
+            <div class="lau-bio" id="landing-author-bio" data-edit-key="profileBio" data-placeholder="Add a short bio…"></div>
             <div class="lau-links" id="landing-author-links"></div>
           </div>
-          <button class="lau-me-btn i18n" data-ko="Full Profile →" data-en="Full Profile →" onclick="showSection('home')">Full Profile →</button>
+          <button class="lau-me-btn" data-edit-key="profileBtn" data-default="Full Profile →" onclick="if(!isAdmin)showSection('home')">Full Profile →</button>
         </div>
       </aside>
     </div>
@@ -2077,6 +2122,26 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
 </div>
 
+<div id="modal-news" class="modal-overlay" style="display:none" onclick="closeModal('modal-news',event)">
+  <div class="modal" style="max-width:440px">
+<div class="modal-drag-handle"></div>
+    <div class="modal-title" id="news-modal-title">Add News</div>
+    <label class="form-label">Date</label>
+    <input class="form-input" id="inp-news-date" placeholder="e.g. Oct. 2026">
+    <label class="form-label">News</label>
+    <textarea class="form-textarea" id="inp-news-text" placeholder="What happened? Use **bold** for emphasis."></textarea>
+    <label class="form-label">Link (optional)</label>
+    <div style="display:flex;gap:6px">
+      <input class="form-input" id="inp-news-link-label" placeholder="Label (e.g. Paper)" style="width:36%">
+      <input class="form-input" id="inp-news-link" placeholder="https://...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-news')">Cancel</button>
+      <button class="btn-primary" onclick="saveNews()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-add-section" class="modal-overlay" style="display:none" onclick="closeModal('modal-add-section',event)">
   <div class="modal" style="max-width:360px">
 <div class="modal-drag-handle"></div>
@@ -2373,9 +2438,17 @@ async function load() {
       });
     }
 
-    if (cvRes.data) cvSections = cvRes.data.map(r => ({
-      id: r.id, name: r.title, entries: r.items || [], layout: r.layout || 'list'
-    }));
+    if (cvRes.data) {
+      // Home 전용 데이터(News, 편집한 문구)는 같은 테이블의 별도 행에 저장 — Me 페이지 섹션에서 제외
+      const newsRow  = cvRes.data.find(r => r.id === 'home_news');
+      const textsRow = cvRes.data.find(r => r.id === 'home_texts');
+      homeNews  = (newsRow && newsRow.items) || [];
+      homeTexts = {};
+      ((textsRow && textsRow.items) || []).forEach(t => { if (t && t.key) homeTexts[t.key] = t.value; });
+      cvSections = cvRes.data.filter(r => !HOME_ROWS.includes(r.id)).map(r => ({
+        id: r.id, name: r.title, entries: r.items || [], layout: r.layout || 'list'
+      }));
+    }
 
     if (profileRes.data) {
       const r = profileRes.data;
@@ -2595,6 +2668,10 @@ let sortDesc        = { posts:true, paper:true };
 let filterCat       = { posts:null, paper:null };
 let filterTag       = { posts:null, paper:null };
 let filterText      = { posts:'', paper:'' };
+const HOME_ROWS     = ['home_news','home_texts'];
+let homeNews        = [];   // [{id,date,text,link,linkLabel}]
+let homeTexts       = {};   // Home에서 직접 고친 문구 {key: value}
+let newsExpanded    = false;
 let postGridCols    = { posts:1, paper:1 };
 let isAdmin         = false;
 
@@ -2754,7 +2831,7 @@ function renderLanding() {
     const koDesc = profile.landingDesc || '';
     const enDesc = profile.landingDescEn || '';
     descEl.textContent = currentLang === 'en' ? (enDesc || koDesc) : koDesc;
-    descEl.style.display = descEl.textContent ? '' : 'none';
+    descEl.style.display = (descEl.textContent || isAdmin) ? '' : 'none';
   }
   // Apply i18n labels
   applyLang();
@@ -2771,14 +2848,28 @@ function renderLanding() {
   if (handleEl) handleEl.textContent = '@' + (profile.handle || 'handle');
   const bioEl = document.getElementById('landing-author-bio');
   if (bioEl) bioEl.innerHTML = esc(profile.bio || '').replace(/\|/g,'<br>');
+  if (bioEl) bioEl.style.display = (profile.bio || isAdmin) ? '' : 'none';
   const linksEl = document.getElementById('landing-author-links');
   if (linksEl) {
     const links = [];
-    if (profile.github) links.push(`<a class="lau-link" href="${esc(profile.github)}" target="_blank">GH · ${esc(profile.github.replace('https://github.com/',''))}</a>`);
-    if (profile.email) links.push(`<a class="lau-link" href="mailto:${esc(profile.email)}">✉ ${esc(profile.email)}</a>`);
-    (profile.customLinks||[]).forEach(l=>{ if(l.url) links.push(`<a class="lau-link" href="${esc(l.url)}" target="_blank">${esc(l.label||l.url)}</a>`); });
+    const icon = (kind, href, title, ext) =>
+      `<a class="lau-icon" href="${esc(href)}" title="${esc(title)}" aria-label="${esc(title)}"${ext?' target="_blank" rel="noopener"':''}>${SOCIAL_ICONS[kind]}</a>`;
+    if (profile.email) links.push(icon('email', 'mailto:' + profile.email, profile.email, false));
+    if (profile.github) {
+      const gh = /^https?:/.test(profile.github) ? profile.github : 'https://github.com/' + profile.github.replace(/^@/, '');
+      links.push(icon('github', gh, 'GitHub', true));
+    }
+    (profile.customLinks||[]).forEach(l => {
+      if (!l.url) return;
+      const hay = (l.url + ' ' + (l.label||'')).toLowerCase();
+      const kind = hay.includes('linkedin') ? 'linkedin' : hay.includes('github') ? 'github' : 'link';
+      links.push(icon(kind, l.url, l.label || l.url, true));
+    });
     linksEl.innerHTML = links.join('');
   }
+
+  applyHomeTexts();
+  renderNews();
 
   // Recent posts
   const recent = [...posts, ...papers]
@@ -2801,6 +2892,164 @@ function renderLanding() {
     </div>`;
   }).join('');
 }
+
+
+// ── HOME: 저장 (cv_sections 테이블의 별도 행) ───────────────────────
+async function saveHomeRow(id, items) {
+  showSaving('Saving...');
+  const { error } = await supa.from('cv_sections').upsert({ id, title: '__' + id, items, sort_order: 9999, layout: 'home' });
+  if (error) { hideSaving('❌ Save failed: ' + error.message, 0); return; }
+  hideSaving('✅ Saved');
+}
+
+// ── HOME: NEWS ──────────────────────────────────────────────────────
+const NEWS_LIMIT = 5;
+let editingNewsId = null, newsDragIdx = null;
+function newsTextHTML(n) {
+  let h = esc(n.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  if (n.link) h += ` <a class="news-link" href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.linkLabel || 'Link')} ↗</a>`;
+  return h;
+}
+function renderNews() {
+  const sec = document.getElementById('landing-news-section');
+  const el = document.getElementById('landing-news');
+  if (!sec || !el) return;
+  sec.style.display = (homeNews.length || isAdmin) ? '' : 'none';
+  const shown = newsExpanded ? homeNews : homeNews.slice(0, NEWS_LIMIT);
+  const drag = i => isAdmin ? `draggable="true" ondragstart="newsDragStart(event,${i})" ondragover="newsDragOver(event,${i})" ondragleave="this.classList.remove('drag-over')" ondrop="newsDrop(event,${i})" ondragend="newsDragEnd()"` : '';
+  el.innerHTML = shown.map((n, i) => `
+    <div class="news-row" id="news-${i}" ${drag(i)}>
+      <div class="news-date">${esc(n.date || '')}</div>
+      <div class="news-text">${newsTextHTML(n)}</div>
+      <div class="news-admin admin-only flex">
+        <button class="btn-sm" onclick="openNewsModal('${n.id}')">✎</button>
+        <button class="btn-sm danger" onclick="askDeleteNews('${n.id}')">✕</button>
+      </div>
+    </div>`).join('')
+    + (homeNews.length > NEWS_LIMIT ? `<button class="news-more" onclick="newsExpanded=!newsExpanded;renderNews()">${newsExpanded ? 'Show less' : 'Show all (' + homeNews.length + ')'}</button>` : '')
+    + (!homeNews.length ? `<div class="news-empty">No news yet — add your first one.</div>` : '');
+}
+function openNewsModal(id) {
+  const n = id ? homeNews.find(x => x.id === id) : null;
+  editingNewsId = n ? n.id : null;
+  document.getElementById('news-modal-title').textContent = n ? 'Edit News' : 'Add News';
+  document.getElementById('inp-news-date').value = n ? (n.date || '') : '';
+  document.getElementById('inp-news-text').value = n ? (n.text || '') : '';
+  document.getElementById('inp-news-link').value = n ? (n.link || '') : '';
+  document.getElementById('inp-news-link-label').value = n ? (n.linkLabel || '') : '';
+  document.getElementById('modal-news').style.display = 'flex';
+  setTimeout(() => document.getElementById(n ? 'inp-news-text' : 'inp-news-date').focus(), 100);
+}
+function saveNews() {
+  const item = {
+    date: document.getElementById('inp-news-date').value.trim(),
+    text: document.getElementById('inp-news-text').value.trim(),
+    link: document.getElementById('inp-news-link').value.trim(),
+    linkLabel: document.getElementById('inp-news-link-label').value.trim(),
+  };
+  if (!item.text) { toast('Enter the news text.'); return; }
+  if (editingNewsId) {
+    const i = homeNews.findIndex(x => x.id === editingNewsId);
+    if (i >= 0) homeNews[i] = { ...homeNews[i], ...item };
+  } else {
+    homeNews.unshift({ id: 'n' + Date.now(), ...item });   // 새 소식은 맨 위
+  }
+  saveHomeRow('home_news', homeNews); closeModal('modal-news'); renderNews();
+}
+function askDeleteNews(id) {
+  deleteType = 'news'; deleteTargetId = id; deleteExtra = null;
+  document.getElementById('modal-delete').style.display = 'flex';
+}
+function newsDragStart(e, i) { newsDragIdx = i; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => { const r = document.getElementById('news-' + i); if (r) r.style.opacity = '.45'; }, 0); }
+function newsDragOver(e, i) { if (newsDragIdx === null) return; e.preventDefault(); document.querySelectorAll('.news-row').forEach(r => r.classList.remove('drag-over')); document.getElementById('news-' + i).classList.add('drag-over'); }
+function newsDrop(e, i) {
+  e.preventDefault();
+  if (newsDragIdx === null || newsDragIdx === i) { newsDragEnd(); return; }
+  const moved = homeNews.splice(newsDragIdx, 1)[0];
+  homeNews.splice(i, 0, moved);
+  newsDragIdx = null; saveHomeRow('home_news', homeNews); renderNews();
+}
+function newsDragEnd() { newsDragIdx = null; document.querySelectorAll('.news-row').forEach(r => { r.style.opacity = ''; r.classList.remove('drag-over'); }); }
+
+// ── HOME: 글자 직접 수정 (관리자 모드에서 클릭 → 그 자리에서 편집) ─────
+const PROFILE_KEYS = ['heroTitle', 'heroDesc', 'profileName', 'profileHandle', 'profileBio'];
+function applyHomeTexts() {
+  document.querySelectorAll('#page-landing [data-edit-key]').forEach(el => {
+    const k = el.dataset.editKey;
+    if (PROFILE_KEYS.includes(k) || el.isContentEditable) return;
+    el.textContent = homeTexts[k] || el.dataset.default || el.textContent;
+  });
+}
+function rawEditValue(el) {
+  const k = el.dataset.editKey;
+  if (k === 'heroTitle') return (profile.landingTitleEn || profile.landingTitle || '').replace(/\|/g, '\n');
+  if (k === 'heroDesc') return profile.landingDescEn || profile.landingDesc || '';
+  if (k === 'profileName') return profile.name || '';
+  if (k === 'profileHandle') return '@' + (profile.handle || '');
+  if (k === 'profileBio') return (profile.bio || '').replace(/\|/g, '\n');
+  return el.textContent;
+}
+function startInlineEdit(el) {
+  el.dataset.before = rawEditValue(el);
+  el.innerText = el.dataset.before;
+  el.style.display = '';
+  try { el.contentEditable = 'plaintext-only'; } catch (_) { el.contentEditable = 'true'; }
+  if (el.contentEditable !== 'plaintext-only') el.contentEditable = 'true';
+  el.classList.add('is-editing');
+  el.focus();
+  const range = document.createRange(); range.selectNodeContents(el);
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+}
+function finishInlineEdit(el, keep) {
+  if (!el.classList.contains('is-editing')) return;
+  el.classList.remove('is-editing');
+  el.contentEditable = 'false';
+  const k = el.dataset.editKey;
+  const multiline = k === 'heroTitle' || k === 'profileBio';
+  const v = keep ? el.innerText.replace(/\u00a0/g, ' ').trim() : el.dataset.before;
+  if (keep && v !== el.dataset.before) {
+    const joined = multiline ? v.split(/\n+/).map(x => x.trim()).filter(Boolean).join('|') : v.replace(/\s*\n\s*/g, ' ');
+    if (PROFILE_KEYS.includes(k)) {
+      if (k === 'heroTitle') profile.landingTitleEn = joined;
+      if (k === 'heroDesc') { profile.landingDescEn = joined; if (!joined) profile.landingDesc = ''; }
+      if (k === 'profileName') profile.name = joined;
+      if (k === 'profileHandle') profile.handle = joined.replace(/^@/, '');
+      if (k === 'profileBio') profile.bio = joined;
+      save(); saveProfileToDB(); if (typeof renderHome === 'function') renderHome();
+    } else {
+      if (joined) homeTexts[k] = joined; else delete homeTexts[k];   // 비우면 기본 문구로
+      saveHomeRow('home_texts', Object.entries(homeTexts).map(([key, value]) => ({ key, value })));
+    }
+  }
+  renderLanding();
+}
+// 캡처 단계에서 가로채서, 편집 중에는 카드/제목의 이동 클릭이 실행되지 않게
+document.addEventListener('click', e => {
+  if (!isAdmin) return;
+  const el = e.target.closest && e.target.closest('#page-landing [data-edit-key]');
+  if (!el) return;
+  e.preventDefault(); e.stopPropagation();
+  if (!el.classList.contains('is-editing')) startInlineEdit(el);
+}, true);
+document.addEventListener('keydown', e => {
+  const el = e.target.closest && e.target.closest('#page-landing [data-edit-key].is-editing');
+  if (!el) return;
+  const multiline = el.dataset.editKey === 'heroTitle' || el.dataset.editKey === 'profileBio';
+  if (e.key === 'Escape') { e.preventDefault(); finishInlineEdit(el, false); }
+  else if (e.key === 'Enter' && !(multiline && e.shiftKey)) { e.preventDefault(); el.blur(); }
+});
+document.addEventListener('focusout', e => {
+  const el = e.target.closest && e.target.closest('#page-landing [data-edit-key].is-editing');
+  if (el) finishInlineEdit(el, true);
+});
+
+// ── 소셜 아이콘 (검은 단색 SVG) ──────────────────────────────────────
+const SOCIAL_ICONS = {
+  email: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 4h17A1.5 1.5 0 0 1 22 5.5v.6l-10 6.2L2 6.1v-.6A1.5 1.5 0 0 1 3.5 4zM2 8.4V18.5A1.5 1.5 0 0 0 3.5 20h17a1.5 1.5 0 0 0 1.5-1.5V8.4l-10 6.2z"/></svg>',
+  github: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>',
+  linkedin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.4-3.4a1 1 0 0 1 1.4 1.4L12 13.4a1 1 0 0 1-1.4 0zm-2.1 6.1a4.5 4.5 0 0 1-3.2-7.7l2.1-2.1a1 1 0 0 1 1.4 1.4l-2.1 2.1a2.5 2.5 0 0 0 3.5 3.5l2.1-2.1a1 1 0 0 1 1.4 1.4l-2.1 2.1a4.5 4.5 0 0 1-3.1 1.4zm8-6.1a1 1 0 0 1-.7-1.7l2.1-2.1a2.5 2.5 0 0 0-3.5-3.5l-2.1 2.1a1 1 0 0 1-1.4-1.4L13 4.7a4.5 4.5 0 0 1 6.4 6.4l-2.1 2.1a1 1 0 0 1-.8.2z"/></svg>',
+};
 
 // ── MEDIA PAGE ────────────────────────────────────────────────────
 function goBack() {
@@ -4746,6 +4995,10 @@ function askDelete(id,section){
   document.getElementById('modal-delete').style.display='flex';
 }
 function confirmDelete(){
+  if(deleteType==='news'){
+    homeNews=homeNews.filter(n=>n.id!==deleteTargetId);
+    saveHomeRow('home_news', homeNews); closeModal('modal-delete'); toast('Deleted.'); renderNews(); return;
+  }
   if(deleteType==='post')       posts  =posts.filter(p=>p.id!==deleteTargetId);
   else if(deleteType==='paper') papers =papers.filter(p=>p.id!==deleteTargetId);
   else if(deleteType==='cv-section') cvSections=cvSections.filter(s=>s.id!==deleteTargetId);
@@ -5710,7 +5963,7 @@ particlesJS("particles-js",{
     if (snap && snap !== best){ snap.el.style.transition = 'transform .3s cubic-bezier(.25,1,.5,1)'; snap.el.style.transform = ''; }
     snap = best;
     // 입력칸 위에서는 숨겨서 글쓰기에 방해되지 않게
-    var tag = e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], .lp-editor');
+    var tag = e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], [contenteditable="plaintext-only"], .lp-editor');
     dot.classList.toggle('is-hidden', !!tag);
   });
   document.addEventListener('mouseleave', function(){ dot.classList.remove('is-active'); started = false; });
