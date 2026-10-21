@@ -1343,6 +1343,7 @@ body{background:#fff;color:#000;letter-spacing:-.005em}
 .landing-title span{color:inherit}
 .landing-desc{margin:20px 0 0;max-width:760px;font-size:1.1rem;color:var(--muted);text-align:left}
 .landing-btns{justify-content:flex-start;margin-top:32px}
+body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 줄 여백 제거 */
 .landing-btn-primary{background:#000;border-radius:999px;font-weight:500;letter-spacing:0}
 .landing-btn-primary:hover{background:#333;transform:none}
 .landing-btn-secondary{border-color:var(--rule);border-radius:999px;color:#000;font-weight:500;letter-spacing:0}
@@ -1691,8 +1692,6 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <h1 class="landing-title" id="landing-title-text"></h1>
       <p class="landing-desc" id="landing-hero-desc"></p>
       <div class="landing-btns">
-        <button class="landing-btn-primary" onclick="showSection('posts')">✍ Posts</button>
-        <button class="landing-btn-secondary" onclick="showSection('paper')">📄 Paper Review</button>
         <button class="landing-btn-secondary admin-only" onclick="openProfileEdit()" style="border-style:dashed">✎ Edit Home</button>
       </div>
     </div>
