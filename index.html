@@ -1805,6 +1805,10 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 @keyframes intro-n-in{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
 @keyframes intro-ball-in{to{transform:scale(1)}}
 
+/* 사진 아래 @handle 숨김 — 이름 아래 바로 소개글 (참고 사이트 간격) */
+.lau-handle,.p-handle{display:none !important}
+.lau-name,.p-name{margin-bottom:34px}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
