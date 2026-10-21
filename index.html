@@ -1696,6 +1696,20 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .feat-type{font-size:.72rem;color:#555;background:var(--tag);border-radius:4px;padding:1px 7px}
 .feat-empty{padding:16px 2px;color:var(--muted);font-size:.85rem}
 
+
+/* ── News 오른쪽 ↗ (Recent Posts와 같은 열) ── */
+.news-row{grid-template-columns:120px minmax(0,1fr) 16px}
+.news-list.has-thumbs .news-row{grid-template-columns:120px 64px minmax(0,1fr) 16px}
+.news-arrow{font-size:.9rem;text-align:right;color:#000;transition:transform .25s cubic-bezier(.22,.61,.36,1),color .2s}
+.news-row.has-link{cursor:pointer}
+.news-row.has-link:hover .news-arrow{transform:translate(3px,-3px)}
+.news-row.has-link:hover .news-text{color:var(--muted)}
+.news-admin{right:28px}
+@media(max-width:600px){
+  .news-row{grid-template-columns:76px minmax(0,1fr) 14px}
+  .news-list.has-thumbs .news-row{grid-template-columns:76px 48px minmax(0,1fr) 14px}
+}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -3111,7 +3125,7 @@ const NEWS_LIMIT = 5;
 let editingNewsId = null, newsDragIdx = null;
 function newsTextHTML(n) {
   let h = esc(n.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-  if (n.link) h += ` <a class="news-link" href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.linkLabel || 'Link')} ↗</a>`;
+  if (n.link) h += ` <a class="news-link" href="${esc(n.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(n.linkLabel || 'Link')}</a>`;
   return h;
 }
 function renderNews() {
@@ -3123,17 +3137,23 @@ function renderNews() {
   const drag = i => isAdmin ? `draggable="true" ondragstart="newsDragStart(event,${i})" ondragover="newsDragOver(event,${i})" ondragleave="this.classList.remove('drag-over')" ondrop="newsDrop(event,${i})" ondragend="newsDragEnd()"` : '';
   el.classList.toggle('has-thumbs', shown.some(n => n.image));
   el.innerHTML = shown.map((n, i) => `
-    <div class="news-row" id="news-${i}" ${drag(i)}>
+    <div class="news-row${n.link ? ' has-link' : ''}" id="news-${i}" ${drag(i)}${n.link ? ` data-href="${esc(n.link)}" onclick="openNewsLink(this)"` : ''}>
       <div class="news-date">${esc(n.date || '')}</div>
       <div class="item-thumb">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" decoding="async">` : ''}</div>
       <div class="news-text">${newsTextHTML(n)}</div>
-      <div class="news-admin admin-only flex">
+      <div class="news-arrow" aria-hidden="true">↗</div>
+      <div class="news-admin admin-only flex" onclick="event.stopPropagation()">
         <button class="btn-sm" onclick="openNewsModal('${n.id}')">✎</button>
         <button class="btn-sm danger" onclick="askDeleteNews('${n.id}')">✕</button>
       </div>
     </div>`).join('')
     + (homeNews.length > NEWS_LIMIT ? `<button class="news-more" onclick="newsExpanded=!newsExpanded;renderNews()">${newsExpanded ? 'Show less' : 'Show all (' + homeNews.length + ')'}</button>` : '')
     + (!homeNews.length ? `<div class="news-empty">No news yet — add your first one.</div>` : '');
+}
+// 링크가 있는 소식은 줄 전체 클릭 시 새 탭으로
+function openNewsLink(row) {
+  if (newsDragIdx !== null) return;
+  window.open(row.dataset.href, '_blank', 'noopener');
 }
 function openNewsModal(id) {
   const n = id ? homeNews.find(x => x.id === id) : null;
