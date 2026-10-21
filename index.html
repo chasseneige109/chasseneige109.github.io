@@ -1782,17 +1782,17 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 }
 
 
-/* ── 링크: 굵은 글자 + 검은 원 ↗ 배지. 마우스를 올리면 글자가 섞였다가 해독되듯 맞춰짐(스크램블) ── */
+/* ── 링크: 차분한 모던 스타일 — 평소엔 살짝 굵은 글자 + 작은 ↗,
+   마우스를 올리면 얇은 선이 왼쪽에서 그어지고 ↗가 2px 움직임 ── */
 .news-inline-link,.news-link,.cv-entry-link,.media-link-inline{
-  color:#000;font-weight:600;text-decoration:none;border:none;background:none;padding:0;margin:0;border-radius:0;
-  transition:color .2s}
+  color:#000;font-weight:500;text-decoration:none;border:none;border-radius:0;padding:0 0 1px;margin:0;
+  background:linear-gradient(currentColor,currentColor) no-repeat 0 100% / 0 1px;
+  transition:background-size .35s cubic-bezier(.22,.61,.36,1)}
+.news-inline-link:hover,.news-link:hover,.cv-entry-link:hover,.media-link-inline:hover{background-size:100% 1px;color:#000}
 .news-inline-link::after,.news-link::after,.cv-entry-link::after,.media-link-inline::after{
-  content:'↗';display:inline-flex;align-items:center;justify-content:center;
-  width:1.15em;height:1.15em;margin:0 .2em 0 .3em;border-radius:50%;
-  background:#000;color:#fff;font-size:.62em;font-weight:500;line-height:1;vertical-align:.18em;
-  transition:transform .35s cubic-bezier(.34,1.56,.64,1),background .2s}
-.news-inline-link:hover::after,.news-link:hover::after,.cv-entry-link:hover::after,.media-link-inline:hover::after{transform:rotate(90deg) scale(1.18)}
-.link-scrambling{display:inline-block;white-space:nowrap;text-align:left}
+  content:'↗';display:inline-block;margin-left:.15em;font-size:.78em;font-weight:400;color:var(--muted);
+  transition:transform .3s cubic-bezier(.22,.61,.36,1),color .3s}
+.news-inline-link:hover::after,.news-link:hover::after,.cv-entry-link:hover::after,.media-link-inline:hover::after{transform:translate(2px,-2px);color:#000}
 .cv-entry-link{justify-self:start;align-self:start;width:fit-content;margin-top:8px}
 
 
@@ -6336,37 +6336,6 @@ particlesJS("particles-js",{
   hero.addEventListener('mouseleave', reset);
   hero.addEventListener('touchmove', function(e){ var t = e.touches[0]; move(t.clientX, t.clientY); }, {passive:true});
   hero.addEventListener('touchend', reset);
-})();
-</script>
-<script>
-// ── 링크 스크램블: 마우스를 올리면 글자가 무작위로 섞였다가 왼쪽부터 원래 글자로 맞춰짐 ──
-(function(){
-  var SEL = '.news-inline-link,.news-link,.cv-entry-link,.media-link-inline';
-  var POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#%&*+=<>/';
-  var DURATION = 420;
-  document.addEventListener('mouseover', function(e){
-    var a = e.target.closest && e.target.closest(SEL);
-    if (!a || a.contains(e.relatedTarget) || a.dataset.scrambling) return;
-    if (a.children.length) return;                       // 글자만 있는 링크에만
-    var text = a.textContent;
-    if (!text.trim()) return;
-    a.dataset.scrambling = '1';
-    a.style.minWidth = a.getBoundingClientRect().width + 'px';   // 글자 폭이 바뀌어도 줄이 흔들리지 않게
-    a.classList.add('link-scrambling');
-    var t0 = performance.now();
-    (function frame(now){
-      var p = Math.min(1, (now - t0) / DURATION);
-      var reveal = Math.floor(p * text.length);
-      var out = '';
-      for (var i = 0; i < text.length; i++) {
-        var c = text[i];
-        out += (i < reveal || c === ' ') ? c : POOL[(Math.random() * POOL.length) | 0];
-      }
-      a.textContent = out;
-      if (p < 1) requestAnimationFrame(frame);
-      else { a.textContent = text; a.classList.remove('link-scrambling'); a.style.minWidth = ''; delete a.dataset.scrambling; }
-    })(t0);
-  });
 })();
 </script>
 </body>
