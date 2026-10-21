@@ -1558,7 +1558,6 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .pr-meta{font-size:.85rem;font-weight:500;color:#555;line-height:1.4}
 .pr-arrow{font-size:.95rem;text-align:right;transition:transform .25s cubic-bezier(.22,.61,.36,1)}
 .post-row:hover .pr-title{color:var(--muted)}
-.post-row:hover .pr-arrow{transform:translate(3px,-3px)}
 .pr-actions{position:absolute;top:10px;right:28px}
 .post-row:hover .pr-actions{opacity:1}
 
@@ -1566,7 +1565,6 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .posts-grid-wrap[class*="cols-"]{column-gap:28px;row-gap:40px}
 .posts-grid-wrap[class*="cols-"] .post-card{position:relative;border:none;border-top:1px solid #000;border-radius:0;padding:16px 0 0;display:flex;flex-direction:column;min-height:180px}
 .posts-grid-wrap[class*="cols-"] .post-card::after{content:'↗';position:absolute;top:14px;right:0;font-size:.95rem;transition:transform .25s cubic-bezier(.22,.61,.36,1)}
-.posts-grid-wrap[class*="cols-"] .post-card:hover::after{transform:translate(3px,-3px)}
 .posts-grid-wrap[class*="cols-"] .pc-top{padding-right:24px}
 .posts-grid-wrap[class*="cols-"] .pc-cat,.posts-grid-wrap[class*="cols-"] .pc-tag{background:none;padding:0;color:var(--muted);font-size:.78rem;margin-right:6px}
 .posts-grid-wrap[class*="cols-"] .pc-title{font-size:1.3rem;font-weight:500;letter-spacing:-.025em;line-height:1.3;margin:10px 0 8px}
@@ -1702,12 +1700,23 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .news-list.has-thumbs .news-row{grid-template-columns:120px 64px minmax(0,1fr) 16px}
 .news-arrow{font-size:.9rem;text-align:right;color:#000;transition:transform .25s cubic-bezier(.22,.61,.36,1),color .2s}
 .news-row.has-link{cursor:pointer}
-.news-row.has-link:hover .news-arrow{transform:translate(3px,-3px)}
 .news-row.has-link:hover .news-text{color:var(--muted)}
 .news-admin{right:28px}
 @media(max-width:600px){
   .news-row{grid-template-columns:76px minmax(0,1fr) 14px}
   .news-list.has-thumbs .news-row{grid-template-columns:76px 48px minmax(0,1fr) 14px}
+}
+
+
+/* ── ↗ 화살표: 마우스를 올리면 살짝 튕기며 90° 회전해 ↘ (참고 사이트 효과) ── */
+.recent-card::after,.landing-card::after,.landing-section-label.is-link::after,
+.posts-grid-wrap[class*="cols-"] .post-card::after,.pr-arrow,.news-arrow{
+  display:inline-block;transform-origin:50% 50%;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.recent-card::after,.landing-card::after,.pr-arrow,.news-arrow{justify-self:end}
+@media(hover:hover){
+  .recent-card:hover::after,.landing-card:hover::after,.landing-section-label.is-link:hover::after,
+  .posts-grid-wrap[class*="cols-"] .post-card:hover::after,.post-row:hover .pr-arrow,.news-row:hover .news-arrow{transform:rotate(90deg)}
+  .recent-card:active::after,.landing-card:active::after,.post-row:active .pr-arrow,.news-row:active .news-arrow{transform:rotate(90deg) scale(.9);transition-duration:.1s}
 }
 
 /* ── 반응형 ── */
