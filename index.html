@@ -5717,11 +5717,53 @@ function parseUA() {
   return { device, os, browser };
 }
 
-// 방문 기록 추가 (소유자 기기가 아닐 때만)
+// ── 봇·AI 에이전트 거르기 ──────────────────────────────────────────
+// 1) User-Agent / 자동화 표시로 1차 판별
+const BOT_UA = /bot\b|bot\/|crawl|spider|slurp|scrap|fetch|preview|monitor|headless|phantom|puppeteer|playwright|selenium|webdriver|lighthouse|pagespeed|gtmetrix|pingdom|uptime|python-|python\/|requests|aiohttp|httpx|curl|wget|axios|node-fetch|undici|go-http|java\/|okhttp|libwww|gptbot|chatgpt|oai-searchbot|openai|claude|anthropic|perplexity|cohere|google-extended|googleother|bytespider|ccbot|amazonbot|applebot|yandex|baidu|bingpreview|duckduck|facebookexternalhit|meta-externalagent|discordbot|slackbot|telegrambot|twitterbot|linkedinbot|embedly|semrush|ahrefs|mj12|dotbot|petalbot|dataforseo|diffbot|youbot|timpibot|imagesift|omgili/i;
+function isLikelyBot() {
+  const ua = navigator.userAgent || '';
+  if (!ua || BOT_UA.test(ua)) return true;
+  if (navigator.webdriver) return true;                       // Selenium·Playwright·Puppeteer 등 자동화 브라우저
+  if (window.outerWidth === 0 || window.outerHeight === 0) return true;   // 화면 없는 실행
+  if (!navigator.languages || navigator.languages.length === 0) return true;
+  return false;
+}
+// 2) 실제 사람의 행동이 확인될 때까지 기다림 (최대 60초)
+//    - 마우스가 6번 이상 서로 다른 위치로 움직임 (자동화는 보통 한 번에 순간이동)
+//    - 화면 터치 / 또는 키보드 + 마우스 움직임
+function waitForHuman(timeoutMs) {
+  return new Promise(resolve => {
+    let moves = 0, lastX = -1, lastY = -1, keys = 0, done = false;
+    const finish = ok => { if (done) return; done = true; cleanup(); resolve(ok); };
+    const onMove = e => {
+      if (!e.isTrusted) return;
+      if (e.clientX !== lastX || e.clientY !== lastY) { moves++; lastX = e.clientX; lastY = e.clientY; }
+      if (moves >= 6 || (keys && moves >= 2)) finish(true);
+    };
+    const onTouch = e => { if (e.isTrusted) finish(true); };
+    const onKey = e => { if (e.isTrusted) { keys++; if (moves >= 2) finish(true); } };
+    const timer = setTimeout(() => finish(false), timeoutMs);
+    function cleanup() {
+      clearTimeout(timer);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('touchstart', onTouch);
+      window.removeEventListener('keydown', onKey);
+    }
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('touchstart', onTouch, { passive: true });
+    window.addEventListener('keydown', onKey);
+  });
+}
+
+// 방문 기록 추가 (소유자 기기가 아니고, 사람이 직접 들어온 경우만)
 async function recordVisit() {
   if (isOwnerDevice()) {
     _visitIdResolve(null);
     loadVisitorCount();
+    return;
+  }
+  if (isLikelyBot() || !(await waitForHuman(60000))) {
+    _visitIdResolve(null);
     return;
   }
 
@@ -5787,7 +5829,7 @@ async function updateVisitArticle(title) {
   if (isOwnerDevice()) return;
   const visitId = await Promise.race([
     _visitIdPromise,
-    new Promise(r => setTimeout(() => r(null), 10000))
+    new Promise(r => setTimeout(() => r(null), 75000))
   ]);
   if (!visitId) { console.warn('[visit] visitId 없음 — insert 실패했거나 소유자 기기'); return; }
   try {
