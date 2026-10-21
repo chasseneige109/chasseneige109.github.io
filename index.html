@@ -1816,6 +1816,20 @@ sup.aff{font-size:.66em;line-height:0;vertical-align:.26em;margin-left:1px;font-
 .entry-hint{font-size:.72rem;color:var(--muted);margin:-6px 0 12px;line-height:1.6}
 .entry-hint code{font-family:var(--mono);font-size:.95em;background:var(--s100);padding:0 4px;border-radius:3px}
 
+/* ── Home 섹션·카드 드래그 (관리자) ── */
+.home-sec{position:relative}
+.home-sec-handle{position:absolute;left:-26px;top:6px;font-size:1rem;color:#bbb;cursor:grab;user-select:none;line-height:1}
+.home-sec-handle:hover{color:#000}
+.home-sec.is-dragging,.landing-card.is-dragging{opacity:.35}
+.admin-mode #page-landing .landing-card{cursor:grab}
+.admin-mode .home-sec{outline:1px dashed transparent;outline-offset:8px;transition:outline-color .15s}
+.admin-mode .home-sec:has(> .home-sec-handle:hover){outline-color:#ccc}
+.home-sec,.news-section.home-sec{margin-bottom:72px}
+.home-sec:last-child{margin-bottom:0}
+.home-sec .recent-posts-grid,.admin-mode .home-sec .recent-posts-grid{margin-bottom:0}
+.home-sec .btn-choose-posts{margin:12px 0 0}
+@media(max-width:768px){.home-sec-handle{left:auto;right:0;top:4px}}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1932,33 +1946,40 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <div class="landing-grid">
       <div class="landing-main">
         <!-- News -->
-        <div class="news-section" id="landing-news-section">
+        <div class="news-section home-sec" id="landing-news-section" data-sec="news">
+          <span class="home-sec-handle admin-only" draggable="true" title="Drag to move this section" aria-hidden="true">⠿</span>
           <div class="landing-section-label" data-edit-key="newsLabel" data-default="News">News</div>
           <div class="news-list" id="landing-news"></div>
           <button class="btn-add-news admin-only" onclick="openNewsModal()">+ Add News</button>
         </div>
 
         <!-- Recent posts -->
+        <div class="home-sec" data-sec="recent">
+        <span class="home-sec-handle admin-only" draggable="true" title="Drag to move this section" aria-hidden="true">⠿</span>
         <div class="landing-section-label is-link" data-edit-key="recentLabel" data-default="Recent Posts" onclick="if(!isAdmin)showSection('posts')">Recent Posts</div>
         <div class="list-head"><span data-edit-key="dateHead" data-default="Date">Date</span><span data-edit-key="titleHead" data-default="Title">Title</span></div>
         <div class="recent-posts-grid" id="landing-recent"></div>
         <button class="btn-add-news btn-choose-posts admin-only" onclick="openFeaturedModal()">✎ Choose posts</button>
+        </div>
 
         <!-- Section rows -->
+        <div class="home-sec" data-sec="here">
+        <span class="home-sec-handle admin-only" draggable="true" title="Drag to move this section" aria-hidden="true">⠿</span>
         <div class="landing-section-label" data-edit-key="hereLabel" data-default="What's here">What's here</div>
         <div class="landing-cards">
-          <div class="gc gc-hover landing-card" onclick="showSection('posts')">
+          <div class="gc gc-hover landing-card" data-card="posts" onclick="if(!homeDragged)showSection('posts')">
             <div class="lc-icon">✍️</div>
             <div class="lc-title" data-edit-key="postsCardTitle" data-default="Posts">Posts</div>
             <div class="lc-desc" data-edit-key="postsCardDesc" data-default="Notes on what I study, dev logs, and everyday thoughts.">Notes on what I study, dev logs, and everyday thoughts.</div>
             <div class="lc-arrow i18n" data-ko="둘러보기 →" data-en="Browse →"></div>
           </div>
-          <div class="gc gc-hover landing-card" onclick="showSection('paper')">
+          <div class="gc gc-hover landing-card" data-card="paper" onclick="if(!homeDragged)showSection('paper')">
             <div class="lc-icon">📄</div>
             <div class="lc-title" data-edit-key="paperCardTitle" data-default="Paper Review">Paper Review</div>
             <div class="lc-desc" data-edit-key="paperCardDesc" data-default="Summaries and reviews of papers I've read.">Summaries and reviews of papers I've read.</div>
             <div class="lc-arrow i18n" data-ko="둘러보기 →" data-en="Browse →"></div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -2681,6 +2702,8 @@ async function load() {
       homeNews  = (newsRow && newsRow.items) || [];
       const featRow = cvRes.data.find(r => r.id === 'home_featured');
       homeFeatured = (featRow && featRow.items) || [];
+      const layRow = cvRes.data.find(r => r.id === 'home_layout');
+      if (layRow && layRow.items && layRow.items[0]) homeLayout = { ...homeLayout, ...layRow.items[0] };
       homeTexts = {};
       ((textsRow && textsRow.items) || []).forEach(t => { if (t && t.key) homeTexts[t.key] = t.value; });
       cvSections = cvRes.data.filter(r => !HOME_ROWS.includes(r.id)).map(r => ({
@@ -2908,7 +2931,8 @@ let sortDesc        = { posts:true, paper:true };
 let filterCat       = { posts:null, paper:null };
 let filterTag       = { posts:null, paper:null };
 let filterText      = { posts:'', paper:'' };
-const HOME_ROWS     = ['home_news','home_texts','home_featured'];
+const HOME_ROWS     = ['home_news','home_texts','home_featured','home_layout'];
+let homeLayout      = { sections:['news','recent','here'], here:['posts','paper'] };   // Home 섹션·카드 순서
 let homeFeatured    = [];   // Home에 띄울 글 [{section:'posts'|'paper', id}] — 비어 있으면 최신 글 자동
 let homeNews        = [];   // [{id,date,text,link,linkLabel}]
 let homeTexts       = {};   // Home에서 직접 고친 문구 {key: value}
@@ -3112,6 +3136,7 @@ function renderLanding() {
 
   applyHomeTexts();
   renderNews();
+  applyHomeLayout();
 
   // Recent posts — 직접 고른 글(homeFeatured)이 있으면 그 순서대로, 없으면 최신 6개
   const curated = homeFeatured.length > 0;
@@ -3125,7 +3150,8 @@ function renderLanding() {
     el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 0;font-size:.8rem;color:var(--s400)">No posts yet.</div>';
     return;
   }
-  const drag = i => (isAdmin && curated) ? `draggable="true" ondragstart="featDragStart(event,${i})" ondragover="featDragOver(event,${i})" ondragleave="this.classList.remove('drag-over')" ondrop="featDrop(event,${i})" ondragend="featDragEnd()"` : '';
+  lastRecent = recent.map(x => ({ section: x.section, id: String(x.p.id) }));
+  const drag = i => isAdmin ? `draggable="true" ondragstart="featDragStart(event,${i})" ondragover="featDragOver(event,${i})" ondragleave="this.classList.remove('drag-over')" ondrop="featDrop(event,${i})" ondragend="featDragEnd()"` : '';
   el.innerHTML = recent.map(({ p, section }, i) => {
     const typeLabel = section === 'paper' ? 'Paper Review' : 'Post';
     return `<div class="gc gc-hover recent-card" id="feat-${i}" onclick="openPost(${p.id},'${section}')" ${drag(i)}>
@@ -3137,13 +3163,62 @@ function renderLanding() {
   }).join('');
 }
 
+// ── HOME: 섹션 순서 / What's here 카드 순서 드래그 ───────────────────
+let homeDragSec = null, homeDragCard = null, homeDragged = false;
+function applyHomeLayout() {
+  const main = document.querySelector('#page-landing .landing-main');
+  if (main) homeLayout.sections.forEach(k => { const el = main.querySelector(`.home-sec[data-sec="${k}"]`); if (el) main.appendChild(el); });
+  const cards = document.querySelector('#page-landing .landing-cards');
+  if (cards) homeLayout.here.forEach(k => { const el = cards.querySelector(`.landing-card[data-card="${k}"]`); if (el) cards.appendChild(el); });
+  // 관리자일 때만 카드 드래그 가능
+  document.querySelectorAll('#page-landing .landing-card').forEach(c => { c.draggable = !!isAdmin; });
+}
+function saveHomeLayout() {
+  const main = document.querySelector('#page-landing .landing-main');
+  homeLayout.sections = [...main.querySelectorAll(':scope > .home-sec')].map(el => el.dataset.sec);
+  homeLayout.here = [...document.querySelectorAll('#page-landing .landing-card')].map(el => el.dataset.card);
+  saveHomeRow('home_layout', [homeLayout]);
+}
+// 손잡이(⠿)를 잡아 끌면 섹션 전체가 이동 (섹션 안 줄 드래그와 충돌 방지)
+document.addEventListener('dragstart', e => {
+  const handle = e.target.classList && e.target.classList.contains('home-sec-handle') ? e.target : null;
+  const sec = handle ? handle.closest('.home-sec') : null;
+  if (sec) { try { e.dataTransfer.setDragImage(sec, 20, 20); } catch (_) {} }
+  const card = e.target.classList && e.target.classList.contains('landing-card') ? e.target : null;
+  if (sec) { homeDragSec = sec; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => sec.classList.add('is-dragging'), 0); }
+  else if (card) { homeDragCard = card; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => card.classList.add('is-dragging'), 0); }
+});
+document.addEventListener('dragover', e => {
+  if (homeDragSec) {
+    const over = e.target.closest && e.target.closest('#page-landing .home-sec');
+    if (!over || over === homeDragSec) return;
+    e.preventDefault();
+    const r = over.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+    over.parentNode.insertBefore(homeDragSec, after ? over.nextSibling : over);
+  } else if (homeDragCard) {
+    const over = e.target.closest && e.target.closest('#page-landing .landing-card');
+    if (!over || over === homeDragCard) return;
+    e.preventDefault();
+    const r = over.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+    over.parentNode.insertBefore(homeDragCard, after ? over.nextSibling : over);
+  }
+});
+document.addEventListener('drop', e => { if (homeDragSec || homeDragCard) e.preventDefault(); });
+document.addEventListener('dragend', e => {
+  if (!homeDragSec && !homeDragCard) return;
+  (homeDragSec || homeDragCard).classList.remove('is-dragging');
+  homeDragSec = null; homeDragCard = null;
+  homeDragged = true; setTimeout(() => { homeDragged = false; }, 300);   // 드롭 직후 클릭으로 페이지 이동 방지
+  saveHomeLayout();
+});
+
 // ── HOME: Recent Posts 직접 고르기 ──────────────────────────────────
 function findFeatured(f) {
   const list = f.section === 'paper' ? papers : posts;
   const p = list.find(x => String(x.id) === String(f.id));
   return p ? { p, section: f.section } : null;
 }
-let featDraft = [], featDragIdx = null;
+let featDraft = [], featDragIdx = null, lastRecent = [];
 function openFeaturedModal() {
   featDraft = homeFeatured.filter(f => findFeatured(f)).map(f => ({ ...f }));
   document.getElementById('feat-search').value = '';
@@ -3186,6 +3261,7 @@ function featDragOver(e, i) { if (featDragIdx === null) return; e.preventDefault
 function featDrop(e, i) {
   e.preventDefault();
   if (featDragIdx === null || featDragIdx === i) { featDragEnd(); return; }
+  if (!homeFeatured.length) homeFeatured = lastRecent.slice();   // 자동(최신) 목록이었다면 지금 순서를 고정
   const moved = homeFeatured.splice(featDragIdx, 1)[0];
   homeFeatured.splice(i, 0, moved);
   featDragIdx = null; saveHomeRow('home_featured', homeFeatured); renderLanding();
