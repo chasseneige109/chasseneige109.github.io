@@ -6115,9 +6115,9 @@ window.addEventListener('popstate', function() {
 
 // ── INIT ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  showSaving('⏳ Loading...');
+  // 첫 로딩 알림(Loading… → Loaded)은 표시하지 않음
   await load();
-  hideSaving('✅ Loaded', 800);
+
   document.getElementById('nav-blog-name').textContent = profile.blogName || profile.name || 'My Blog';
   if (!handleHash()) {
     showSection('landing');
