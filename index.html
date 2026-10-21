@@ -1781,6 +1781,29 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
   .cv-entries-wrap.has-thumbs[style*="flex-direction:column"] > .cv-entry > .item-thumb{width:40px;height:24px;aspect-ratio:auto;margin-top:2px}
 }
 
+
+/* ── 링크: 밑줄 대신 형광펜 띠 → 마우스를 올리면 검은색이 아래에서 차오르며 글자가 흰색으로 ── */
+.news-inline-link,.news-link,.cv-entry-link,.media-link-inline{
+  color:#000;text-decoration:none;border:none;border-radius:2px;
+  padding:0 .14em;margin:0 -.04em;
+  background-color:transparent;
+  background-image:linear-gradient(#000,#000),linear-gradient(#e4e4e4,#e4e4e4);
+  background-repeat:no-repeat;background-position:0 100%,0 100%;
+  background-size:100% 0,100% .34em;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+  transition:background-size .38s cubic-bezier(.22,.61,.36,1),color .2s ease .04s}
+.news-inline-link,.news-link,.cv-entry-link,.media-link-inline{white-space:normal}
+.news-inline-link:hover,.news-link:hover,.cv-entry-link:hover,.media-link-inline:hover{
+  color:#fff;background-size:100% 100%,100% .34em;text-decoration:none}
+/* 작은 ↗ — 올리면 ↘로 회전 (사이트의 다른 화살표와 같은 움직임) */
+.news-inline-link::after,.news-link::after,.media-link-inline::after{
+  content:'↗';display:inline-block;font-size:.7em;margin-left:.18em;transform:translateY(-.32em);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.news-inline-link:hover::after,.news-link:hover::after,.media-link-inline:hover::after{transform:translateY(-.32em) rotate(90deg)}
+.news-row.has-link:hover .news-text .news-inline-link{color:#000}
+.news-row.has-link .news-text .news-inline-link:hover{color:#fff}
+.cv-entry-link{justify-self:start;align-self:start;width:fit-content;margin-top:8px}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -6269,7 +6292,7 @@ particlesJS("particles-js",{
   if (!dot) return;
   if (window.matchMedia('(hover:none),(pointer:coarse)').matches) return;
   var mouse = {x:-100, y:-100}, pos = {x:-100, y:-100}, scale = {x:1, y:1}, angle = 0;
-  var targets = [], snap = null, started = false;
+  var targets = [], snap = null, started = false, overLink = false;
   var EASE = .15, SMALL = 15, BIG = 40;
   function measure(){
     targets = Array.prototype.map.call(document.querySelectorAll('.nav-tab, .nav-logo'), function(el){
@@ -6292,7 +6315,9 @@ particlesJS("particles-js",{
     snap = best;
     // 입력칸 위에서는 숨겨서 글쓰기에 방해되지 않게
     var tag = e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], [contenteditable="plaintext-only"], .lp-editor');
-    dot.classList.toggle('is-hidden', !!tag);
+    overLink = !!(e.target.closest && e.target.closest('.news-inline-link,.news-link,.cv-entry-link,.media-link-inline,.lau-icon'));
+    // 입력칸과 링크 위에서는 원을 숨김 (링크는 자체 효과가 있으므로)
+    dot.classList.toggle('is-hidden', !!tag || overLink);
   });
   document.addEventListener('mouseleave', function(){ dot.classList.remove('is-active'); started = false; });
   function tick(){
