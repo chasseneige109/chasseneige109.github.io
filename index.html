@@ -1796,6 +1796,19 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .cv-entry-link{justify-self:start;align-self:start;width:fit-content;margin-top:8px}
 
 
+/* ── 로고: N · O(점) · [AH / M] — 위로 읽으면 NOAH, 아래로 읽으면 NAM ── */
+.hero-logo .hero-logo-stack{width:119px;height:125px;overflow:visible;fill:none;stroke:#000;stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.hero-logo-stack .stack-top{stroke-linejoin:miter}
+.hero-logo-stack .stack-top{opacity:0;animation:stack-in-top .9s cubic-bezier(.215,.61,.355,1) .35s forwards}
+.hero-logo-stack .stack-bottom{opacity:0;animation:stack-in-bottom .9s cubic-bezier(.215,.61,.355,1) .5s forwards}
+@keyframes stack-in-top{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+@keyframes stack-in-bottom{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@media(max-width:600px){
+  .hero-logo{height:96px}
+  .hero-logo svg{width:88px;height:88px}
+  .hero-logo .hero-logo-stack{width:84px;height:88px}
+}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1899,6 +1912,11 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
           <circle class="hero-logo-ball" cx="21" cy="105" r="17"></circle>
           <circle class="hero-logo-ball" cx="63" cy="105" r="17"></circle>
           <circle class="hero-logo-ball" cx="105" cy="105" r="17"></circle>
+        </svg>
+        <!-- O 높이의 절반씩: 위 AH(→ N·O·AH = NOAH), 아래 M(→ N·O(A)·M = NAM). A는 직각으로만 -->
+        <svg class="hero-logo-stack" viewBox="0 0 120 126">
+          <path class="stack-top" d="M12 51 V12 H54 V51 M12 37 H54 M72 12 V51 M108 12 V51 M72 31 H108"></path>
+          <path class="stack-bottom" d="M12 114 V75 L60 104 L108 75 V114"></path>
         </svg>
       </div>
       <h1 class="landing-title" id="landing-title-text" data-edit-key="heroTitle"></h1>
