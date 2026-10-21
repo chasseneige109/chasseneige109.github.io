@@ -1809,6 +1809,13 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .lau-handle,.p-handle{display:none !important}
 .lau-name,.p-name{margin-bottom:34px}
 
+/* ── 저자 위첨자 번호 · 소속 줄 ── */
+sup.aff{font-size:.66em;line-height:0;vertical-align:.55em;margin-left:1px;font-weight:500;color:inherit}
+.cv-entry-affil{font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:3px}
+.cv-entry-affil sup.aff{margin:0 2px 0 0}
+.entry-hint{font-size:.72rem;color:var(--muted);margin:-6px 0 12px;line-height:1.6}
+.entry-hint code{font-family:var(--mono);font-size:.95em;background:var(--s100);padding:0 4px;border-radius:3px}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -2407,7 +2414,10 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <label class="form-label" style="margin-top:4px">Title</label>
     <input class="form-input" id="inp-entry-title" placeholder="e.g. SungKyunKwan University">
     <label class="form-label">Subtitle (optional)</label>
-    <input class="form-input" id="inp-entry-sub" placeholder="e.g. Biomechatronics · 2023~Present">
+    <input class="form-input" id="inp-entry-sub" placeholder="e.g. Hyungjun Nam^1, Young Kyun Jang^2, Byungchul Kim^1">
+    <p class="entry-hint">Tip: write <code>^1</code>, <code>^2</code>, <code>^*</code> after a name for a small superscript (Nam<sup>1</sup>).</p>
+    <label class="form-label">Affiliations (optional, small text under the subtitle)</label>
+    <input class="form-input" id="inp-entry-affil" placeholder="e.g. ^1 Sungkyunkwan University · ^2 Google DeepMind">
     <label class="form-label">Date / period (optional)</label>
     <input class="form-input" id="inp-entry-date" placeholder="e.g. 2023 ~ Present">
     <label class="form-label">Description (optional)</label>
@@ -3528,11 +3538,12 @@ ${isAdmin ? `<div class="layout-toggle">
             <button class="btn-sm danger admin-only" onclick="askDeleteCvEntry('${sec.id}','${entry.id}')">✕</button>
           </div>
           <div class="cv-entry-header">
-            <div class="cv-entry-title">${esc(entry.title)}</div>
+            <div class="cv-entry-title">${supFmt(entry.title)}</div>
             ${entry.date ? `<div class="cv-entry-date">${esc(entry.date)}</div>` : ''}
           </div>
-          ${entry.sub  ? `<div class="cv-entry-sub">${esc(entry.sub)}</div>` : ''}
-          ${hasDesc ? `<div class="cv-entry-desc">${esc(entry.desc)}</div>` : ''}
+          ${entry.sub  ? `<div class="cv-entry-sub">${supFmt(entry.sub)}</div>` : ''}
+          ${entry.affil ? `<div class="cv-entry-affil">${supFmt(entry.affil)}</div>` : ''}
+          ${hasDesc ? `<div class="cv-entry-desc">${supFmt(entry.desc)}</div>` : ''}
           ${entry.tags && entry.tags.length
             ? `<div class="cv-entry-tags">${entry.tags.map(t=>`<span class="cv-entry-tag">${esc(t)}</span>`).join('')}</div>`
             : ''}
@@ -3668,7 +3679,7 @@ function saveSection() {
 function openAddEntry(secId) {
   editingEntrySectionId=secId; editingEntryId=null;
   document.getElementById('add-entry-title').textContent='Add Entry';
-  ['inp-entry-title','inp-entry-sub','inp-entry-date','inp-entry-desc','inp-entry-tags','inp-entry-link-label','inp-entry-link-url','inp-entry-icon'].forEach(id=>document.getElementById(id).value='');
+  ['inp-entry-title','inp-entry-sub','inp-entry-affil','inp-entry-date','inp-entry-desc','inp-entry-tags','inp-entry-link-label','inp-entry-link-url','inp-entry-icon'].forEach(id=>document.getElementById(id).value='');
   selectEntryStyle('default', document.querySelector('.entry-style-opt[data-style="default"]'));
   selectHeight('auto', document.querySelector('.height-btn[data-height="auto"]'));
   selectColStart('auto', document.querySelector('.colstart-btn[data-col="auto"]'));
@@ -3686,6 +3697,7 @@ function openEditEntry(secId,entryId) {
   document.getElementById('add-entry-title').textContent='Edit Entry';
   document.getElementById('inp-entry-title').value=entry.title||'';
   document.getElementById('inp-entry-sub').value=entry.sub||'';
+  document.getElementById('inp-entry-affil').value=entry.affil||'';
   document.getElementById('inp-entry-date').value=entry.date||'';
   document.getElementById('inp-entry-desc').value=entry.desc||'';
   document.getElementById('inp-entry-tags').value=(entry.tags||[]).join(', ');
@@ -3709,6 +3721,7 @@ function saveEntry() {
   const title=document.getElementById('inp-entry-title').value.trim();
   if(!title){toast('Enter a title.');return;}
   const sub  =document.getElementById('inp-entry-sub').value.trim();
+  const affil=document.getElementById('inp-entry-affil').value.trim();
   const date =document.getElementById('inp-entry-date').value.trim();
   const desc =document.getElementById('inp-entry-desc').value.trim();
   const tagsRaw=document.getElementById('inp-entry-tags').value;
@@ -3727,9 +3740,9 @@ function saveEntry() {
   if(!sec) return;
   if(editingEntryId) {
     const i=sec.entries.findIndex(e=>e.id===editingEntryId);
-    if(i>=0) sec.entries[i]={...sec.entries[i],title,sub,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage};
+    if(i>=0) sec.entries[i]={...sec.entries[i],title,sub,affil,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage};
   } else {
-    sec.entries.push({id:'e'+Date.now(),title,sub,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage});
+    sec.entries.push({id:'e'+Date.now(),title,sub,affil,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage});
   }
   save();saveCvSections();closeModal('modal-add-entry');renderCvArea();
 }
@@ -6084,6 +6097,8 @@ window.enterAdmin = function() {
   }
 };
 
+// "Nam^1", "^2 Google DeepMind", "^*" → 작은 위첨자 (저자 번호·소속 표시용)
+function supFmt(t){return esc(t||'').replace(/\^\{([^}]{1,8})\}|\^([0-9]{1,2}|[*†‡§a-z])/g,(m,a,b)=>`<sup class="aff">${a||b}</sup>`);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function excerpt(b){if(!b) return '';return b.replace(/#{1,6} /g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/`/g,'').replace(/\$\$[\s\S]*?\$\$/g,'[math]').replace(/\$[^$]+\$/g,'[math]').substring(0,110).trim()+'...';}
 function fmtDate(ts){const d=new Date(ts);return`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;}
