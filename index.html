@@ -1854,6 +1854,94 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 .nav-logo:hover .nav-mark{transform:scale(1.06)}
 .sr-only{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
+/* ══ 갤러리 (Projects · Posts) — 참고 사이트 projects 페이지 측정값 ══
+   본문 1250px · 제목 40px · 알약 14.4px · 3열 정사각 커버(397px), 간격 29/40 */
+.gallery-wrap{max-width:1298px}
+.gallery-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-top:49px}
+.gallery-title{font-size:40px;font-weight:400;line-height:48px;letter-spacing:-.02em;color:#000;margin:0 0 8px}
+.gallery-title .fl-count{font-size:15px}
+.gallery-filters{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0 32px}
+.gallery-filters:empty{margin:16px 0}
+.g-pill{padding:6px 16px;border:1px solid var(--rule);border-radius:20px;background:none;font-family:var(--sans);font-size:14.4px;color:#000;cursor:pointer;transition:background .25s,color .25s,border-color .25s}
+.g-pill:hover{background:#000;border-color:#000;color:#fff}
+.g-pill.on{background:#000;border-color:#000;color:#fff}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px 29px;padding-bottom:80px}
+.g-card{position:relative;cursor:pointer;min-width:0}
+.g-cover{position:relative;aspect-ratio:1/1;overflow:hidden;background:#f1f1f1}
+.g-cover img,.g-cover-art{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s cubic-bezier(.22,.61,.36,1)}
+.g-card:hover .g-cover img,.g-card:hover .g-cover-art{transform:scale(1.035)}
+.g-cover-label{position:absolute;left:16px;bottom:14px;font-size:13px;color:#111;background:rgba(255,255,255,.85);padding:3px 9px;border-radius:999px}
+.g-info{margin-top:16px}
+.g-title{font-size:17.6px;font-weight:600;line-height:1.2;letter-spacing:-.01em;color:#000;margin:0 0 8px}
+.g-card:hover .g-title{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.g-tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.g-tag{display:inline-block;font-size:12px;line-height:18px;color:#000;background:#eee;border-radius:6px;padding:4px 12px}
+.g-desc{font-size:14.4px;line-height:1.5;color:#767676;margin:0 0 8px}
+.g-date{font-size:13px;color:#999}
+.g-actions{position:absolute;top:10px;right:10px;gap:5px;opacity:0;transition:opacity .2s}
+.g-card:hover .g-actions{opacity:1}
+.g-empty{grid-column:1/-1;padding:60px 0;color:var(--muted);font-size:.95rem}
+.folder-manage{margin:-16px 0 28px;border:1px dashed var(--s300);border-radius:8px;padding:10px 14px}
+.folder-manage summary{cursor:pointer;font-size:.85rem;color:var(--muted)}
+.folder-manage .filter-sidebar{position:static;margin-top:12px;max-width:420px}
+#page-posts .list-filter{display:none}
+@media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.gallery-grid{grid-template-columns:1fr;gap:32px}.gallery-title{font-size:32px;line-height:40px}.gallery-head{padding-top:28px}}
+
+/* ══ 글 페이지 — 참고 사이트 project 페이지: 왼쪽 목차 320 + 본문 930 ══ */
+.article-layout{max-width:1298px;display:grid;grid-template-columns:320px minmax(0,930px);padding-bottom:96px}
+.article-toc{position:sticky;top:80px;align-self:start;padding:49px 24px 0 20px;max-height:calc(100vh - 100px);overflow-y:auto}
+.toc-item{display:block;font-size:13px;line-height:1.5;color:#000;text-decoration:none;padding:3px 0;transition:color .2s}
+.toc-item:hover{color:var(--muted)}
+.toc-l2{padding-left:12px}.toc-l3{padding-left:24px;color:#555}
+.article-main{min-width:0}
+.article-main .article-topbar{border-bottom:none;padding:16px 0 0;margin:0}
+.a-header{padding:24px 0 0;margin-bottom:40px}
+.a-title{font-size:40px !important;font-weight:400;line-height:1.2 !important;letter-spacing:-.025em;color:#000;margin:0 0 8px !important}
+.a-desc{font-size:14px;line-height:1.5;color:#000;margin:0 0 32px;max-width:930px}
+.a-info{display:flex;flex-wrap:wrap;gap:24px 32px;border-top:1px solid var(--rule);padding-top:26px}
+.a-info-item{min-width:0}
+.a-info-label{font-size:14px;font-weight:600;color:#000;margin-bottom:4px}
+.a-info-value{font-size:16px;line-height:1.5;color:#767676}
+.a-info-value .g-tag{font-size:12px}
+.a-body,.ep-line{font-size:1rem;line-height:1.8}
+.a-body .media-img-wrap img{border-radius:0;box-shadow:none}
+.a-body blockquote,.ep-bq{border-left:4px solid #000 !important;padding:6px 0 6px 24px !important;margin:1.4em 0 !important;font-style:normal !important;font-size:1.2em;line-height:1.6;color:#000 !important}
+.ep-h1,.ep-h2,.ep-h3,.a-body h1,.a-body h2,.a-body h3{scroll-margin-top:80px}
+body:has(#page-article.active) .right-panel{display:none !important}
+@media(max-width:1000px){.article-layout{grid-template-columns:minmax(0,1fr)}.article-toc{display:none}}
+@media(max-width:600px){.a-title{font-size:30px !important}.a-info{gap:16px 24px}}
+
+/* ══ 글쓰기 — 같은 톤: 넓이 930, 얇은 40px 제목, 알약 버튼 ══ */
+.editor-wrap{max-width:978px}
+.editor-title-inp{font-family:var(--sans);font-size:40px;font-weight:400;letter-spacing:-.025em;line-height:1.2;color:#000;padding:8px 0}
+.editor-title-inp::placeholder{color:#c8c8c8}
+.editor-row{border-bottom:1px solid var(--rule);padding:12px 0;gap:10px}
+.editor-row-label{font-size:13px;font-weight:600;color:#000;width:72px}
+.cat-sel-btn{padding:5px 14px;border:1px solid var(--rule);border-radius:20px;background:#fff;font-size:13.5px;font-weight:400;color:#000}
+.cat-sel-btn:hover,.cat-sel-btn.sel{background:#000;border-color:#000;color:#fff}
+.cat-new-inp{border-radius:20px;font-size:13px}
+.cat-add-btn{border-radius:20px;border-color:#000;color:#000;font-size:13px}
+.cat-add-btn:hover{background:#000;color:#fff}
+.editor-tags-row{border-color:var(--rule)}
+.e-tag-pill{background:#eee;color:#000;font-family:var(--sans);border-radius:6px}
+.paper-fields,.project-fields{background:#fafafa;border:1px solid var(--rule);border-radius:8px}
+.project-fields{display:none;padding:16px 20px;margin-bottom:14px}
+.project-fields.visible{display:block}
+.pj-cover-row{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.draft-bar{background:#fafafa;border-color:var(--rule)}
+.btn-draft-save{background:#fff;color:#000;border-color:var(--rule)}
+.btn-draft-save:hover{border-color:#000}
+
+/* 글 페이지 정리: 예전 논문 정보 상자 숨김(정보 칸으로 대체), 세 줄 요약은 구분선 스타일 */
+#article-meta-box{display:none !important}
+.paper-summary-box{background:none;border:none;border-top:1px solid var(--rule);border-radius:0;padding:24px 0 8px;margin:0 0 32px}
+.paper-summary-title{font-size:14px;font-weight:600;color:#000;margin-bottom:14px}
+.paper-summary-list li{font-size:15px;color:#333}
+/* 글쓰기 태그를 가로로 */
+#editor-tag-list{display:contents}
+.editor-tags-row .e-tag-pill{display:inline-flex}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -1906,6 +1994,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   <div class="nav-tabs">
     <button class="nav-tab" id="tab-landing" onclick="showSection('landing')">Home</button>
     <button class="nav-tab" id="tab-home"  onclick="showSection('home')">Me</button>
+    <button class="nav-tab" id="tab-projects" onclick="showSection('projects')">Projects</button>
     <button class="nav-tab" id="tab-posts" onclick="showSection('posts')">Posts</button>
     <button class="nav-tab" id="tab-paper" onclick="showSection('paper')">Paper Review</button>
   </div>
@@ -1932,6 +2021,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   <div class="mbn-inner">
     <button class="mbn-btn on" id="mbn-landing" onclick="showSection('landing')"><span class="mbn-ic">🏠</span><span class="mbn-lb">Home</span></button>
     <button class="mbn-btn"   id="mbn-home"    onclick="showSection('home')"><span class="mbn-ic">👤</span><span class="mbn-lb">Me</span></button>
+    <button class="mbn-btn"   id="mbn-projects" onclick="showSection('projects')"><span class="mbn-ic">🧩</span><span class="mbn-lb">Projects</span></button>
     <button class="mbn-btn"   id="mbn-posts"   onclick="showSection('posts')"><span class="mbn-ic">✍️</span><span class="mbn-lb">Posts</span></button>
     <button class="mbn-btn"   id="mbn-paper"   onclick="showSection('paper')"><span class="mbn-ic">📄</span><span class="mbn-lb">Papers</span></button>
   </div>
@@ -1992,6 +2082,11 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <span class="home-sec-handle admin-only" title="Drag to move this section" aria-hidden="true">⠿</span>
         <div class="landing-section-label" data-edit-key="hereLabel" data-default="What's here">What's here</div>
         <div class="landing-cards">
+          <div class="gc gc-hover landing-card" data-card="projects" onclick="if(!homeDragged)showSection('projects')">
+            <div class="lc-icon">🧩</div>
+            <div class="lc-title" data-edit-key="projectsCardTitle" data-default="Projects">Projects</div>
+            <div class="lc-desc" data-edit-key="projectsCardDesc" data-default="Things I have built and worked on.">Things I have built and worked on.</div>
+          </div>
           <div class="gc gc-hover landing-card" data-card="posts" onclick="if(!homeDragged)showSection('posts')">
             <div class="lc-icon">✍️</div>
             <div class="lc-title" data-edit-key="postsCardTitle" data-default="Posts">Posts</div>
@@ -2059,21 +2154,30 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
 </div>
 
-<div id="page-posts" class="page">
-  <div class="wrap">
-    <div class="three-col-sidebar">
-      <div class="filter-sidebar" id="posts-filter-sidebar"></div>
-      <div>
-        <div id="posts-mob-filter" class="mob-filter-bar"></div>
-        <div class="filter-bar">
-          <span class="filter-label" id="posts-filter-label">Posts</span>
-          <div class="post-col-control" id="posts-col-control"></div>
-          <button class="sort-btn" onclick="toggleSort('posts')">Newest ↕</button>
-        </div>
-        <input class="list-filter" type="search" placeholder="Type to filter" oninput="setTextFilter('posts',this.value)">
-        <div id="posts-list"></div>
-      </div>
+<div id="page-projects" class="page">
+  <div class="wrap gallery-wrap">
+    <div class="gallery-head">
+      <h1 class="gallery-title" id="projects-title">Projects</h1>
     </div>
+    <div class="gallery-filters" id="projects-filters"></div>
+    <div class="gallery-grid" id="projects-grid"></div>
+  </div>
+</div>
+
+<div id="page-posts" class="page">
+  <div class="wrap gallery-wrap">
+    <div class="gallery-head">
+      <h1 class="gallery-title" id="posts-filter-label">Posts</h1>
+      <button class="sort-btn" onclick="toggleSort('posts')">Newest ↕</button>
+    </div>
+    <div class="gallery-filters" id="posts-pills"></div>
+    <details class="folder-manage admin-only" id="posts-folder-manage">
+      <summary>Manage folders</summary>
+      <div class="filter-sidebar" id="posts-filter-sidebar"></div>
+    </details>
+    <div id="posts-mob-filter" class="mob-filter-bar" style="display:none!important"></div>
+    <div class="post-col-control" id="posts-col-control" style="display:none!important"></div>
+    <div id="posts-list"></div>
   </div>
 </div>
 
@@ -2100,28 +2204,35 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 
 
 <div id="page-article" class="page">
-  <div class="article-wrap">
-    <div class="article-topbar">
-      <button class="btn-back" onclick="goBack()">← Back</button>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button id="article-share-btn" class="btn-sm" title="Copy link" style="display:flex;align-items:center;gap:4px">🔗 Share</button>
-        <div id="article-admin-btns" style="display:flex;gap:8px">
-          <button class="btn-sm admin-only" onclick="editCurrentArticle()">✎ Edit</button>
-          <button class="btn-sm danger admin-only" onclick="deleteCurrentArticle()">✕ Delete</button>
+  <div class="wrap article-layout">
+    <aside class="article-toc" id="article-toc" aria-label="Contents"></aside>
+    <div class="article-main">
+      <div class="article-topbar">
+        <button class="btn-back" onclick="goBack()">← Back</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="article-share-btn" class="btn-sm" title="Copy link" style="display:flex;align-items:center;gap:4px">🔗 Share</button>
+          <div id="article-admin-btns" style="display:flex;gap:8px">
+            <button class="btn-sm admin-only" onclick="editCurrentArticle()">✎ Edit</button>
+            <button class="btn-sm danger admin-only" onclick="deleteCurrentArticle()">✕ Delete</button>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="a-tags" id="article-tags"></div>
-    <h1 class="a-title" id="article-title"></h1>
-    <div class="a-meta"><span id="article-date"></span></div>
-    <div id="article-paper-meta" style="display:none">
-      <div class="paper-meta-box" id="article-meta-box"></div>
-      <div class="paper-summary-box" id="article-summary-box" style="display:none">
-        <div class="paper-summary-title">💡 Three-line Summary</div>
-        <ol class="paper-summary-list" id="article-summary-list"></ol>
+      <header class="a-header">
+        <h1 class="a-title" id="article-title"></h1>
+        <p class="a-desc" id="article-desc"></p>
+        <div class="a-info" id="article-info"></div>
+      </header>
+      <div class="a-tags" id="article-tags" style="display:none"></div>
+      <div class="a-meta" style="display:none"><span id="article-date"></span></div>
+      <div id="article-paper-meta" style="display:none">
+        <div class="paper-meta-box" id="article-meta-box" style="display:none!important"></div>
+        <div class="paper-summary-box" id="article-summary-box" style="display:none">
+          <div class="paper-summary-title">Three-line Summary</div>
+          <ol class="paper-summary-list" id="article-summary-list"></ol>
+        </div>
       </div>
+      <div class="a-body" id="article-body"></div>
     </div>
-    <div class="a-body" id="article-body"></div>
   </div>
 </div>
 
@@ -2160,7 +2271,27 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <div class="editor-row">
       <span class="editor-row-label">Section</span>
       <button class="cat-sel-btn sel" id="sec-btn-posts" onclick="selectSection('posts',this)">Posts</button>
+      <button class="cat-sel-btn" id="sec-btn-projects" onclick="selectSection('projects',this)">Projects</button>
       <button class="cat-sel-btn" id="sec-btn-paper" onclick="selectSection('paper',this)">Paper Review</button>
+    </div>
+    <!-- Projects 정보 칸 (글 본문 맨 앞에 숨은 메타로 저장) -->
+    <div class="paper-fields project-fields" id="project-fields">
+      <div class="paper-fields-title">Project info</div>
+      <div class="paper-fields-grid">
+        <input class="paper-field-inp paper-field-full" id="pj-desc" placeholder="One-line description (shown on the card and under the title)">
+        <input class="paper-field-inp" id="pj-team" placeholder="Team (e.g. BEAR Lab, SKKU)">
+        <input class="paper-field-inp" id="pj-role" placeholder="My role">
+        <input class="paper-field-inp" id="pj-period" placeholder="Period (e.g. Mar 2026 – Present)">
+        <input class="paper-field-inp" id="pj-link" placeholder="Link (GitHub, demo, paper…)">
+      </div>
+      <div class="pj-cover-row">
+        <div class="thumb-preview" id="project-thumb-preview"><span>No cover</span></div>
+        <div class="thumb-actions">
+          <label class="thumb-btn">Upload cover<input type="file" accept="image/*" hidden onchange="pickThumb('project',this)"></label>
+          <button type="button" class="thumb-btn thumb-remove" onclick="setThumb('project','')">Remove</button>
+          <input class="form-input thumb-url" id="project-thumb-url" placeholder="or paste an image URL" oninput="setThumb('project',this.value.trim(),true)">
+        </div>
+      </div>
     </div>
     <!-- Paper Review 메타 필드 -->
     <div class="paper-fields" id="paper-fields">
@@ -3052,7 +3183,7 @@ function lockAdmin() {
 function updateWriteBtn() {
   const btn=document.getElementById('btn-write-nav');
   const sec=currentPageName;
-  btn.style.display=(sec==='posts'||sec==='paper')&&isAdmin?'flex':'none';
+  btn.style.display=(sec==='posts'||sec==='paper'||sec==='projects')&&isAdmin?'flex':'none';
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────
@@ -3079,6 +3210,7 @@ function renderCurrentPage() {
   if(currentPageName==='landing') renderLanding();
   if(currentPageName==='home')  renderHome();
   if(currentPageName==='posts') renderPostsPage();
+  if(currentPageName==='projects') renderProjectsPage();
   if(currentPageName==='paper') renderPaperPage();
 }
 
@@ -3178,7 +3310,7 @@ function renderLanding() {
   lastRecent = recent.map(x => ({ section: x.section, id: String(x.p.id) }));
   const drag = i => false ? `draggable="true" ondragstart="featDragStart(event,${i})" ondragover="featDragOver(event,${i})" ondragleave="this.classList.remove('drag-over')" ondrop="featDrop(event,${i})" ondragend="featDragEnd()"` : '';
   el.innerHTML = recent.map(({ p, section }, i) => {
-    const typeLabel = section === 'paper' ? 'Paper Review' : 'Post';
+    const typeLabel = section === 'paper' ? 'Paper Review' : isProject(p) ? 'Project' : 'Post';
     return `<div class="gc gc-hover recent-card" id="feat-${i}" onclick="openPost(${p.id},'${section}')" ${drag(i)}>
       <span class="row-grip admin-only" aria-hidden="true">⠿</span>
       <div class="rc-type">${typeLabel}</div>
@@ -3196,6 +3328,7 @@ function applyHomeLayout() {
   if (main) homeLayout.sections.forEach(k => { const el = main.querySelector(`.home-sec[data-sec="${k}"]`); if (el) main.appendChild(el); });
   const cards = document.querySelector('#page-landing .landing-cards');
   if (cards) homeLayout.here.forEach(k => { const el = cards.querySelector(`.landing-card[data-card="${k}"]`); if (el) cards.appendChild(el); });
+  if (cards) [...cards.querySelectorAll('.landing-card')].filter(c => !homeLayout.here.includes(c.dataset.card)).forEach(c => cards.appendChild(c));   // 새로 생긴 카드는 맨 뒤
   // 관리자일 때만 카드 드래그 가능
   document.querySelectorAll('#page-landing .landing-card').forEach(c => { c.draggable = false; });
 }
@@ -3325,6 +3458,95 @@ document.addEventListener('dragend', e => {
   window.addEventListener('click', e => { if (suppressClick) { e.preventDefault(); e.stopImmediatePropagation(); suppressClick = false; } }, true);
 })();
 
+
+// ══ PROJECTS · 갤러리 카드 (Posts·Projects) ═══════════════════════
+// 프로젝트는 posts 테이블에 카테고리 "Projects"로 저장.
+// 커버·설명·팀·역할·기간·링크는 본문 맨 앞의 <!--project:{...}--> 한 줄에 저장 (화면엔 안 보임)
+const PROJECT_CAT = 'Projects';
+const isProject = p => !!p && (p.cat === PROJECT_CAT || String(p.cat || '').startsWith(PROJECT_CAT + '/'));
+const PROJ_RE = /^<!--project:([\s\S]*?)-->\n?/;
+function splitProjectMeta(body) {
+  const m = String(body || '').match(PROJ_RE);
+  if (!m) return { meta: {}, body: String(body || '') };
+  let meta = {}; try { meta = JSON.parse(m[1]); } catch (_) {}
+  return { meta, body: String(body).slice(m[0].length) };
+}
+function joinProjectMeta(meta, body) {
+  const clean = Object.fromEntries(Object.entries(meta || {}).filter(([, v]) => v));
+  if (!Object.keys(clean).length) return body;
+  return '<!--project:' + JSON.stringify(clean).replace(/>/g, '\\u003e') + '-->\n' + body;
+}
+function firstImage(body) {
+  const b = String(body || '');
+  const m = b.match(/%%IMG%%(.*?)%%/) || b.match(/!\[[^\]]*\]\(([^)\s]+)\)/);
+  return m ? m[1] : '';
+}
+// 사진이 없는 글: 로고의 점 모티프로 글마다 다른 흑백 커버 생성
+function coverSVG(seed) {
+  let h = 2166136261; String(seed).split('').forEach(c => { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); });
+  const rnd = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 1000) / 1000; };
+  const R = [0, 0, 7, 12, 18, 26, 32];
+  let dots = '';
+  for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) {
+    const r = R[(rnd() * R.length) | 0];
+    if (r) dots += `<circle cx="${60 + x * 70}" cy="${60 + y * 70}" r="${r}"/>`;
+  }
+  return `<svg class="g-cover-art" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="400" fill="#f1f1f1"/><g fill="#111">${dots}</g></svg>`;
+}
+function galleryCardHTML(p, section) {
+  const meta = p.meta || {};
+  const img = meta.cover || (p.body ? firstImage(splitProjectMeta(p.body).body) : '');
+  const leaf = p.cat ? String(p.cat).split('/').pop() : '';
+  const tags = section === 'projects' ? (p.tags || []) : (leaf ? [leaf] : []);
+  const desc = section === 'projects' ? (meta.desc || '') : '';
+  return `<article class="g-card" onclick="openPost(${p.id},'${section}')">
+    <div class="g-cover">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : coverSVG(p.id)}
+      ${!img && leaf && section !== 'projects' ? `<span class="g-cover-label">${esc(leaf)}</span>` : ''}</div>
+    <div class="g-info">
+      <h3 class="g-title">${esc(p.title)}</h3>
+      ${tags.length ? `<div class="g-tags">${tags.map(t => `<span class="g-tag">#${esc(t)}</span>`).join('')}</div>` : ''}
+      ${desc ? `<p class="g-desc">${esc(desc)}</p>` : ''}
+      <div class="g-date">${section === 'projects' && meta.period ? esc(meta.period) : fmtDate(p.createdAt)}</div>
+    </div>
+    <div class="pc-actions g-actions admin-only flex" onclick="event.stopPropagation()">
+      <button class="btn-sm" onclick="openEdit(${p.id},'${section}')">✎</button>
+      <button class="btn-sm danger" onclick="askDelete(${p.id},'posts')">✕</button>
+    </div>
+  </article>`;
+}
+function pillsHTML(items, active, onclickFn) {
+  return [`<button class="g-pill${!active ? ' on' : ''}" onclick="${onclickFn}(null)">All</button>`]
+    .concat(items.map(([val, label]) => `<button class="g-pill${active === val ? ' on' : ''}" onclick="${onclickFn}(${esc(JSON.stringify(val))})">${esc(label)}</button>`)).join('');
+}
+
+// Projects 페이지
+let projectTag = null, projectsLoading = false;
+async function ensureProjectBodies() {
+  const need = posts.filter(p => isProject(p) && p.body == null);
+  if (!need.length || projectsLoading) return false;
+  projectsLoading = true;
+  try {
+    const { data } = await supa.from('posts').select('id,content').in('id', need.map(p => p.id));
+    (data || []).forEach(r => { const p = posts.find(x => x.id === r.id); if (p) { p.body = r.content || ''; p.meta = splitProjectMeta(p.body).meta; } });
+  } catch (_) {}
+  projectsLoading = false;
+  return true;
+}
+function setProjectTag(t) { projectTag = t; renderProjectsPage(); }
+async function renderProjectsPage() {
+  const all = posts.filter(isProject).sort((a, b) => b.id - a.id);
+  all.forEach(p => { if (p.body != null && !p.meta) p.meta = splitProjectMeta(p.body).meta; });
+  const tags = [...new Set(all.flatMap(p => p.tags || []))].sort((a, b) => a.localeCompare(b));
+  document.getElementById('projects-filters').innerHTML = tags.length ? pillsHTML(tags.map(t => [t, t]), projectTag, 'setProjectTag') : '';
+  const list = projectTag ? all.filter(p => (p.tags || []).includes(projectTag)) : all;
+  const grid = document.getElementById('projects-grid');
+  grid.innerHTML = list.length ? list.map(p => galleryCardHTML(p, 'projects')).join('')
+    : `<div class="g-empty">No projects yet.${isAdmin ? ' Use <b>New Post</b> and choose <b>Projects</b>.' : ''}</div>`;
+  if (await ensureProjectBodies()) renderProjectsPage();
+}
+// Posts 카테고리 알약
+function setPostsPill(cat) { filterCat.posts = cat; renderPostsPage(); }
+
 // ── HOME: Recent Posts 직접 고르기 ──────────────────────────────────
 function findFeatured(f) {
   const list = f.section === 'paper' ? papers : posts;
@@ -3383,7 +3605,7 @@ function featDragEnd() { featDragIdx = null; document.querySelectorAll('.recent-
 
 
 // ── 항목 이미지 (News / Me 항목 공용) ───────────────────────────────
-const thumbValue = { news:'', entry:'' };
+const thumbValue = { news:'', entry:'', project:'' };
 function setThumb(kind, url, fromInput) {
   thumbValue[kind] = url || '';
   const pv = document.getElementById(kind + '-thumb-preview');
@@ -4144,15 +4366,19 @@ function addSubFolder(section, parentPath) {
 function renderPostsPage() {
   buildFilterSidebar('posts-filter-sidebar','posts');
   buildMobFilter('posts');
-  let list=[...posts];
+  // 카테고리 알약 (프로젝트 제외, 실제 글이 있는 카테고리만)
+  const pcats=[...new Set(posts.filter(p=>!isProject(p)&&p.cat).map(p=>p.cat))].sort((a,b)=>a.split('/').pop().localeCompare(b.split('/').pop()));
+  const pillEl=document.getElementById('posts-pills');
+  if(pillEl) pillEl.innerHTML=pillsHTML(pcats.map(c=>[c,c.split('/').pop()]),filterCat.posts,'setPostsPill');
+  let list=posts.filter(p=>!isProject(p));
   const fc=filterCat.posts;
   if(fc) list=list.filter(p=>p.cat&&(p.cat===fc||p.cat.startsWith(fc+'/')));
   list=applyTextFilter(list,'posts');
   list.sort((a,b)=>sortDesc.posts?b.id-a.id:a.id-b.id);
-  setListLabel('posts-filter-label', fc||'Posts', list.length);
+  setListLabel('posts-filter-label', fc?fc.split('/').pop():'Posts', list.length);
   renderColBtns('posts');
   document.getElementById('posts-list').innerHTML=list.length
-    ? postListHTML(list,'posts')
+    ? `<div class="gallery-grid">${list.map(p=>galleryCardHTML(p,'posts')).join('')}</div>`
     : `<div class="empty-state"><div class="empty-icon">✍️</div><h3>No posts</h3></div>`;
 }
 function renderPaperPage() {
@@ -4420,9 +4646,10 @@ function renderPaperMeta(p, section) {
 }
 
 async function openPost(id,section) {
-  const list=section==='posts'?posts:papers;
+  const list=section==='paper'?papers:posts;
   const p=list.find(x=>x.id===id);
   if(!p) return;
+  if(section==='posts'&&isProject(p)) section='projects';
   currentPostId=id; currentSection=section;
   history.pushState(null,'','#'+section+'/'+id);
   document.getElementById('article-tags').innerHTML=
@@ -4438,6 +4665,8 @@ async function openPost(id,section) {
     };
   }
   renderPaperMeta(p, section);
+  renderArticleHeader(p, section);
+  document.getElementById('article-toc').innerHTML='';
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
   document.getElementById('page-article').classList.add('active');
@@ -4447,18 +4676,57 @@ async function openPost(id,section) {
   const bodyEl=document.getElementById('article-body');
   if(!p.body) {
     bodyEl.innerHTML='<div style="color:var(--s400);font-size:.85rem;padding:20px 0">Loading...</div>';
-    const table=section==='posts'?'posts':'papers';
+    const table=section==='paper'?'papers':'posts';
     const {data,error}=await supa.from(table).select('content').eq('id',id).single();
     if(error||!data){ bodyEl.innerHTML='<div style="color:#ef4444">Failed to load</div>'; return; }
     p.body=data.content;
   }
-  bodyEl.innerHTML=parseMd((p.body||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n'));
+  const split=splitProjectMeta(p.body);
+  if(section==='projects'){ p.meta=split.meta; renderArticleHeader(p, section); }
+  bodyEl.innerHTML=parseMd((split.body||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n'));
+  buildArticleToc(bodyEl);
   setTimeout(()=>{
     if(window.renderMathInElement) renderMathInElement(bodyEl,{
       delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false
     });
   },60);
   rpUpdate();
+}
+// 글 머리: 제목 아래 설명 + 정보 칸 (참고 사이트의 TEAM / MY ROLE / PERIOD 형식)
+function renderArticleHeader(p, section) {
+  const meta = p.meta || {};
+  const desc = section === 'projects' ? (meta.desc || '') : section === 'paper' ? (p.venue ? p.venue + (p.year ? ' · ' + p.year : '') : '') : '';
+  const descEl = document.getElementById('article-desc');
+  descEl.textContent = desc; descEl.style.display = desc ? '' : 'none';
+  const link = (u, label) => `<a class="news-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(label)}</a>`;
+  const rows = [];
+  if (section === 'projects') {
+    if (meta.team) rows.push(['Team', esc(meta.team)]);
+    if (meta.role) rows.push(['My Role', esc(meta.role)]);
+    if (meta.period) rows.push(['Project Period', esc(meta.period)]);
+    if (meta.link) rows.push(['Link', link(meta.link, meta.link.replace(/^https?:\/\//, '').slice(0, 48))]);
+    if ((p.tags || []).length) rows.push(['Tags', (p.tags || []).map(t => `<span class="g-tag">#${esc(t)}</span>`).join(' ')]);
+  } else if (section === 'paper') {
+    if (p.authors) rows.push(['Authors', supFmt(p.authors)]);
+    const links = [p.arxiv && link(p.arxiv, 'arXiv'), p.codeLink && link(p.codeLink, 'Code')].filter(Boolean);
+    if (links.length) rows.push(['Links', links.join('&nbsp;&nbsp;')]);
+    if ((p.tags || []).length) rows.push(['Tags', (p.tags || []).map(t => `<span class="g-tag">#${esc(t)}</span>`).join(' ')]);
+    rows.push(['Date', fmtDate(p.createdAt)]);
+  } else {
+    if (p.cat) rows.push(['Category', esc(String(p.cat).split('/').join(' / '))]);
+    rows.push(['Date', fmtDate(p.createdAt)]);
+  }
+  document.getElementById('article-info').innerHTML = rows.map(([k, v]) => `<div class="a-info-item"><div class="a-info-label">${k}</div><div class="a-info-value">${v}</div></div>`).join('');
+}
+// 왼쪽 목차: 본문 제목(#, ##, ###)으로 생성, 누르면 해당 위치로 이동
+function buildArticleToc(bodyEl) {
+  const toc = document.getElementById('article-toc');
+  const hs = [...bodyEl.querySelectorAll('.ep-h1,.ep-h2,.ep-h3,h1,h2,h3')];
+  toc.innerHTML = hs.map((h, i) => {
+    h.id = 'sec-' + i;
+    const lv = h.matches('.ep-h1,h1') ? 1 : h.matches('.ep-h2,h2') ? 2 : 3;
+    return `<a class="toc-item toc-l${lv}" href="#" onclick="event.preventDefault();document.getElementById('sec-${i}').scrollIntoView({behavior:'smooth',block:'start'})">${esc(h.textContent)}</a>`;
+  }).join('');
 }
 function editCurrentArticle(){if(currentPostId)openEdit(currentPostId,currentSection);}
 function deleteCurrentArticle(){if(currentPostId)askDelete(currentPostId,currentSection);}
@@ -4469,11 +4737,12 @@ function openWrite(sectionHint) {
   editingPostId=null; editorTags=[]; editorCat='';
   editingSection=sectionHint||currentPageName==='paper'?'paper':'posts';
   if(currentPageName==='paper') editingSection='paper';
+  else if(currentPageName==='projects') editingSection='projects';
   else editingSection='posts';
   document.getElementById('editor-title').value='';
   LPE.setValue('');
   document.getElementById('editor-mode-label').textContent='New Post';
-  clearPaperFields();
+  clearPaperFields(); fillProjectFields({});
   selectSection(editingSection,document.getElementById('sec-btn-'+editingSection));
   renderEditorCats(); renderEditorTags();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -4488,20 +4757,23 @@ function openWrite(sectionHint) {
 }
 async function openEdit(id,section) {
   if(!isAdmin) return;
-  const list=section==='posts'?posts:papers;
+  const list=section==='paper'?papers:posts;
   const p=list.find(x=>x.id===id);
   if(!p) return;
+  if(section==='posts'&&isProject(p)) section='projects';
   editingPostId=id; editingSection=section; editorTags=[...(p.tags||[])]; editorCat=p.cat||'';
   document.getElementById('editor-title').value=p.title;
   document.getElementById('editor-mode-label').textContent='Editing Post';
   // 본문 캐시 없으면 fetch
   if(!p.body) {
     LPE.setValue('Loading...');
-    const table=section==='posts'?'posts':'papers';
+    const table=section==='paper'?'papers':'posts';
     const {data}=await supa.from(table).select('content').eq('id',id).single();
     if(data){ p.body=data.content; }
   }
-  LPE.setValue(p.body||'');
+  const split=splitProjectMeta(p.body||'');
+  fillProjectFields(section==='projects'?split.meta:{});
+  LPE.setValue(section==='projects'?split.body:(p.body||''));
   selectSection(section,document.getElementById('sec-btn-'+section));
   renderEditorCats(); renderEditorTags();
   if(section==='paper') fillPaperFields(p);
@@ -4518,7 +4790,7 @@ function cancelWrite() {
   // 나갈 때 변경사항 있으면 자동저장
   if(draftDirty) draftSaveNow();
   draftStopWatcher();
-  if(editingPostId!==null) openPost(editingPostId,editingSection);
+  if(editingPostId!==null) openPost(editingPostId,editingSection==='projects'?'projects':editingSection);
   else showSection(editingSection||'posts');
 }
 
@@ -4549,6 +4821,7 @@ function draftGetFields() {
     s1:        document.getElementById('pf-s1')?.value        || '',
     s2:        document.getElementById('pf-s2')?.value        || '',
     s3:        document.getElementById('pf-s3')?.value        || '',
+    project:   editingSection === 'projects' ? readProjectFields() : null,
   };
 }
 
@@ -4567,6 +4840,7 @@ function draftSetFields(d) {
   ['authors','year','venue','arxiv','code','s1','s2','s3'].forEach(k => {
     const el = document.getElementById('pf-' + k); if (el) el.value = d[k] || '';
   });
+  fillProjectFields(d.project || {});
 }
 
 function draftSetStatus(state, msg) {
@@ -4622,7 +4896,7 @@ function draftMarkDirty() {
 }
 
 function draftStartWatcher() {
-  ['editor-title','pf-authors','pf-year','pf-venue','pf-arxiv','pf-code','pf-s1','pf-s2','pf-s3'].forEach(id => {
+  ['editor-title','pf-authors','pf-year','pf-venue','pf-arxiv','pf-code','pf-s1','pf-s2','pf-s3','pj-desc','pj-team','pj-role','pj-period','pj-link'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', draftMarkDirty);
   });
@@ -4666,7 +4940,7 @@ async function draftOpenPanel() {
       const t   = new Date(row.updated_at);
       const ts  = `${t.getFullYear()}.${(t.getMonth()+1).toString().padStart(2,'0')}.${t.getDate().toString().padStart(2,'0')} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
       const ttl = d.title?.trim() || '(Untitled)';
-      const sec = d.section === 'paper' ? '📄 Papers' : '✍️ Posts';
+      const sec = d.section === 'paper' ? '📄 Papers' : d.section === 'projects' ? '🧩 Projects' : '✍️ Posts';
       return `<div class="draft-item">
         <div class="draft-item-left">
           <div class="draft-item-title">${esc(ttl)}</div>
@@ -4730,11 +5004,41 @@ async function draftClearAfterPublish() {
 }
 // ────────────────────────────────────────────────────────────────
 
+function readProjectFields() {
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  return { desc: v('pj-desc'), team: v('pj-team'), role: v('pj-role'), period: v('pj-period'), link: v('pj-link'), cover: thumbValue.project || '' };
+}
+function fillProjectFields(m) {
+  m = m || {};
+  ['desc','team','role','period','link'].forEach(k => { const el = document.getElementById('pj-' + k); if (el) el.value = m[k] || ''; });
+  setThumb('project', m.cover || '');
+}
+// 프로젝트 저장: posts 테이블 + 카테고리 Projects + 본문 앞 메타
+function publishProject(title, body) {
+  const meta = readProjectFields();
+  const full = joinProjectMeta(meta, body);
+  if (editingPostId !== null) {
+    const i = posts.findIndex(x => x.id === editingPostId);
+    const updated = { ...posts[i], title, body: full, meta, tags: editorTags, cat: PROJECT_CAT, updatedAt: Date.now() };
+    if (i >= 0) posts[i] = updated;
+    save();
+    savePost(updated, 'posts').then(ok => { if (ok) { toast('Updated.'); draftClearAfterPublish(); } });
+    const id = editingPostId; editingPostId = null;
+    openPost(id, 'projects');
+  } else {
+    const np = { id: Date.now(), title, body: full, meta, tags: editorTags, cat: PROJECT_CAT, createdAt: Date.now(), updatedAt: Date.now() };
+    posts.unshift(np);
+    save();
+    savePost(np, 'posts').then(ok => { if (ok) { toast('Published.'); draftClearAfterPublish(); } });
+    openPost(np.id, 'projects');
+  }
+}
 function publishPost() {
   const title=document.getElementById('editor-title').value.trim();
   const body=LPE.getValue().trim();
   if(!title){toast('Enter a title.');return;}
   if(!body){toast('Enter some content.');return;}
+  if(editingSection==='projects'){ publishProject(title, body); return; }
   const list=editingSection==='posts'?posts:papers;
 
   if(editingPostId!==null) {
@@ -4788,12 +5092,16 @@ function selectSection(sec,btn) {
   // paper 필드 토글
   const pf = document.getElementById('paper-fields');
   if(pf) pf.classList.toggle('visible', sec==='paper');
+  const jf = document.getElementById('project-fields');
+  if(jf) jf.classList.toggle('visible', sec==='projects');
+  // 프로젝트는 카테고리 고정(Projects) → 카테고리 줄 숨김
+  const cr = document.getElementById('editor-cat-btns'); if(cr) cr.closest('.editor-row').style.display = sec==='projects' ? 'none' : '';
   // 태그 입력행: posts에선 숨김
   const tr = document.getElementById('editor-tags-row');
   if(tr) tr.style.display = sec==='posts' ? 'none' : '';
 }
 function renderEditorCats() {
-  const cats=categories[editingSection]||[];
+  const cats=(categories[editingSection==='projects'?'posts':editingSection]||[]).filter(c=>c!==PROJECT_CAT&&!c.startsWith(PROJECT_CAT+'/'));
   // Sort and render as indented tree for easy selection
   const sorted = [...cats].sort();
   document.getElementById('editor-cat-btns').innerHTML=sorted.map(c=>{
@@ -6302,12 +6610,12 @@ function handleHash() {
   if (parts.length === 2) {
     const sec = parts[0];
     const id  = parseInt(parts[1]);
-    if ((sec === 'posts' || sec === 'paper') && !isNaN(id)) {
+    if ((sec === 'posts' || sec === 'paper' || sec === 'projects') && !isNaN(id)) {
       openPost(id, sec);
       return true;
     }
   }
-  if (['landing','home','posts','paper','media'].includes(hash)) {
+  if (['landing','home','projects','posts','paper','media'].includes(hash)) {
     showSection(hash);
     return true;
   }
@@ -6413,7 +6721,7 @@ particlesJS("particles-js",{
     var ed=(name==='write'||name==='article');
     if(wrap){ if(ed) wrap.classList.add('mbn-hidden'); else wrap.classList.remove('mbn-hidden'); }
     if(fab){
-      if(!ed&&window.isAdmin&&(name==='posts'||name==='paper')) fab.classList.add('show');
+      if(!ed&&window.isAdmin&&(name==='posts'||name==='paper'||name==='projects')) fab.classList.add('show');
       else fab.classList.remove('show');
     }
   }
