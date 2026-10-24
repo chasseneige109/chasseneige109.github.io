@@ -1884,7 +1884,6 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 .folder-manage{margin:-16px 0 28px;border:1px dashed var(--s300);border-radius:8px;padding:10px 14px}
 .folder-manage summary{cursor:pointer;font-size:.85rem;color:var(--muted)}
 .folder-manage .filter-sidebar{position:static;margin-top:12px;max-width:420px}
-#page-posts .list-filter{display:none}
 @media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.gallery-grid{grid-template-columns:1fr;gap:32px}.gallery-title{font-size:32px;line-height:40px}.gallery-head{padding-top:28px}}
 
@@ -2165,19 +2164,20 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 </div>
 
 <div id="page-posts" class="page">
-  <div class="wrap gallery-wrap">
-    <div class="gallery-head">
-      <h1 class="gallery-title" id="posts-filter-label">Posts</h1>
-      <button class="sort-btn" onclick="toggleSort('posts')">Newest ↕</button>
-    </div>
-    <div class="gallery-filters" id="posts-pills"></div>
-    <details class="folder-manage admin-only" id="posts-folder-manage">
-      <summary>Manage folders</summary>
+  <div class="wrap">
+    <div class="three-col-sidebar">
       <div class="filter-sidebar" id="posts-filter-sidebar"></div>
-    </details>
-    <div id="posts-mob-filter" class="mob-filter-bar" style="display:none!important"></div>
-    <div class="post-col-control" id="posts-col-control" style="display:none!important"></div>
-    <div id="posts-list"></div>
+      <div>
+        <div id="posts-mob-filter" class="mob-filter-bar"></div>
+        <div class="filter-bar">
+          <span class="filter-label" id="posts-filter-label">Posts</span>
+          <div class="post-col-control" id="posts-col-control"></div>
+          <button class="sort-btn" onclick="toggleSort('posts')">Newest ↕</button>
+        </div>
+        <input class="list-filter" type="search" placeholder="Type to filter" oninput="setTextFilter('posts',this.value)">
+        <div id="posts-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4182,7 +4182,7 @@ function buildMobFilter(section) {
   // 768px 초과면 렌더 안 함
   if (!window.matchMedia('(max-width:768px)').matches) { el.innerHTML=''; return; }
 
-  const list = section==='posts' ? posts : papers;
+  const list = section==='posts' ? posts.filter(p=>!isProject(p)) : papers;
   const cats = categories[section] || [];
   const allTags = [...new Set(list.flatMap(p=>p.tags||[]))];
   const fc = filterCat[section], ft = filterTag[section];
@@ -4299,7 +4299,7 @@ function renderFolderNode(node, list, section, fc, level) {
 
 function buildFilterSidebar(containerId, section) {
   const el=document.getElementById(containerId);
-  const list=section==='posts'?posts:papers;
+  const list=section==='posts'?posts.filter(p=>!isProject(p)):papers;
   const allTags=new Set(list.flatMap(p=>p.tags||[]));
   const cats=categories[section]||[];
   const fc=filterCat[section], ft=filterTag[section];
@@ -4366,19 +4366,15 @@ function addSubFolder(section, parentPath) {
 function renderPostsPage() {
   buildFilterSidebar('posts-filter-sidebar','posts');
   buildMobFilter('posts');
-  // 카테고리 알약 (프로젝트 제외, 실제 글이 있는 카테고리만)
-  const pcats=[...new Set(posts.filter(p=>!isProject(p)&&p.cat).map(p=>p.cat))].sort((a,b)=>a.split('/').pop().localeCompare(b.split('/').pop()));
-  const pillEl=document.getElementById('posts-pills');
-  if(pillEl) pillEl.innerHTML=pillsHTML(pcats.map(c=>[c,c.split('/').pop()]),filterCat.posts,'setPostsPill');
-  let list=posts.filter(p=>!isProject(p));
+  let list=posts.filter(p=>!isProject(p));   // Projects 글은 Posts 목록에서 제외
   const fc=filterCat.posts;
   if(fc) list=list.filter(p=>p.cat&&(p.cat===fc||p.cat.startsWith(fc+'/')));
   list=applyTextFilter(list,'posts');
   list.sort((a,b)=>sortDesc.posts?b.id-a.id:a.id-b.id);
-  setListLabel('posts-filter-label', fc?fc.split('/').pop():'Posts', list.length);
+  setListLabel('posts-filter-label', fc||'Posts', list.length);
   renderColBtns('posts');
   document.getElementById('posts-list').innerHTML=list.length
-    ? `<div class="gallery-grid">${list.map(p=>galleryCardHTML(p,'posts')).join('')}</div>`
+    ? postListHTML(list,'posts')
     : `<div class="empty-state"><div class="empty-icon">✍️</div><h3>No posts</h3></div>`;
 }
 function renderPaperPage() {
