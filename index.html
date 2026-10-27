@@ -2301,7 +2301,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <div class="paper-fields-grid">
         <input class="paper-field-inp paper-field-full" id="pj-desc" placeholder="One-line description (shown on the card and under the title)">
         <input class="paper-field-inp" id="pj-team" placeholder="Team (e.g. BEAR Lab, SKKU)">
-        <input class="paper-field-inp" id="pj-role" placeholder="My role">
+        <input class="paper-field-inp" id="pj-members" placeholder="Members (e.g. Hyungjun Nam, Young Kyun Jang)">
         <input class="paper-field-inp" id="pj-period" placeholder="Period (e.g. Mar 2026 – Present)">
         <input class="paper-field-inp" id="pj-link" placeholder="Link (GitHub, demo, paper…)">
       </div>
@@ -4719,7 +4719,7 @@ function renderArticleHeader(p, section) {
   const rows = [];
   if (section === 'projects') {
     if (meta.team) rows.push(['Team', esc(meta.team)]);
-    if (meta.role) rows.push(['My Role', esc(meta.role)]);
+    if (meta.members) rows.push(['Members', supFmt(meta.members)]);
     if (meta.period) rows.push(['Project Period', esc(meta.period)]);
     if (meta.link) rows.push(['Link', link(meta.link, meta.link.replace(/^https?:\/\//, '').slice(0, 48))]);
     if ((p.tags || []).length) rows.push(['Tags', (p.tags || []).map(t => `<span class="g-tag">#${esc(t)}</span>`).join(' ')]);
@@ -4913,7 +4913,7 @@ function draftMarkDirty() {
 }
 
 function draftStartWatcher() {
-  ['editor-title','pf-authors','pf-year','pf-venue','pf-arxiv','pf-code','pf-s1','pf-s2','pf-s3','pj-desc','pj-team','pj-role','pj-period','pj-link'].forEach(id => {
+  ['editor-title','pf-authors','pf-year','pf-venue','pf-arxiv','pf-code','pf-s1','pf-s2','pf-s3','pj-desc','pj-team','pj-members','pj-period','pj-link'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', draftMarkDirty);
   });
@@ -5023,11 +5023,11 @@ async function draftClearAfterPublish() {
 
 function readProjectFields() {
   const v = id => (document.getElementById(id)?.value || '').trim();
-  return { desc: v('pj-desc'), team: v('pj-team'), role: v('pj-role'), period: v('pj-period'), link: v('pj-link'), cover: thumbValue.project || '' };
+  return { desc: v('pj-desc'), team: v('pj-team'), members: v('pj-members'), period: v('pj-period'), link: v('pj-link'), cover: thumbValue.project || '' };
 }
 function fillProjectFields(m) {
   m = m || {};
-  ['desc','team','role','period','link'].forEach(k => { const el = document.getElementById('pj-' + k); if (el) el.value = m[k] || ''; });
+  ['desc','team','members','period','link'].forEach(k => { const el = document.getElementById('pj-' + k); if (el) el.value = m[k] || ''; });
   setThumb('project', m.cover || '');
 }
 // 프로젝트 저장: posts 테이블 + 카테고리 Projects + 본문 앞 메타
