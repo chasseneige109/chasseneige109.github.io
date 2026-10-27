@@ -1878,6 +1878,8 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 .g-tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
 .g-tag{display:inline-block;font-size:12px;line-height:18px;color:#000;background:#eee;border-radius:6px;padding:4px 12px}
 .g-desc{font-size:14.4px;line-height:1.5;color:#767676;margin:0 0 8px}
+.g-team{font-size:13.5px;line-height:1.45;color:#000;font-weight:500;margin:0 0 2px}
+.g-members{font-size:13.5px;line-height:1.45;color:#767676;margin:0 0 8px}
 .g-date{font-size:13px;color:#999}
 .g-actions{position:absolute;top:10px;right:10px;gap:5px;opacity:0;transition:opacity .2s}
 .g-card:hover .g-actions{opacity:1}
@@ -3590,6 +3592,8 @@ function galleryCardHTML(p, section) {
       <h3 class="g-title">${esc(p.title)}</h3>
       ${tags.length ? `<div class="g-tags">${tags.map(t => `<span class="g-tag">#${esc(t)}</span>`).join('')}</div>` : ''}
       ${desc ? `<p class="g-desc">${esc(desc)}</p>` : ''}
+      ${section === 'projects' && meta.team ? `<div class="g-team">${esc(meta.team)}</div>` : ''}
+      ${section === 'projects' && meta.members ? `<div class="g-members">${supFmt(meta.members)}</div>` : ''}
       <div class="g-date">${section === 'projects' && meta.period ? esc(meta.period) : fmtDate(p.createdAt)}</div>
     </div>
     <div class="pc-actions g-actions admin-only flex" onclick="event.stopPropagation()">
