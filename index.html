@@ -1962,6 +1962,63 @@ body:has(#page-article.active) .right-panel{display:none !important}
 #lp-editor .cm-rendered-flow + .cm-widgetBuffer{display:none}
 #lp-editor a.media-link-inline{cursor:text}
 
+/* ══ 글쓰기 = 글 페이지와 같은 틀 (왼쪽 편집 설정·목차 + 930 본문) ══ */
+body:has(#page-write.active) .right-panel{display:none !important}
+.write-aside{position:sticky;top:80px;align-self:start;padding:49px 24px 0 20px;max-height:calc(100vh - 100px);overflow-y:auto;scrollbar-width:thin}
+.w-tools{display:flex;flex-direction:column;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--rule);margin-bottom:20px}
+.w-tool-label{font-size:12px;font-weight:600;color:#000;margin-bottom:7px}
+.w-tool-note{font-weight:400;color:var(--muted)}
+.w-tool-btns{display:flex;flex-wrap:wrap;gap:5px}
+.write-aside .cat-sel-btn{padding:3px 11px;font-size:12.5px}
+.write-aside .cat-sel-wrap{display:inline-flex;align-items:center}
+.w-cat-add{display:flex;gap:5px;margin-top:7px}
+.w-cat-add .cat-new-inp{flex:1;min-width:0;padding:4px 10px;font-size:12px}
+.w-cat-add .cat-add-btn{padding:4px 10px;font-size:12px;white-space:nowrap}
+#page-write .project-fields{display:none;background:none;border:none;border-radius:0;padding:0;margin:0}
+#page-write .project-fields.visible{display:block}
+#page-write .pj-cover-row{margin:0 0 6px}
+#page-write .thumb-url{font-size:12px;padding:5px 8px}
+#page-write .draft-bar{margin:0;padding:6px 10px;border-radius:8px}
+.w-toc-wrap{padding-bottom:30px}
+.w-toc .toc-item{cursor:pointer}
+.w-muted{color:#b8b8b8;font-size:13px}
+/* 위쪽 고정 막대: 취소/발행 + 서식 버튼 */
+.w-sticky{position:sticky;top:53px;z-index:30;background:#fff}
+#page-write .article-topbar{border-bottom:none;padding:16px 0 0;margin:0}
+#page-write .editor-toolbar{margin:8px 0 0;padding:5px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+#page-write .tb-btn{font-family:var(--sans);font-size:12.5px;color:#333;padding:4px 8px}
+#page-write .tb-btn:hover{background:#f0f0f0;color:#000}
+#page-write .btn-sm{padding:6px 14px;border-radius:20px}
+#page-write .draft-list-panel{margin-top:12px}
+/* 머리: 실제 글과 같은 글꼴·크기, 입력칸 테두리 없이 */
+.w-title{display:block;width:100%;border:none;outline:none;resize:none;overflow:hidden;background:none;padding:0;font-family:var(--sans);field-sizing:content}
+.w-title::placeholder{color:#c8c8c8}
+.w-inp{font:inherit;color:inherit;letter-spacing:inherit;line-height:inherit;background:none;border:none;outline:none;padding:0;margin:0;field-sizing:content;min-width:7ch;max-width:100%;box-shadow:inset 0 -1px 0 transparent;transition:box-shadow .15s;vertical-align:baseline}
+.w-inp:hover{box-shadow:inset 0 -1px 0 #e2e2e2}
+.w-inp:focus{box-shadow:inset 0 -1px 0 #000}
+.w-inp::placeholder{color:#c4c4c4}
+#page-write .w-hide{display:none !important}
+.w-rendered{cursor:text}
+.w-rendered .news-link{cursor:text}
+textarea.w-inp-block{display:block;width:100%;resize:none;overflow:hidden}
+.w-tags-ui{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.w-tags-ui .tag-inp{font-family:inherit;font-size:14px;min-width:12ch}
+.w-tags-ui .e-tag-pill{font-size:12px}
+/* 섹션마다 실제 글에 보이는 칸만 */
+#page-write [data-for]{display:none !important}
+#page-write[data-sec="posts"] [data-for~="posts"],#page-write[data-sec="projects"] [data-for~="projects"],#page-write[data-sec="paper"] [data-for~="paper"]{display:block !important}
+#page-write[data-sec] .w-desc span[data-for]{display:none !important}
+#page-write[data-sec="projects"] .w-desc span[data-for~="projects"],#page-write[data-sec="paper"] .w-desc span[data-for~="paper"]{display:inline !important}
+#page-write .paper-fields{display:none}
+#page-write .paper-fields.visible{display:block}
+.paper-summary-list textarea{font-size:inherit}
+/* 본문: 글 페이지 a-body 자리 그대로 (위 여백·선 없음) */
+#page-write #lp-editor{padding:0 0 200px;border-top:none;min-height:420px}
+@media(max-width:1000px){
+  .write-aside{position:static;max-height:none;padding:16px 0 0;overflow:visible}
+  .w-toc-wrap{display:none}
+}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -2257,113 +2314,119 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
 </div>
 
-<div id="page-write" class="page">
-  <div class="editor-wrap">
-    <div class="editor-topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="btn-back" onclick="cancelWrite()">← Cancel</button>
-        <span class="editor-mode" id="editor-mode-label">New Post</span>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-cancel" onclick="cancelWrite()">Cancel</button>
-        <button class="btn-pub" onclick="publishPost()">Publish</button>
-      </div>
-    </div>
-    <!-- 임시저장 목록 패널 -->
-    <div class="draft-list-panel" id="draft-list-panel">
-      <div class="draft-list-header">
-        <span class="draft-list-title">💾 Saved Drafts</span>
-        <button class="btn-draft-close" onclick="draftClosePanel()">✕</button>
-      </div>
-      <div class="draft-list-items" id="draft-list-items"></div>
-    </div>
-    <!-- 자동저장 상태 바 -->
-    <div class="draft-bar">
-      <div class="draft-bar-left">
-        <div class="draft-autosave-dot" id="draft-dot"></div>
-        <span class="draft-status" id="draft-status">Autosave idle</span>
-      </div>
-      <div class="draft-bar-right">
-        <button class="btn-draft-save" onclick="draftSaveNow()">Save Draft</button>
-        <button class="btn-draft-save" onclick="draftOpenPanel()" style="background:var(--s100);color:var(--s600);border-color:var(--s200)">Drafts 📋</button>
-        <button class="btn-draft-clear" onclick="draftClear()">Clear</button>
-      </div>
-    </div>
-    <div class="editor-row">
-      <span class="editor-row-label">Section</span>
-      <button class="cat-sel-btn sel" id="sec-btn-posts" onclick="selectSection('posts',this)">Posts</button>
-      <button class="cat-sel-btn" id="sec-btn-projects" onclick="selectSection('projects',this)">Projects</button>
-      <button class="cat-sel-btn" id="sec-btn-paper" onclick="selectSection('paper',this)">Paper Review</button>
-    </div>
-    <!-- Projects 정보 칸 (글 본문 맨 앞에 숨은 메타로 저장) -->
-    <div class="paper-fields project-fields" id="project-fields">
-      <div class="paper-fields-title">Project info</div>
-      <div class="paper-fields-grid">
-        <input class="paper-field-inp paper-field-full" id="pj-desc" placeholder="One-line description (shown on the card and under the title)">
-        <input class="paper-field-inp" id="pj-team" placeholder="Team (e.g. BEAR Lab, SKKU)">
-        <input class="paper-field-inp" id="pj-members" placeholder="Members (e.g. Hyungjun Nam, Young Kyun Jang)">
-        <input class="paper-field-inp" id="pj-period" placeholder="Period (e.g. Mar 2026 – Present)">
-        <input class="paper-field-inp" id="pj-link" placeholder="Link (GitHub, demo, paper…)">
-      </div>
-      <div class="pj-cover-row">
-        <div class="thumb-preview" id="project-thumb-preview"><span>No cover</span></div>
-        <div class="thumb-actions">
-          <label class="thumb-btn">Upload cover<input type="file" accept="image/*" hidden onchange="pickThumb('project',this)"></label>
-          <button type="button" class="thumb-btn thumb-remove" onclick="setThumb('project','')">Remove</button>
+<div id="page-write" class="page" data-sec="posts">
+  <!-- 글 페이지와 같은 틀: 왼쪽 320(편집 설정 + 목차) + 본문 930 -->
+  <div class="wrap article-layout write-layout">
+    <aside class="write-aside">
+      <div class="w-tools">
+        <div class="w-tool">
+          <div class="w-tool-label">Section</div>
+          <div class="w-tool-btns">
+            <button class="cat-sel-btn sel" id="sec-btn-posts" onclick="selectSection('posts',this)">Posts</button>
+            <button class="cat-sel-btn" id="sec-btn-projects" onclick="selectSection('projects',this)">Projects</button>
+            <button class="cat-sel-btn" id="sec-btn-paper" onclick="selectSection('paper',this)">Paper Review</button>
+          </div>
+        </div>
+        <div class="w-tool" id="w-cat-tool">
+          <div class="w-tool-label">Category</div>
+          <div id="editor-cat-btns" class="w-tool-btns"></div>
+          <div class="w-cat-add">
+            <input class="cat-new-inp" id="cat-new-inp" placeholder="New category…">
+            <button class="cat-add-btn" onclick="addNewCat()">+ Add</button>
+          </div>
+        </div>
+        <div class="w-tool" id="w-tags-tool">
+          <div class="w-tool-label">Tags</div>
+          <div id="w-tags-slot"></div>
+        </div>
+        <!-- Projects 표지 (카드에만 쓰임) -->
+        <div class="w-tool project-fields" id="project-fields">
+          <div class="w-tool-label">Cover image <span class="w-tool-note">(card only)</span></div>
+          <div class="pj-cover-row">
+            <div class="thumb-preview" id="project-thumb-preview"><span>No cover</span></div>
+            <div class="thumb-actions">
+              <label class="thumb-btn">Upload<input type="file" accept="image/*" hidden onchange="pickThumb('project',this)"></label>
+              <button type="button" class="thumb-btn thumb-remove" onclick="setThumb('project','')">Remove</button>
+            </div>
+          </div>
           <input class="form-input thumb-url" id="project-thumb-url" placeholder="or paste an image URL" oninput="setThumb('project',this.value.trim(),true)">
         </div>
+        <div class="w-tool">
+          <div class="w-tool-label">Draft</div>
+          <div class="draft-bar">
+            <div class="draft-bar-left">
+              <div class="draft-autosave-dot" id="draft-dot"></div>
+              <span class="draft-status" id="draft-status">Autosave idle</span>
+            </div>
+            <div class="draft-bar-right">
+              <button class="btn-draft-save" onclick="draftOpenPanel()">Drafts</button>
+              <button class="btn-draft-clear" onclick="draftClear()">Clear</button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <!-- Paper Review 메타 필드 -->
-    <div class="paper-fields" id="paper-fields">
-      <div class="paper-fields-title">📄 Paper Info</div>
-      <div class="paper-fields-grid">
-        <input class="paper-field-inp" id="pf-authors" placeholder="Authors">
-        <input class="paper-field-inp" id="pf-year" placeholder="Year">
-        <input class="paper-field-inp" id="pf-venue" placeholder="Venue (conference / journal)">
-        <input class="paper-field-inp" id="pf-arxiv" placeholder="arXiv link">
-        <input class="paper-field-inp paper-field-full" id="pf-code" placeholder="Code link (GitHub, etc.)">
+      <div class="w-toc-wrap">
+        <div class="w-tool-label">Contents</div>
+        <nav class="w-toc" id="write-toc"></nav>
       </div>
-      <div style="margin-top:10px">
-        <div class="paper-fields-title" style="margin-bottom:8px">💡 Three-line Summary</div>
-        <textarea class="paper-summary-inp paper-field-full" id="pf-s1" placeholder="Key contribution 1" rows="2"></textarea>
-        <textarea class="paper-summary-inp paper-field-full" id="pf-s2" placeholder="Key contribution 2" style="margin-top:6px" rows="2"></textarea>
-        <textarea class="paper-summary-inp paper-field-full" id="pf-s3" placeholder="Key contribution 3" style="margin-top:6px" rows="2"></textarea>
+    </aside>
+
+    <div class="article-main">
+      <div class="w-sticky">
+        <div class="article-topbar">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn-back" onclick="cancelWrite()">← Cancel</button>
+            <span class="editor-mode" id="editor-mode-label">New Post</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn-sm" onclick="draftSaveNow()">Save Draft</button>
+            <button class="btn-pub" onclick="publishPost()">Publish</button>
+          </div>
+        </div>
+        <div class="editor-toolbar"><button class="tb-btn" onclick="ins('# ','')" title="">H1</button><button class="tb-btn" onclick="ins('## ','')" title="">H2</button><button class="tb-btn" onclick="ins('### ','')" title="">H3</button><button class="tb-btn" onclick="ins('#### ','')" title="">H4</button><div class="tb-sep"></div><button class="tb-btn" onclick="ins('**','**')" title="Bold (Ctrl+B)"><b>B</b></button><button class="tb-btn" onclick="ins('*','*')" title="Italic (Ctrl+I)"><i>I</i></button><button class="tb-btn" onclick="ins('~~','~~')" title="Strikethrough"><s>S</s></button><button class="tb-btn" onclick="ins('`','`')" title="Inline code (Ctrl+E)">Code</button><div class="tb-sep"></div><button class="tb-btn" onclick="ins('> ','')" title="">Quote</button><button class="tb-btn" onclick="ins('- ','')" title="">• List</button><button class="tb-btn" onclick="ins('1. ','')" title="">1. List</button><button class="tb-btn" onclick="ins('```\n','\n```')" title="">Code block</button><button class="tb-btn" onclick="ins('---\n','')" title="">Rule</button><div class="tb-sep"></div><button class="tb-btn" onclick="ins('$$\n','\n$$')" title="">∑ Block</button><button class="tb-btn" onclick="ins('$','$')" title="">∑ Inline</button><div class="tb-sep"></div><button class="tb-btn" onclick="insertMedia('image')" title="">Image</button><button class="tb-btn" onclick="insertMedia('video')" title="">Video</button><button class="tb-btn" onclick="insertMedia('pdf')" title="">PDF</button><button class="tb-btn" onclick="insertMedia('link')" title="">Link</button></div>
       </div>
+      <!-- 임시저장 목록 패널 -->
+      <div class="draft-list-panel" id="draft-list-panel">
+        <div class="draft-list-header">
+          <span class="draft-list-title">Saved Drafts</span>
+          <button class="btn-draft-close" onclick="draftClosePanel()">✕</button>
+        </div>
+        <div class="draft-list-items" id="draft-list-items"></div>
+      </div>
+
+      <!-- 글 머리: 실제 글 페이지(a-header)와 같은 자리·같은 글꼴, 그 자리에서 바로 입력 -->
+      <header class="a-header">
+        <textarea class="a-title w-title" id="editor-title" placeholder="Title" rows="1" oninput="autoResize(this)"></textarea>
+        <div class="a-desc w-desc" data-for="projects paper">
+          <span data-for="projects"><textarea class="w-inp w-inp-block" id="pj-desc" rows="1" placeholder="One-line description (also shown on the card)" oninput="autoResize(this)"></textarea></span>
+          <span data-for="paper"><input class="w-inp" id="pf-venue" placeholder="Venue"> · <input class="w-inp" id="pf-year" placeholder="Year"></span>
+        </div>
+        <div class="a-info" id="write-info">
+          <div class="a-info-item" data-for="posts"><div class="a-info-label">Category</div><div class="a-info-value" id="w-info-cat"></div></div>
+          <div class="a-info-item" data-for="projects"><div class="a-info-label">Team</div><div class="a-info-value"><input class="w-inp" id="pj-team" placeholder="e.g. BEAR Lab, SKKU"></div></div>
+          <div class="a-info-item" data-for="projects"><div class="a-info-label">Members</div><div class="a-info-value"><input class="w-inp" id="pj-members" placeholder="e.g. Hyungjun Nam^1, Young Kyun Jang^2"></div></div>
+          <div class="a-info-item" data-for="projects"><div class="a-info-label">Project Period</div><div class="a-info-value"><input class="w-inp" id="pj-period" placeholder="e.g. Mar 2026 – Present"></div></div>
+          <div class="a-info-item" data-for="projects"><div class="a-info-label">Link</div><div class="a-info-value"><input class="w-inp" id="pj-link" placeholder="https://…"></div></div>
+          <div class="a-info-item" data-for="paper"><div class="a-info-label">Authors</div><div class="a-info-value"><input class="w-inp" id="pf-authors" placeholder="Authors"></div></div>
+          <div class="a-info-item" data-for="paper"><div class="a-info-label">Links</div><div class="a-info-value"><input class="w-inp" id="pf-arxiv" placeholder="arXiv URL">&nbsp;&nbsp;<input class="w-inp" id="pf-code" placeholder="Code URL"></div></div>
+          <div class="a-info-item" data-for="projects paper"><div class="a-info-label">Tags</div><div class="a-info-value" id="w-tags-item">
+            <div class="w-tags-ui" id="w-tags-ui"><span id="editor-tag-list"></span><input class="tag-inp w-inp" id="editor-tag-inp" placeholder="Add tag + Enter" onkeydown="handleTagInput(event)"></div>
+          </div></div>
+          <div class="a-info-item" data-for="posts paper"><div class="a-info-label">Date</div><div class="a-info-value" id="w-info-date"></div></div>
+        </div>
+      </header>
+      <!-- Paper Review 세 줄 요약 (실제 글과 같은 상자) -->
+      <div class="paper-summary-box paper-fields" id="paper-fields">
+        <div class="paper-summary-title">Three-line Summary</div>
+        <ol class="paper-summary-list">
+          <li><textarea class="w-inp w-inp-block" id="pf-s1" rows="1" placeholder="Key contribution 1" oninput="autoResize(this)"></textarea></li>
+          <li><textarea class="w-inp w-inp-block" id="pf-s2" rows="1" placeholder="Key contribution 2" oninput="autoResize(this)"></textarea></li>
+          <li><textarea class="w-inp w-inp-block" id="pf-s3" rows="1" placeholder="Key contribution 3" oninput="autoResize(this)"></textarea></li>
+        </ol>
+      </div>
+      <div class="lp-editor" id="lp-editor"></div>
+      <textarea id="editor-body" style="display:none" aria-hidden="true" tabindex="-1"></textarea>
     </div>
-    <div class="editor-row">
-      <span class="editor-row-label">Category</span>
-      <div id="editor-cat-btns" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div>
-      <input class="cat-new-inp" id="cat-new-inp" placeholder="New category...">
-      <button class="cat-add-btn" onclick="addNewCat()">+ Add</button>
-    </div>
-    <textarea class="editor-title-inp" id="editor-title" placeholder="Enter a title" rows="1" oninput="autoResize(this)"></textarea>
-    <div class="editor-tags-row">
-      <span id="editor-tag-list"></span>
-      <input class="tag-inp" id="editor-tag-inp" placeholder="Type a tag and press Enter..." onkeydown="handleTagInput(event)">
-    </div>
-    <div class="editor-toolbar">
-      <button class="tb-btn" onclick="ins('## ','')">H2</button>
-      <button class="tb-btn" onclick="ins('### ','')">H3</button>
-      <div class="tb-sep"></div>
-      <button class="tb-btn" onclick="ins('**','**')"><b>B</b></button>
-      <button class="tb-btn" onclick="ins('*','*')"><i>I</i></button>
-      <button class="tb-btn" onclick="ins('`','`')">Code</button>
-      <div class="tb-sep"></div>
-      <button class="tb-btn" onclick="ins('> ','')">Quote</button>
-      <button class="tb-btn" onclick="ins('- ','')">List</button>
-      <div class="tb-sep"></div>
-      <button class="tb-btn" onclick="ins('$$\n','\n$$')">∑ Block</button>
-      <button class="tb-btn" onclick="ins('$','$')">∑ Inline</button>
-      <div class="tb-sep"></div>
-      <button class="tb-btn" onclick="insertMedia('image')">🖼 Image</button>
-      <button class="tb-btn" onclick="insertMedia('video')">🎬 Video</button>
-      <button class="tb-btn" onclick="insertMedia('pdf')">📄 PDF</button>
-      <button class="tb-btn" onclick="insertMedia('link')">🔗 Link</button>
-    </div>
-    <div class="lp-editor" id="lp-editor"></div>
-    <textarea id="editor-body" style="display:none" aria-hidden="true" tabindex="-1"></textarea>
-    <div class="editor-hint">Markdown supported · $...$ inline math · $$...$$ block math</div>
   </div>
 </div>
 
@@ -4625,10 +4688,12 @@ function fillPaperFields(p) {
   document.getElementById('pf-s1').value      = p.summary1 || '';
   document.getElementById('pf-s2').value      = p.summary2 || '';
   document.getElementById('pf-s3').value      = p.summary3 || '';
+  wRenderAll();
 }
 function clearPaperFields() {
   ['pf-authors','pf-year','pf-venue','pf-arxiv','pf-code','pf-s1','pf-s2','pf-s3']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  wRenderAll();
 }
 function renderPaperMeta(p, section) {
   const wrap = document.getElementById('article-paper-meta');
@@ -5029,6 +5094,7 @@ function fillProjectFields(m) {
   m = m || {};
   ['desc','team','members','period','link'].forEach(k => { const el = document.getElementById('pj-' + k); if (el) el.value = m[k] || ''; });
   setThumb('project', m.cover || '');
+  wRenderAll();
 }
 // 프로젝트 저장: posts 테이블 + 카테고리 Projects + 본문 앞 메타
 function publishProject(title, body) {
@@ -5112,12 +5178,20 @@ function selectSection(sec,btn) {
   const jf = document.getElementById('project-fields');
   if(jf) jf.classList.toggle('visible', sec==='projects');
   // 프로젝트는 카테고리 고정(Projects) → 카테고리 줄 숨김
-  const cr = document.getElementById('editor-cat-btns'); if(cr) cr.closest('.editor-row').style.display = sec==='projects' ? 'none' : '';
+  const cr = document.getElementById('w-cat-tool'); if(cr) cr.style.display = sec==='projects' ? 'none' : '';
+  document.getElementById('page-write').dataset.sec = sec;
+  // 태그: Projects/Paper는 글 머리 정보 칸(실제 글과 같은 자리), Posts는 실제 글에 안 보이므로 왼쪽 설정으로
+  const tagsUi = document.getElementById('w-tags-ui');
+  if (tagsUi) document.getElementById(sec==='posts' ? 'w-tags-slot' : 'w-tags-item').appendChild(tagsUi);
+  document.getElementById('w-tags-tool').style.display = sec==='posts' ? '' : 'none';
+  updateWriteInfo();
+  setTimeout(() => document.querySelectorAll('#page-write textarea[oninput]').forEach(autoResize), 0);
   // 태그 입력행: posts에선 숨김
   const tr = document.getElementById('editor-tags-row');
   if(tr) tr.style.display = sec==='posts' ? 'none' : '';
 }
 function renderEditorCats() {
+  setTimeout(updateWriteInfo, 0);
   const cats=(categories[editingSection==='projects'?'posts':editingSection]||[]).filter(c=>c!==PROJECT_CAT&&!c.startsWith(PROJECT_CAT+'/'));
   // Sort and render as indented tree for easy selection
   const sorted = [...cats].sort();
@@ -5133,6 +5207,48 @@ function renderEditorCats() {
   }).join('');
 }
 function selectCat(cat){editorCat=editorCat===cat?'':cat;renderEditorCats();}
+// 글쓰기 머리의 Category / Date 값 (실제 글 페이지와 같은 표시)
+function updateWriteInfo(){
+  const catEl=document.getElementById('w-info-cat'); if(!catEl) return;
+  catEl.innerHTML = editorCat ? esc(String(editorCat).split('/').join(' / ')) : '<span class="w-muted">Choose on the left</span>';
+  const list = editingSection==='paper' ? papers : posts;
+  const p = editingPostId!=null && list.find(x=>x.id===editingPostId);
+  document.getElementById('w-info-date').textContent = fmtDate(p && p.createdAt ? p.createdAt : Date.now());
+  wRenderAll();
+}
+// 정보 칸: 입력 중이 아닐 때는 실제 글과 같은 모양(위첨자, 링크)으로 보여 주고, 누르면 다시 입력칸
+const W_RENDER = {
+  'pj-members': v => supFmt(v),
+  'pf-authors': v => supFmt(v),
+  'pj-link':    v => `<a class="news-link">${esc(v.replace(/^https?:\/\//, '').slice(0, 48))}</a>`,
+  'pf-arxiv':   () => '<a class="news-link">arXiv</a>',
+  'pf-code':    () => '<a class="news-link">Code</a>',
+};
+function wRender(inp){
+  let sp = inp.nextElementSibling;
+  if (!sp || !sp.classList.contains('w-rendered')) {
+    sp = document.createElement('span'); sp.className = 'w-rendered'; sp.title = 'Click to edit';
+    sp.addEventListener('mousedown', e => { e.preventDefault(); inp.classList.remove('w-hide'); sp.hidden = true; inp.focus(); });
+    inp.after(sp);
+    inp.addEventListener('focus', () => { inp.classList.remove('w-hide'); sp.hidden = true; });
+    inp.addEventListener('blur', () => wRender(inp));
+  }
+  const v = inp.value.trim(), show = !!v && document.activeElement !== inp;
+  sp.innerHTML = show ? W_RENDER[inp.id](v) : '';
+  sp.hidden = !show; inp.classList.toggle('w-hide', show);
+}
+function wRenderAll(){ Object.keys(W_RENDER).forEach(id => { const el = document.getElementById(id); if (el) wRender(el); }); }
+// 글쓰기 왼쪽 목차 (실제 글 페이지 목차와 같은 규칙: #, ##, ###)
+let _wTocT=null;
+function buildWriteToc(){
+  clearTimeout(_wTocT);
+  _wTocT=setTimeout(()=>{
+    const el=document.getElementById('write-toc'); if(!el) return;
+    const hs=LPE.headings().filter(h=>h.level<=3);
+    el.innerHTML = hs.length ? hs.map(h=>`<a class="toc-item toc-l${h.level}" href="#" onclick="event.preventDefault();LPE.scrollToLine(${h.line})">${esc(h.text)}</a>`).join('')
+                             : '<span class="w-muted">Headings (#, ##, ###) appear here</span>';
+  },150);
+}
 function addNewCat(){
   const v=document.getElementById('cat-new-inp').value.trim();
   if(!v) return;
@@ -5775,6 +5891,7 @@ const LPE = (() => {
           if (typeof draftMarkDirty === 'function') draftMarkDirty();
         }
         if (typeof rpDeferUpdate === 'function') rpDeferUpdate();
+        if (typeof buildWriteToc === 'function') buildWriteToc();
       })
     ];
   }
@@ -5810,6 +5927,7 @@ const LPE = (() => {
     view.setState(newState(md));
     syncHidden();
     if (typeof rpDeferUpdate === 'function') rpDeferUpdate();
+    if (typeof buildWriteToc === 'function') buildWriteToc();
   }
   function insertAtCursor(before, after) {
     if (!view) return;
