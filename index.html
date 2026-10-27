@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/cm6.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -1941,6 +1942,26 @@ body:has(#page-article.active) .right-panel{display:none !important}
 #editor-tag-list{display:contents}
 .editor-tags-row .e-tag-pill{display:inline-flex}
 
+/* ══ 글쓰기 편집창 (CodeMirror) — 실제 글 페이지와 같은 모양 ══ */
+.lp-editor{padding:18px 0 200px;min-height:460px;cursor:text;caret-color:#000}
+#lp-editor .cm-editor{background:none}
+#lp-editor .cm-editor.cm-focused{outline:none}
+#lp-editor .cm-scroller{font-family:var(--sans);line-height:1.8;overflow:visible}
+#lp-editor .cm-content{padding:0;min-height:440px;caret-color:#000}
+#lp-editor .cm-line{padding:0 3px}
+#lp-editor .cm-placeholder{color:#c8c8c8}
+#lp-editor .cm-mk{color:#b4b4b4;font-weight:400;font-style:normal;text-decoration:none}
+#lp-editor .cm-math-src{font-family:var(--mono);font-size:.88em;color:#444;background:#f2f2f2;border-radius:3px}
+#lp-editor .cm-line.cm-math-src-line{font-family:var(--mono);font-size:.9rem;line-height:1.7;color:#444;background:#f2f2f2;padding:0 22px}
+#lp-editor .cm-line.cm-code-src{font-family:var(--mono);font-size:.85rem;line-height:1.7;color:#cbd5e1;background:var(--s900);padding:0 24px;caret-color:#fff}
+#lp-editor .cm-line.cm-code-fence{color:#8a8a8a}
+#lp-editor .cm-line.cm-src-line{font-family:var(--mono);font-size:.85rem;color:#777}
+#lp-editor .cm-rendered-block,#lp-editor .cm-rendered-flow{display:flow-root;cursor:text}
+#lp-editor .cm-rendered img{cursor:text}
+#lp-editor .cm-widgetBuffer{vertical-align:top !important}
+#lp-editor .cm-rendered-flow + .cm-widgetBuffer{display:none}
+#lp-editor a.media-link-inline{cursor:text}
+
 /* ── 반응형 ── */
 @media(max-width:860px){
   .landing-grid,#page-home .two-col{grid-template-columns:minmax(0,1fr);gap:40px}
@@ -2340,7 +2361,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <button class="tb-btn" onclick="insertMedia('pdf')">📄 PDF</button>
       <button class="tb-btn" onclick="insertMedia('link')">🔗 Link</button>
     </div>
-    <div class="lp-editor" id="lp-editor" contenteditable="true" spellcheck="false"></div>
+    <div class="lp-editor" id="lp-editor"></div>
     <textarea id="editor-body" style="display:none" aria-hidden="true" tabindex="-1"></textarea>
     <div class="editor-hint">Markdown supported · $...$ inline math · $$...$$ block math</div>
   </div>
@@ -5423,371 +5444,395 @@ function rmTag(t){editorTags=editorTags.filter(x=>x!==t);renderEditorTags();}
 function ins(before,after){LPE.insertAtCursor(before,after);}
 function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 
-// ── LIVE PREVIEW EDITOR (Obsidian-style) ────────────────────────────────────
+// ── LIVE PREVIEW EDITOR (Obsidian 방식, CodeMirror 6) ────────────────────────
+// 문서 전체가 하나의 텍스트 → Ctrl+Z/Ctrl+Y가 자연스럽게 동작.
+// 커서가 닿아 있는 요소(굵게·수식·링크·제목 기호 등)만 원문 기호를 보여 주고,
+// 나머지는 실제 글 페이지(parseMd)와 똑같은 모양으로 렌더링한다. 편집창 밖을 클릭하면 전부 렌더링.
 const LPE = (() => {
   'use strict';
-  let wrap=null, hidden=null, cur=null, comp=false, activating=false;
+  let view = null, hidden = null, pendingValue = null, extensions = null;
+  let S, V, C, setFocus, remeasure, MK, HIDE;
 
-  function renderLineHTML(raw, inCode) {
-    if(inCode && !/^```/.test(raw))
-      return `<span class="ep-line ep-code-inner">${esc(raw)||'​'}</span>`;
-    if(/^```/.test(raw))
-      return `<span class="ep-line ep-code-fence">${esc(raw)}</span>`;
-    if(!raw.trim()) return '​';
-    if(/^[ \t]*(-{3,}|\*{3,}|_{3,})[ \t]*$/.test(raw))
-      return '<span class="ep-line ep-hr">​</span>';
-    const hm=raw.match(/^(#{1,6}) +(.*)/);
-    if(hm) return `<span class="ep-line ep-h ep-h${hm[1].length}">${pmi(hm[2])}</span>`;
-    if(/^>[ ]?/.test(raw))
-      return `<span class="ep-line ep-bq">${pmi(raw.replace(/^>[ ]?/,''))}</span>`;
-    const ulm=raw.match(/^([ \t]*)[-*+] +(.*)/);
-    if(ulm){const d=Math.floor(ulm[1].replace(/\t/g,'  ').length/2);return `<span class="ep-line ep-li" data-d="${d}">• ${pmi(ulm[2])}</span>`;}
-    const olm=raw.match(/^([ \t]*)(\d+)\. +(.*)/);
-    if(olm){const d=Math.floor(olm[1].replace(/\t/g,'  ').length/2);return `<span class="ep-line ep-li" data-d="${d}">${olm[2]}. ${pmi(olm[3])}</span>`;}
-    return `<span class="ep-line ep-text">${pmi(raw)}</span>`;
-  }
-
-  function makeLine(raw){const d=document.createElement('div');d.className='lp-line';d.dataset.raw=raw??'';return d;}
-
-  function ctxAt(lineEl){
-    let inCode=false;
-    for(const l of wrap.children){
-      if(l===lineEl) break;
-      if(/^```/.test(l.dataset.raw||'')) inCode=!inCode;
-    }
-    return inCode;
-  }
-
-  function applyRender(lineEl){
-    const raw=lineEl.dataset.raw||'';
-    const inCode=ctxAt(lineEl);
-    lineEl.className='lp-line';
-    if(inCode||/^```/.test(raw)){
-      lineEl.classList.add('lp-code-zone');
-      if(/^```/.test(raw)) lineEl.classList.add('lp-code-fence');
-    }
-    lineEl.innerHTML=renderLineHTML(raw,inCode);
-    if(window.renderMathInElement && (raw.includes('$')||raw.includes('$$'))){
-      try{renderMathInElement(lineEl,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});}catch(e){}
-    }
-  }
-
-  function renderAllExceptCur(){for(const l of wrap.children){if(l!==cur) applyRender(l);}}
-
-  function wrapHasFocus(){return wrap&&(document.activeElement===wrap||wrap.contains(document.activeElement));}
-
-  function findLine(node){
-    let el=node&&node.nodeType===3?node.parentElement:node;
-    while(el&&el!==wrap){if(el.parentElement===wrap&&el.classList.contains('lp-line'))return el;el=el.parentElement;}
-    return null;
-  }
-
-  function getOff(lineEl){
-    const sel=window.getSelection();if(!sel.rangeCount)return 0;
-    try{const r=document.createRange();r.setStart(lineEl,0);r.setEnd(sel.getRangeAt(0).startContainer,sel.getRangeAt(0).startOffset);return r.toString().length;}catch(e){return 0;}
-  }
-
-  function setOff(lineEl,pos){
-    if(!lineEl||!lineEl.isConnected)return;
-    const sel=window.getSelection();const range=document.createRange();
-    let rem=Math.max(0,pos),placed=false;
-    (function walk(node){
-      if(placed)return;
-      if(node.nodeType===3){if(rem<=node.textContent.length){range.setStart(node,rem);range.collapse(true);placed=true;}else rem-=node.textContent.length;}
-      else for(const c of node.childNodes)walk(c);
-    })(lineEl);
-    if(!placed){range.selectNodeContents(lineEl);range.collapse(false);}
-    try{sel.removeAllRanges();sel.addRange(range);}catch(e){}
-  }
-
-  function commit(){
-    if(!cur)return;
-    cur.dataset.raw=cur.textContent;
-    applyRender(cur);
-    cur=null;
-  }
-
-  function activate(lineEl,rawOff){
-    if(cur===lineEl)return;
-    activating=true;
-    commit();
-    cur=lineEl;
-    const raw=lineEl.dataset.raw||'';
-    lineEl.className='lp-line lp-active';
-    lineEl.textContent=raw;
-    const pos=rawOff!=null?Math.min(rawOff,raw.length):raw.length;
-    requestAnimationFrame(()=>{setOff(lineEl,pos);activating=false;});
-  }
-
-  function onSC(){
-    if(!wrapHasFocus()||comp||activating)return;
-    const sel=window.getSelection();if(!sel.rangeCount)return;
-    const line=findLine(sel.getRangeAt(0).startContainer);
-    if(!line||line===cur)return;
-    const rendText=line.innerText.replace(/​/g,'');
-    const rendOff=getOff(line);
-    const raw=line.dataset.raw||'';
-    const rawOff=rendText.length>0?Math.round(raw.length*(rendOff/rendText.length)):raw.length;
-    activate(line,rawOff);
-  }
-
-  function onInput(){
-    if(comp||!cur)return;
-    cur.normalize();
-    cur.dataset.raw=cur.textContent;
-    if(/^```/.test(cur.dataset.raw)||(cur.dataset.raw||'').trim()==='$$') renderAllExceptCur();
-    syncHidden();
-    if(typeof draftMarkDirty==='function') draftMarkDirty();
-    if(typeof rpDeferUpdate==='function') rpDeferUpdate();
-  }
-
-  // ── Selection helpers ────────────────────────────────────────────
-  function getSelInfo(){
-    const sel=window.getSelection();
-    if(!sel||!sel.rangeCount)return null;
-    const range=sel.getRangeAt(0);
-    if(range.collapsed)return null;
-    const sl=findLine(range.startContainer)||cur;
-    const el=findLine(range.endContainer)||cur;
-    if(!sl||!el)return null;
-    let so=0,eo=0;
-    try{const r=document.createRange();r.setStart(sl,0);r.setEnd(range.startContainer,range.startOffset);so=r.toString().length;}catch(_){}
-    try{const r=document.createRange();r.setStart(el,0);r.setEnd(range.endContainer,range.endOffset);eo=r.toString().length;}catch(_){}
-    return{sl,el,so,eo};
-  }
-
-  // Delete current selection (single-line or multi-line). Returns true if something was deleted.
-  function deleteSel(){
-    const s=getSelInfo();if(!s)return false;
-    const{sl,el,so,eo}=s;
-    if(sl===el){
-      // single-line selection
-      const raw=sl===cur?sl.textContent:(sl.dataset.raw||'');
-      const nr=raw.slice(0,so)+raw.slice(eo);
-      if(sl!==cur){
-        if(cur){applyRender(cur);cur=null;}
-        cur=sl;sl.className='lp-line lp-active';sl.textContent=nr;
-      } else {
-        cur.textContent=nr;
+  // ── 실제 글 페이지와 같은 여백/테두리 값을 읽어 오는 숨은 견본 ──
+  // (CodeMirror는 줄의 margin을 높이 계산에 넣지 못하므로 같은 값을 padding+배경선으로 옮겨 그린다)
+  let probeCache = null;
+  const PROBE_KINDS = { text:['ep-text'], h1:['ep-h','ep-h1'], h2:['ep-h','ep-h2'], h3:['ep-h','ep-h3'], h4:['ep-h','ep-h4'],
+                        bq:['ep-bq'], li0:['ep-li','d0'], li1:['ep-li','d1'], li2:['ep-li','d2'] };
+  function probe(kind) {
+    if (!probeCache) {
+      probeCache = {};
+      const box = document.createElement('div');
+      box.className = 'a-body';
+      box.style.cssText = 'position:absolute;left:-9999px;top:0;width:930px;visibility:hidden;pointer-events:none';
+      document.body.appendChild(box);
+      for (const k in PROBE_KINDS) {
+        const sp = document.createElement('span');
+        const cls = PROBE_KINDS[k];
+        sp.className = 'ep-line ' + cls.filter(c => !/^d\d$/.test(c)).join(' ');
+        const d = cls.find(c => /^d\d$/.test(c)); if (d) sp.dataset.d = d.slice(1);
+        sp.textContent = 'x';
+        box.appendChild(sp);
+        const cs = getComputedStyle(sp), n = v => parseFloat(v) || 0;
+        probeCache[k] = { mt:n(cs.marginTop), mb:n(cs.marginBottom), ml:n(cs.marginLeft),
+          pt:n(cs.paddingTop), pb:n(cs.paddingBottom), pl:n(cs.paddingLeft), pr:n(cs.paddingRight),
+          bl:n(cs.borderLeftWidth), blc:cs.borderLeftColor, bb:n(cs.borderBottomWidth), bbc:cs.borderBottomColor };
       }
-      cur.dataset.raw=nr;
-      setOff(cur,so);syncHidden();return true;
+      box.remove();
     }
-    // multi-line selection
-    const startRaw=sl===cur?sl.textContent:(sl.dataset.raw||'');
-    const endRaw=el.dataset.raw||'';
-    const merged=startRaw.slice(0,so)+endRaw.slice(eo);
-    let node=sl.nextElementSibling;
-    while(node&&node!==el){const nx=node.nextElementSibling;node.remove();node=nx;}
-    el.remove();
-    if(cur&&cur!==sl){applyRender(cur);}
-    cur=sl;sl.className='lp-line lp-active';sl.textContent=merged;sl.dataset.raw=merged;
-    setOff(cur,so);syncHidden();return true;
+    return probeCache[kind] || probeCache.text;
+  }
+  function lineStyle(kind, prevKind, isFirst) {
+    const P = probe(kind), Q = prevKind === 'blk' ? { mb: 26 } : prevKind ? probe(prevKind) : null;   // blk: 수식·코드·그림 상자 (아래 여백 ≈26px)
+    // 위 여백은 바로 위 줄의 아래 여백과 겹침(margin collapse) — 실제 페이지와 같게
+    const top = (isFirst && kind === 'h1') ? 0 : Math.max(0, P.mt - (Q ? Q.mb : 0));
+    let st = `margin:0 !important;border:0 !important;padding:${top + P.pt}px ${P.pr}px ${P.pb + P.bb + P.mb}px ${P.ml + P.bl + P.pl}px !important;`;
+    const bg = [];
+    if (P.bl) bg.push(`linear-gradient(${P.blc},${P.blc}) ${P.ml}px ${top}px / ${P.bl}px calc(100% - ${top + P.mb}px) no-repeat`);
+    if (P.bb) bg.push(`linear-gradient(${P.bbc},${P.bbc}) ${P.ml}px calc(100% - ${P.mb}px) / calc(100% - ${P.ml}px) ${P.bb}px no-repeat`);
+    st += bg.length ? `background:${bg.join(',')} !important;` : 'background:none !important;';
+    return st;
   }
 
-  function onKD(e){
-    if(comp)return;
-    if(e.key==='Enter'){_kdMark();return handleEnter(e);}
-    if(e.key==='Backspace'){_kdMark();return handleBS(e);}
-    if(e.key==='Delete'){_kdMark();return handleDel(e);}
-    if(e.key==='Tab')return handleTab(e);
-    // Printable char with multi-line selection: delete selection, let browser insert char
-    if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
-      const s=getSelInfo();
-      if(s&&s.sl!==s.el){
-        e.preventDefault();
-        deleteSel();
-        const off2=getOff(cur),raw2=cur.textContent;
-        const nr2=raw2.slice(0,off2)+e.key+raw2.slice(off2);
-        cur.dataset.raw=nr2;cur.textContent=nr2;
-        requestAnimationFrame(()=>setOff(cur,off2+1));
-        syncHidden();if(typeof draftMarkDirty==='function') draftMarkDirty();
+  // ── 위젯 (수식, 이미지, 코드 블록 등 — 실제 글 페이지와 같은 HTML) ──
+  function katexIn(el) {
+    if (window.renderMathInElement) {
+      try { renderMathInElement(el, { delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false }); } catch (e) {}
+    }
+  }
+  function makeWidgets() {
+    class HtmlWidget extends V.WidgetType {
+      constructor(html, block) { super(); this.html = html; this.block = block; }
+      eq(o) { return o.html === this.html && o.block === this.block; }
+      toDOM() {
+        // flow-root: 안쪽 요소의 margin까지 높이에 포함되게
+        const el = document.createElement(this.block ? 'div' : 'span');
+        el.className = 'cm-rendered' + (this.block ? ' cm-rendered-block' : '') + (/^<div/.test(this.html) ? ' cm-rendered-flow' : '');
+        el.innerHTML = this.html;
+        katexIn(el);
+        return el;
       }
+      ignoreEvent() { return false; }   // 클릭하면 커서가 그 자리로 → 원문이 열림
     }
-  }
-
-  function handleEnter(e){
-    e.preventDefault();
-    // Delete any selection first, then split at cursor
-    deleteSel();
-    if(!cur)return;
-    const off=getOff(cur),raw=cur.textContent;
-    const before=raw.slice(0,off),after=raw.slice(off);
-    let afterLine=after;
-    const lm=raw.match(/^([ \t]*)[-*+] (.*)/);
-    const om=raw.match(/^([ \t]*)(\d+)\. (.*)/);
-    if(lm&&!lm[2]&&!after){afterLine='';}
-    else if(lm&&after) afterLine=lm[1]+'- '+after;
-    else if(om&&after) afterLine=om[1]+(parseInt(om[2])+1)+'. '+after;
-    // Fix: set dataset.raw then applyRender directly (commit() would re-read textContent and overwrite)
-    cur.dataset.raw=before;
-    applyRender(cur);
-    const ref=cur;cur=null;
-    const nl=makeLine(afterLine);
-    ref.after(nl);
-    syncHidden();
-    activate(nl,0);
-  }
-
-  function handleBS(e){
-    if(!cur)return;
-    // Selection exists → delete it, don't merge lines
-    if(deleteSel()){e.preventDefault();return;}
-    if(getOff(cur)>0)return; // mid-line: let browser handle
-    e.preventDefault();
-    const prev=cur.previousElementSibling;if(!prev)return;
-    const prevRaw=prev.dataset.raw||'',curRaw=cur.textContent;
-    const mp=prevRaw.length,merged=prevRaw+curRaw;
-    cur.remove();cur=null;
-    prev.dataset.raw=merged;
-    activate(prev,mp);
-    syncHidden();
-  }
-
-  function handleDel(e){
-    if(!cur)return;
-    // Selection exists → delete it
-    if(deleteSel()){e.preventDefault();return;}
-    const raw=cur.textContent;
-    if(getOff(cur)<raw.length)return; // mid-line: let browser handle
-    e.preventDefault();
-    const next=cur.nextElementSibling;if(!next)return;
-    const nextRaw=next.dataset.raw||'',merged=raw+nextRaw;
-    next.remove();cur.dataset.raw=merged;cur.textContent=merged;
-    requestAnimationFrame(()=>setOff(cur,raw.length));
-    syncHidden();
-  }
-
-  function handleTab(e){
-    e.preventDefault();if(!cur)return;
-    deleteSel(); // delete selection if any before indenting
-    const off=getOff(cur),raw=cur.textContent;
-    if(e.shiftKey){
-      const nr=raw.replace(/^  /,'');cur.dataset.raw=nr;cur.textContent=nr;
-      requestAnimationFrame(()=>setOff(cur,Math.max(0,off-(raw.length-nr.length))));
-    } else {
-      const nr=raw.slice(0,off)+'  '+raw.slice(off);cur.dataset.raw=nr;cur.textContent=nr;
-      requestAnimationFrame(()=>setOff(cur,off+2));
+    class MathWidget extends V.WidgetType {
+      constructor(tex) { super(); this.tex = tex; }
+      eq(o) { return o.tex === this.tex; }
+      toDOM() {
+        const el = document.createElement('span');
+        el.className = 'cm-math-inline';
+        if (window.katex) { try { katex.render(this.tex, el, { throwOnError:false }); } catch (e) { el.textContent = '$' + this.tex + '$'; } }
+        else el.textContent = '$' + this.tex + '$';
+        return el;
+      }
+      ignoreEvent() { return false; }
     }
-    syncHidden();
+    class TextWidget extends V.WidgetType {
+      constructor(text) { super(); this.text = text; }
+      eq(o) { return o.text === this.text; }
+      toDOM() { const el = document.createElement('span'); el.textContent = this.text; return el; }
+      ignoreEvent() { return false; }
+    }
+    return { HtmlWidget, MathWidget, TextWidget };
+  }
+  let W;
+
+  // ── 한 줄 안의 서식 (pmi와 같은 규칙) ──
+  function inline(text, off, out, touched) {
+    let s = text;
+    const mask = (a, b) => { s = s.slice(0, a) + '\0'.repeat(b - a) + s.slice(b); };
+    const all = re => [...s.matchAll(re)];
+    const mk = (a, b, show) => { if (b > a) out.push(show ? MK.range(off + a, off + b) : HIDE.range(off + a, off + b)); };
+    const mark = (a, b, deco) => { if (b > a) out.push(deco.range(off + a, off + b)); };
+
+    // 1) $$..$$ (한 줄 안), 2) $..$
+    for (const m of all(/\$\$([\s\S]*?)\$\$/g)) {
+      const a = m.index, b = a + m[0].length;
+      if (touched(off + a, off + b)) mark(a, b, V.Decoration.mark({ class:'cm-math-src' }));
+      else out.push(V.Decoration.replace({ widget: new W.HtmlWidget(pmi(m[0]), false) }).range(off + a, off + b));   // 실제 글(pmi)과 같은 HTML
+      mask(a, b);
+    }
+    for (const m of all(/\$((?:[^$\\\0]|\\.)+?)\$/g)) {
+      const a = m.index, b = a + m[0].length;
+      if (touched(off + a, off + b)) mark(a, b, V.Decoration.mark({ class:'cm-math-src' }));
+      else out.push(V.Decoration.replace({ widget: new W.MathWidget(m[1]) }).range(off + a, off + b));
+      mask(a, b);
+    }
+    // 3) `code`
+    for (const m of all(/`([^`\0]+)`/g)) {
+      const a = m.index, b = a + m[0].length, t = touched(off + a, off + b);
+      mk(a, a + 1, t); mark(a + 1, b - 1, V.Decoration.mark({ tagName:'code', class:'ep-code' })); mk(b - 1, b, t);
+      mask(a, b);
+    }
+    // 4) ![alt](src)
+    for (const m of all(/!\[([^\]\0]*)\]\(([^)\0]+)\)/g)) {
+      const a = m.index, b = a + m[0].length;
+      if (!touched(off + a, off + b))
+        out.push(V.Decoration.replace({ widget: new W.HtmlWidget(`<img src="${esc(m[2])}" alt="${esc(m[1])}" style="max-width:100%;border-radius:var(--r);vertical-align:middle">`, false) }).range(off + a, off + b));
+      mask(a, b);
+    }
+    // 5) [text](url) — 글자에는 서식 유지, 괄호·주소만 숨김
+    for (const m of all(/\[([^\]\0]+)\]\(([^)\0]+)\)/g)) {
+      const a = m.index, b = a + m[0].length, t = touched(off + a, off + b), te = a + 1 + m[1].length;
+      mk(a, a + 1, t);
+      mark(a + 1, te, V.Decoration.mark({ tagName:'a', class:'media-link-inline', attributes:{ title:m[2] } }));
+      mk(te, b, t);
+      mask(a, a + 1); mask(te, b);
+    }
+    // 6) ***굵은기울임*** **굵게** *기울임* ~~취소선~~ (기호만 가려서 안쪽 중첩 허용)
+    const pair = (re, len, decos) => {
+      for (const m of all(re)) {
+        const a = m.index, b = a + m[0].length, t = touched(off + a, off + b);
+        mk(a, a + len, t); decos.forEach(d => mark(a + len, b - len, d)); mk(b - len, b, t);
+        mask(a, a + len); mask(b - len, b);
+      }
+    };
+    const strong = V.Decoration.mark({ tagName:'strong' }), em = V.Decoration.mark({ tagName:'em' });
+    pair(/\*\*\*([^\0]+?)\*\*\*/g, 3, [strong, em]);
+    pair(/\*\*([^\0]+?)\*\*/g, 2, [strong]);
+    pair(/(?<!\*)\*([^*\n\0]+?)\*(?!\*)/g, 1, [em]);
+    pair(/~~([^\0]+?)~~/g, 2, [V.Decoration.mark({ tagName:'s' })]);
   }
 
-  function htmlToPlain(html){
-    const tmp=document.createElement('div');
-    tmp.innerHTML=html;
-    const BLOCK=new Set(['p','div','li','h1','h2','h3','h4','h5','h6','pre','blockquote','tr','br']);
-    function walk(node){
-      let out='';
-      for(const child of node.childNodes){
-        if(child.nodeType===3){out+=child.textContent;}
-        else if(child.nodeType===1){
-          const tag=child.tagName.toLowerCase();
-          if(tag==='br'){out+='\n';}
-          else if(child.classList&&child.classList.contains('katex-display')){
-            const ann=child.querySelector('annotation[encoding="application/x-tex"]');
-            if(ann) out+=`$$${ann.textContent}$$`;
-          }
-          else if(child.classList&&child.classList.contains('katex')){
-            const ann=child.querySelector('annotation[encoding="application/x-tex"]');
-            if(ann) out+=`$${ann.textContent}$`;
-          }
-          else{
-            out+=walk(child);
-            if(BLOCK.has(tag)||(child.className&&child.className.includes('ep-line')))out+='\n';
-          }
+  // ── 문서 전체 장식 계산 ──
+  function build(state) {
+    const doc = state.doc, focused = state.field(focusField, false);
+    const ranges = state.selection.ranges;
+    const touched = (a, b) => focused && ranges.some(r => r.from <= b && r.to >= a);
+    const out = [];
+    const lineDeco = (line, cls, style, attrs) => out.push(V.Decoration.line({ class: cls, attributes: Object.assign(style ? { style } : {}, attrs || {}) }).range(line.from));
+    const block = (from, to, html) => out.push(V.Decoration.replace({ widget: new W.HtmlWidget(html, true), block: true }).range(from, to));
+    let prevKind = null;
+
+    for (let i = 1; i <= doc.lines; i++) {
+      const line = doc.line(i), raw = line.text, isFirst = i === 1;
+      // 코드 블록 ``` … ```
+      if (/^```/.test(raw)) {
+        let j = i + 1; while (j <= doc.lines && !/^```/.test(doc.line(j).text)) j++;
+        const end = doc.line(Math.min(j, doc.lines));
+        const src = doc.sliceString(line.from, end.to);
+        if (touched(line.from, end.to)) {
+          for (let k = i; k <= end.number; k++) lineDeco(doc.line(k), 'cm-code-src' + (k === i || (k === end.number && j <= doc.lines) ? ' cm-code-fence' : ''));
+        } else block(line.from, end.to, parseMd(src));
+        i = end.number; prevKind = 'blk'; continue;
+      }
+      // 수식 블록 $$ … $$
+      if (raw.trim() === '$$') {
+        let j = i + 1; while (j <= doc.lines && doc.line(j).text.trim() !== '$$') j++;
+        if (j <= doc.lines) {
+          const end = doc.line(j), src = doc.sliceString(line.from, end.to);
+          if (touched(line.from, end.to)) {
+            for (let k = i; k <= j; k++) lineDeco(doc.line(k), 'cm-math-src-line');
+            // 고치는 동안에도 결과를 바로 아래에 보여 줌
+            out.push(V.Decoration.widget({ widget: new W.HtmlWidget(parseMd(src), true), block: true, side: 1 }).range(end.to));
+          } else block(line.from, end.to, parseMd(src));
+          i = j; prevKind = 'blk'; continue;
         }
       }
-      return out;
-    }
-    return walk(tmp).replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
-  }
-
-  function onPaste(e){
-    if([...(e.clipboardData?.items||[])].some(i=>i.type.startsWith('image/'))) return;
-    e.preventDefault();
-    const rawHtml=e.clipboardData?.getData('text/html');
-    const text=rawHtml?htmlToPlain(rawHtml):((e.clipboardData||window.clipboardData).getData('text/plain'));
-    if(!text)return;
-    deleteSel(); // delete selection (single or multi-line) before pasting
-    if(!cur)return;
-    const off=getOff(cur),raw=cur.textContent;
-    const lines=text.replace(/\r\n?/g,'\n').split('\n');
-    if(lines.length===1){
-      const nr=raw.slice(0,off)+text+raw.slice(off);cur.dataset.raw=nr;cur.textContent=nr;
-      requestAnimationFrame(()=>setOff(cur,off+text.length));
-      syncHidden();return;
-    }
-    // Multi-line paste: fix — use applyRender directly, not commit()
-    cur.dataset.raw=raw.slice(0,off)+lines[0];
-    applyRender(cur);
-    const ref=cur;cur=null;
-    let ins=ref;
-    for(let i=1;i<lines.length-1;i++){const ml=makeLine(lines[i]);ins.after(ml);applyRender(ml);ins=ml;}
-    const ll=makeLine(lines[lines.length-1]+raw.slice(off));ins.after(ll);
-    syncHidden();
-    activate(ll,lines[lines.length-1].length);
-  }
-
-  function syncHidden(){
-    if(hidden) hidden.value=[...wrap.children].map(l=>l===cur?l.textContent:(l.dataset.raw||'')).join('\n');
-  }
-
-  function getValue(){syncHidden();return hidden?hidden.value:'';}
-
-  function setValue(md){
-    commit();wrap.innerHTML='';
-    const lines=(md||'').split('\n');
-    if(!lines.length)lines.push('');
-    lines.forEach(raw=>wrap.appendChild(makeLine(raw)));
-    renderAllExceptCur();
-    if(hidden)hidden.value=md||'';
-  }
-
-  function insertAtCursor(before,after){
-    if(!cur){const last=wrap.lastElementChild;if(!last)return;activate(last);setTimeout(()=>insertAtCursor(before,after),60);return;}
-    const sel=window.getSelection();
-    const off=getOff(cur);let selEnd=off;
-    if(sel.rangeCount){try{const r=document.createRange();r.setStart(cur,0);r.setEnd(sel.getRangeAt(0).endContainer,sel.getRangeAt(0).endOffset);selEnd=r.toString().length;}catch(e){}}
-    const raw=cur.textContent;
-    const [s,e2]=[Math.min(off,selEnd),Math.max(off,selEnd)];
-    const sel_text=raw.slice(s,e2);
-    const nr=raw.slice(0,s)+before+sel_text+after+raw.slice(e2);
-    cur.dataset.raw=nr;cur.textContent=nr;
-    requestAnimationFrame(()=>setOff(cur,s+before.length+sel_text.length));
-    syncHidden();
-    if(typeof draftMarkDirty==='function') draftMarkDirty();
-  }
-
-  // 마지막 Enter/BS/Del을 keydown이 처리했는지 추적 (중복 방지)
-  let _kdHandledAt = 0;
-  function _kdMark(){ _kdHandledAt = Date.now(); }
-  function _kdRecent(){ return Date.now() - _kdHandledAt < 80; }
-
-  function init(wrapEl,hiddenEl){
-    wrap=wrapEl;hidden=hiddenEl;
-    wrap.addEventListener('input',onInput);
-    wrap.addEventListener('keydown',onKD);
-    wrap.addEventListener('paste',onPaste);
-    wrap.addEventListener('compositionstart',()=>{comp=true;});
-    wrap.addEventListener('compositionend',()=>{comp=false;if(cur){cur.normalize();cur.dataset.raw=cur.textContent;syncHidden();}});
-    document.addEventListener('selectionchange',onSC);
-    // Android 소프트 키보드: keydown이 Enter/BS/Del을 잡지 못할 때 beforeinput으로 처리
-    wrap.addEventListener('beforeinput',e=>{
-      if(comp)return;
-      if(e.inputType==='insertParagraph'){
-        if(_kdRecent())return; // keydown이 이미 처리함
-        handleEnter(e);
-      } else if(e.inputType==='deleteContentBackward'){
-        if(_kdRecent())return;
-        handleBS(e);
-      } else if(e.inputType==='deleteContentForward'){
-        if(_kdRecent())return;
-        handleDel(e);
+      const onLine = touched(line.from, line.to);
+      // 한 줄짜리 $$수식$$ → 실제 글과 같은 수식 상자 (고치는 동안엔 원문 + 바로 아래 미리보기)
+      if (raw.trim() !== '$$' && /^\s*\$\$[\s\S]+\$\$\s*$/.test(raw)) {
+        if (onLine) {
+          lineDeco(line, 'cm-math-src-line');
+          out.push(V.Decoration.widget({ widget: new W.HtmlWidget(parseMd(raw), true), block: true, side: 1 }).range(line.to));
+        } else block(line.from, line.to, parseMd(raw));
+        prevKind = 'blk'; continue;
       }
-    });
+      // 빈 줄
+      if (!raw.trim()) { lineDeco(line, 'ep-line', lineStyle('text', prevKind, isFirst)); prevKind = 'text'; continue; }
+      // 구분선, 이미지/영상/PDF 줄 → 실제 글과 같은 블록
+      if (/^[ \t]*(-{3,}|\*{3,}|_{3,})[ \t]*$/.test(raw) || /^%%(IMG|VID|PDF)%%/.test(raw)) {
+        if (onLine) { lineDeco(line, 'ep-line cm-src-line', lineStyle('text', prevKind, isFirst)); prevKind = 'text'; }
+        else { block(line.from, line.to, parseMd(raw)); prevKind = /^%%/.test(raw) ? 'blk' : null; }
+        continue;
+      }
+      let kind = 'text', cls = 'ep-line ep-text', attrs = null, cs = 0;
+      const hm = raw.match(/^(#{1,6}) +/), um = raw.match(/^([ \t]*)[-*+] +/), om = raw.match(/^([ \t]*)(\d+)\. +/);
+      if (hm) {
+        const n = hm[1].length; kind = n <= 4 ? 'h' + n : 'text'; cls = `ep-line ep-h ep-h${n}`; cs = hm[0].length;
+        out.push((onLine ? MK : HIDE).range(line.from, line.from + cs));
+      } else if (/^>/.test(raw)) {
+        kind = 'bq'; cls = 'ep-line ep-bq'; cs = /^> /.test(raw) ? 2 : 1;
+        out.push((onLine ? MK : HIDE).range(line.from, line.from + cs));
+      } else if (um) {
+        const d = Math.floor(um[1].replace(/\t/g, '  ').length / 2);
+        kind = 'li' + Math.min(d, 2); cls = 'ep-line ep-li'; attrs = { 'data-d': String(d) }; cs = um[0].length;
+        out.push(onLine ? MK.range(line.from, line.from + cs)
+                        : V.Decoration.replace({ widget: new W.TextWidget('• ') }).range(line.from, line.from + cs));
+      } else if (om) {
+        const d = Math.floor(om[1].replace(/\t/g, '  ').length / 2);
+        kind = 'li' + Math.min(d, 2); cls = 'ep-line ep-li'; attrs = { 'data-d': String(d) }; cs = om[0].length;
+        if (onLine) out.push(MK.range(line.from, line.from + cs));
+        else out.push(V.Decoration.replace({ widget: new W.TextWidget(om[2] + '. ') }).range(line.from, line.from + cs));
+      }
+      lineDeco(line, cls, lineStyle(kind, prevKind, isFirst), attrs);
+      inline(raw.slice(cs), line.from + cs, out, touched);
+      prevKind = kind;
+    }
+    return V.Decoration.set(out, true);
   }
 
-  return{init,getValue,setValue,insertAtCursor,syncHidden,commit};
+  let focusField, decoField;
+
+  // ── 단축키·목록 이어 쓰기 ──
+  function wrapSel(before, after) {
+    return v => {
+      v.dispatch(v.state.changeByRange(r => {
+        const t = v.state.sliceDoc(r.from, r.to);
+        return { changes: { from: r.from, to: r.to, insert: before + t + after },
+                 range: S.EditorSelection.range(r.from + before.length, r.from + before.length + t.length) };
+      }));
+      return true;
+    };
+  }
+  function enterList(v) {
+    const r = v.state.selection.main; if (!r.empty) return false;
+    const line = v.state.doc.lineAt(r.head);
+    if (r.head !== line.to && r.head < line.from + 2) return false;
+    const m = line.text.match(/^([ \t]*)([-*+]|\d+\.|>) (.*)$/) || line.text.match(/^([ \t]*)(>)()$/);
+    if (!m) return false;
+    if (!m[3].trim() && r.head === line.to) {      // 빈 항목에서 Enter → 목록 끝내기
+      v.dispatch({ changes: { from: line.from, to: line.to, insert: '' } }); return true;
+    }
+    const marker = /^\d/.test(m[2]) ? (parseInt(m[2]) + 1) + '.' : m[2];
+    v.dispatch(v.state.replaceSelection('\n' + m[1] + marker + ' '), { scrollIntoView: true });
+    return true;
+  }
+
+  function htmlToPlain(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const BLOCK = new Set(['p','div','li','h1','h2','h3','h4','h5','h6','pre','blockquote','tr']);
+    function walk(node) {
+      let o = '';
+      for (const ch of node.childNodes) {
+        if (ch.nodeType === 3) o += ch.textContent;
+        else if (ch.nodeType === 1) {
+          const tag = ch.tagName.toLowerCase();
+          if (tag === 'br') o += '\n';
+          else if (ch.classList.contains('katex-display')) { const a = ch.querySelector('annotation[encoding="application/x-tex"]'); if (a) o += `$$${a.textContent}$$`; }
+          else if (ch.classList.contains('katex')) { const a = ch.querySelector('annotation[encoding="application/x-tex"]'); if (a) o += `$${a.textContent}$`; }
+          else { o += walk(ch); if (BLOCK.has(tag)) o += '\n'; }
+        }
+      }
+      return o;
+    }
+    return walk(tmp).replace(/\n{3,}/g, '\n\n').replace(/^\n+|\n+$/g, '');
+  }
+
+  function setup() {
+    S = CM.state; V = CM.view; C = CM.commands;
+    W = makeWidgets();
+    MK = V.Decoration.mark({ class:'cm-mk' });
+    HIDE = V.Decoration.replace({});
+    setFocus = S.StateEffect.define();
+    remeasure = S.StateEffect.define();
+    focusField = S.StateField.define({
+      create: () => false,
+      update(v, tr) { for (const e of tr.effects) if (e.is(setFocus)) v = e.value; return v; }
+    });
+    decoField = S.StateField.define({
+      create: st => build(st),
+      update(d, tr) {
+        if (tr.docChanged || tr.selection || tr.effects.some(e => e.is(setFocus) || e.is(remeasure))) return build(tr.state);
+        return d;
+      },
+      provide: f => V.EditorView.decorations.from(f)
+    });
+    extensions = [
+      focusField, decoField,
+      C.history(),
+      V.EditorView.lineWrapping,
+      V.EditorView.contentAttributes.of({ class:'a-body', spellcheck:'false', autocorrect:'off', autocapitalize:'off' }),
+      V.EditorView.focusChangeEffect.of((st, focusing) => setFocus.of(focusing)),
+      V.placeholder('Write here…'),
+      V.keymap.of([
+        { key:'Enter', run: enterList },
+        { key:'Mod-b', run: wrapSel('**', '**') },
+        { key:'Mod-i', run: wrapSel('*', '*') },
+        { key:'Mod-e', run: wrapSel('`', '`') },
+        ...C.historyKeymap, C.indentWithTab, ...C.defaultKeymap
+      ]),
+      V.EditorView.domEventHandlers({
+        paste(e, v) {
+          const items = [...(e.clipboardData?.items || [])];
+          if (items.some(i => i.type.startsWith('image/'))) return true;   // 이미지 붙여넣기는 아래 업로드 처리기로
+          const html = e.clipboardData?.getData('text/html');
+          if (html && html.includes('katex')) {                          // 블로그 글에서 복사한 수식 → $..$ 원문으로
+            e.preventDefault();
+            v.dispatch(v.state.replaceSelection(htmlToPlain(html)), { scrollIntoView: true, userEvent: 'input.paste' });
+            return true;
+          }
+          return false;
+        }
+      }),
+      V.EditorView.updateListener.of(u => {
+        if (!u.docChanged) return;
+        syncHidden();
+        if (u.transactions.some(t => t.annotation(S.Transaction.userEvent) !== 'lpe.set')) {
+          if (typeof draftMarkDirty === 'function') draftMarkDirty();
+        }
+        if (typeof rpDeferUpdate === 'function') rpDeferUpdate();
+      })
+    ];
+  }
+
+  function newState(doc) { return S.EditorState.create({ doc: doc || '', extensions }); }
+
+  function init(wrapEl, hiddenEl) {
+    hidden = hiddenEl;
+    if (!window.CM) { console.error('CodeMirror failed to load'); return; }
+    setup();
+    wrapEl.removeAttribute('contenteditable');
+    view = new V.EditorView({ state: newState(pendingValue ?? hidden.value ?? ''), parent: wrapEl });
+    pendingValue = null;
+    // 화면 폭이 바뀌면(모바일 글자 크기 등) 여백 값을 다시 읽음
+    let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { probeCache = null; view.dispatch({ effects: remeasure.of(null) }); }, 150); });
+    // 수식 글꼴이 늦게 로드돼도 다시 그림
+    window.addEventListener('load', () => { probeCache = null; view.dispatch({ effects: remeasure.of(null) }); });
+    // 아래 빈 여백을 눌러도 글 끝으로 커서 이동
+    wrapEl.addEventListener('mousedown', e => {
+      if (e.target !== wrapEl) return;
+      e.preventDefault(); view.focus(); view.dispatch({ selection: { anchor: view.state.doc.length } });
+    });
+    syncHidden();
+  }
+
+  function syncHidden() { if (hidden && view) hidden.value = view.state.doc.toString(); }
+  function getValue() { return view ? view.state.doc.toString() : (pendingValue ?? ''); }
+  // 다른 글을 불러올 때는 상태를 새로 만들어 이전 글로 Ctrl+Z 되돌아가지 않게
+  function setValue(md) {
+    md = md || '';
+    if (!view) { pendingValue = md; if (hidden) hidden.value = md; return; }
+    probeCache = null;
+    view.setState(newState(md));
+    syncHidden();
+    if (typeof rpDeferUpdate === 'function') rpDeferUpdate();
+  }
+  function insertAtCursor(before, after) {
+    if (!view) return;
+    const r = view.state.selection.main, t = view.state.sliceDoc(r.from, r.to);
+    view.dispatch({ changes: { from: r.from, to: r.to, insert: before + t + after },
+                    selection: { anchor: r.from + before.length + t.length }, scrollIntoView: true, userEvent: 'input' });
+    view.focus();
+  }
+  function headings() {
+    if (!view) return [];
+    const hs = [], doc = view.state.doc; let inCode = false;
+    for (let i = 1; i <= doc.lines; i++) {
+      const t = doc.line(i).text;
+      if (/^```/.test(t)) { inCode = !inCode; continue; }
+      const m = !inCode && t.match(/^(#{1,4}) +(.*)/);
+      if (m) hs.push({ level: m[1].length, text: m[2].replace(/\*\*|__|~~|\*/g, ''), line: i });
+    }
+    return hs;
+  }
+  function scrollToLine(n) {
+    if (!view) return;
+    const pos = view.state.doc.line(Math.min(Math.max(1, n), view.state.doc.lines)).from;
+    view.dispatch({ effects: V.EditorView.scrollIntoView(pos, { y: 'center' }) });
+  }
+  function focus() { if (view) view.focus(); }
+
+  return { init, getValue, setValue, insertAtCursor, syncHidden, commit(){}, headings, scrollToLine, focus };
 })();
 
 
@@ -6132,10 +6177,8 @@ function confirmInsertMedia() {
     tag = `[${text}](${url})`;
   }
 
-  const ta = document.getElementById('editor-body');
-  const pos = ta.selectionStart;
-  ta.value = ta.value.substring(0, pos) + tag + ta.value.substring(pos);
   closeModal('modal-media');
+  LPE.insertAtCursor(tag, '');
   toast('Inserted.');
 }
 function openPdf(type, src) {
@@ -6525,14 +6568,7 @@ function _rpBuildToc(isEditor) {
   const headings = [];
 
   if (isEditor) {
-    const lpe = document.getElementById('lp-editor');
-    if (lpe) {
-      [...lpe.children].forEach((line, idx) => {
-        const raw = line.classList.contains('lp-active') ? line.textContent : (line.dataset.raw || '');
-        const m = raw.match(/^(#{1,4}) +(.*)/);
-        if (m) headings.push({ level: +m[1].length, text: m[2].replace(/\*\*|__|~~|\*/g, ''), idx });
-      });
-    }
+    LPE.headings().forEach(h => headings.push({ level: h.level, text: h.text, idx: h.line }));
   } else {
     const body = document.getElementById('article-body');
     if (body) {
@@ -6561,9 +6597,7 @@ function _rpBuildToc(isEditor) {
 }
 
 function rpGoLine(idx) {
-  const lpe = document.getElementById('lp-editor');
-  if (!lpe || !lpe.children[idx]) return;
-  lpe.children[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  LPE.scrollToLine(idx);
 }
 
 function rpGoId(id) {
