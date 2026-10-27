@@ -3124,13 +3124,16 @@ async function compressImage(file, maxDim=1920, quality=0.85) {
 }
 
 async function uploadImageToSupabase(file, progressEl, barEl, labelEl) {
-  const compressed = await compressImage(file);
-  const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+  // GIF는 압축하면 움직임이 사라지므로 원본 그대로 올림 (저장소 한도: 파일당 50MB)
+  const isGif = file.type === 'image/gif';
+  if (file.size > 50 * 1024 * 1024) { toast('❌ File is too large (max 50MB).'); return null; }
+  const body = isGif ? file : await compressImage(file);
+  const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${isGif ? 'gif' : 'jpg'}`;
   if (progressEl) { progressEl.style.display = 'block'; }
   if (barEl) barEl.style.width = '40%';
   if (labelEl) labelEl.textContent = 'Uploading...';
-  const { data, error } = await supa.storage.from('blog-images').upload(filename, compressed, {
-    contentType: 'image/jpeg', upsert: false
+  const { data, error } = await supa.storage.from('blog-images').upload(filename, body, {
+    contentType: isGif ? 'image/gif' : 'image/jpeg', upsert: false
   });
   if (error) {
     if (progressEl) progressEl.style.display = 'none';
