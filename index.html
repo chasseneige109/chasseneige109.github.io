@@ -5441,7 +5441,11 @@ function handleTagInput(e){
   if(e.key==='Backspace'&&e.target.value===''&&editorTags.length){editorTags.pop();renderEditorTags();}
 }
 function rmTag(t){editorTags=editorTags.filter(x=>x!==t);renderEditorTags();}
-function ins(before,after){LPE.insertAtCursor(before,after);}
+// 제목·인용·목록 기호는 커서 위치가 아니라 선택한 모든 줄의 맨 앞에 붙임
+function ins(before,after){
+  if(!after && /^(#{1,6} |> |- |1\. )$/.test(before)) LPE.linePrefix(before);
+  else LPE.insertAtCursor(before,after);
+}
 function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 
 // ── LIVE PREVIEW EDITOR (Obsidian 방식, CodeMirror 6) ────────────────────────
@@ -5814,6 +5818,28 @@ const LPE = (() => {
                     selection: { anchor: r.from + before.length + t.length }, scrollIntoView: true, userEvent: 'input' });
     view.focus();
   }
+  // 선택한 줄들 맨 앞에 # / > / - / 1. 붙이기 (이미 모두 같은 기호면 해제, 다른 제목 단계면 교체)
+  function linePrefix(prefix) {
+    if (!view) return;
+    const st = view.state, doc = st.doc, lines = [];
+    for (const r of st.selection.ranges)
+      for (let n = doc.lineAt(r.from).number; n <= doc.lineAt(r.to).number; n++)
+        if (!lines.includes(n)) lines.push(n);
+    lines.sort((a, b) => a - b);
+    const targets = lines.length > 1 ? lines.filter(n => doc.line(n).text.trim()) : lines;
+    if (!targets.length) return;
+    const OLD = /^(#{1,6} +|> ?|[ 	]*[-*+] +|[ 	]*\d+\. +)/;
+    const ol = prefix === '1. ';
+    const has = t => ol ? /^[ 	]*\d+\. /.test(t) : t.startsWith(prefix) && !(prefix[0] === '#' && t[prefix.length - 1] === '#');
+    const remove = targets.every(n => has(doc.line(n).text));
+    const changes = targets.map((n, i) => {
+      const line = doc.line(n), m = line.text.match(OLD);
+      const indent = m && /^[ 	]/.test(m[0]) ? m[0].match(/^[ 	]*/)[0] : '';
+      return { from: line.from, to: line.from + (m ? m[0].length : 0), insert: remove ? '' : indent + (ol ? (i + 1) + '. ' : prefix) };
+    });
+    view.dispatch({ changes, userEvent: 'input', scrollIntoView: true });
+    view.focus();
+  }
   function headings() {
     if (!view) return [];
     const hs = [], doc = view.state.doc; let inCode = false;
@@ -5831,8 +5857,9 @@ const LPE = (() => {
     view.dispatch({ effects: V.EditorView.scrollIntoView(pos, { y: 'center' }) });
   }
   function focus() { if (view) view.focus(); }
+  function select(a, b) { if (view) view.dispatch({ selection: { anchor: a, head: b ?? a } }); }
 
-  return { init, getValue, setValue, insertAtCursor, syncHidden, commit(){}, headings, scrollToLine, focus };
+  return { init, getValue, setValue, insertAtCursor, linePrefix, select, syncHidden, commit(){}, headings, scrollToLine, focus };
 })();
 
 
