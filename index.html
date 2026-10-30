@@ -1949,7 +1949,7 @@ body:has(#page-article.active) .right-panel{display:none !important}
 #lp-editor .cm-editor.cm-focused{outline:none}
 #lp-editor .cm-scroller{font-family:var(--sans);line-height:1.8;overflow:visible}
 #lp-editor .cm-content{padding:0;min-height:440px;caret-color:#000}
-#lp-editor .cm-line{padding:0 3px}
+#lp-editor .cm-line{padding:0 3px;white-space:break-spaces}
 #lp-editor .cm-placeholder{color:#c8c8c8}
 #lp-editor .cm-mk{color:#b4b4b4;font-weight:400;font-style:normal;text-decoration:none}
 #lp-editor .cm-mk-line{letter-spacing:0;word-spacing:.22em}
@@ -5886,19 +5886,22 @@ const LPE = (() => {
         { key:'Mod-e', run: wrapSel('`', '`') },
         ...C.historyKeymap, C.indentWithTab, ...C.defaultKeymap
       ]),
-      // 커서가 기호 뒤에 있는데 "## " 의 공백이 지워지는 변경은 되돌림 (직접 누른 Backspace·Delete·잘라내기·실행취소는 제외)
+      // 지우는 키 없이 커서 앞 공백이 사라지는 입력은 공백을 되살림 (직접 누른 Backspace·Delete·잘라내기·실행취소는 제외)
       S.EditorState.transactionFilter.of(tr => {
-        if (!tr.docChanged || Date.now() - lastDeleteKey < 400 || tr.isUserEvent('undo') || tr.isUserEvent('redo')) return tr;
-        const sel = tr.startState.selection.main;
+        if (!tr.docChanged || Date.now() - lastDeleteKey < 400) return tr;
+        if (!tr.isUserEvent('input') && !tr.isUserEvent('delete')) return tr;
+        const start = tr.startState, sel = start.selection.main;
         if (!sel.empty) return tr;
-        const before = tr.startState.doc.lineAt(sel.head);
-        const m = before.text.match(/^(#{1,6}|[-*+]|\d+\.) /);
-        if (!m || sel.head < before.from + m[0].length) return tr;
-        if (tr.changes.touchesRange(before.from, before.from + m[1].length - 1)) return tr;
-        const at = tr.changes.mapPos(before.from + m[1].length, -1);
-        if (tr.newDoc.sliceString(at, at + 1) === ' ') return tr;
-        console.warn('[editor] restored marker space', JSON.stringify(before.text.slice(0, 40)), tr.annotation(S.Transaction.userEvent));
-        return [tr, { changes: { from: at, insert: ' ' }, sequential: true }];
+        let count = 0, c;
+        tr.changes.iterChanges((from, to, _f, _t, ins) => { count++; c = { from, to, ins: ins.toString() }; });
+        if (count !== 1 || c.from === c.to || c.from > sel.head || c.ins.includes('\n')) return tr;
+        const gone = start.sliceDoc(c.from, c.to), kept = gone.replace(/ /g, '');
+        if (gone === kept || gone.includes('\n') || start.doc.lineAt(c.from).number !== start.doc.lineAt(sel.head).number) return tr;
+        if (!c.ins.startsWith(kept)) return tr;
+        const insert = gone + c.ins.slice(kept.length);
+        console.warn('[editor] restored space', JSON.stringify(gone), '->', JSON.stringify(c.ins), tr.annotation(S.Transaction.userEvent));
+        return { changes: { from: c.from, to: c.to, insert }, selection: { anchor: tr.newSelection.main.head + insert.length - c.ins.length },
+                 userEvent: tr.annotation(S.Transaction.userEvent), scrollIntoView: true };
       }),
       // 입력·붙여넣기로 들어오는 특수 공백도 일반 공백으로
       V.EditorView.inputHandler.of((v, from, to, text) => {
