@@ -5579,7 +5579,7 @@ const LPE = (() => {
 
   // ── 실제 글 페이지와 같은 여백/테두리 값을 읽어 오는 숨은 견본 ──
   // (CodeMirror는 줄의 margin을 높이 계산에 넣지 못하므로 같은 값을 padding+배경선으로 옮겨 그린다)
-  let probeCache = null;
+  let probeCache = null, lastDeleteKey = 0;
   const PROBE_KINDS = { text:['ep-text'], h1:['ep-h','ep-h1'], h2:['ep-h','ep-h2'], h3:['ep-h','ep-h3'], h4:['ep-h','ep-h4'],
                         bq:['ep-bq'], li0:['ep-li','d0'], li1:['ep-li','d1'], li2:['ep-li','d2'] };
   function probe(kind) {
@@ -5886,6 +5886,21 @@ const LPE = (() => {
         { key:'Mod-e', run: wrapSel('`', '`') },
         ...C.historyKeymap, C.indentWithTab, ...C.defaultKeymap
       ]),
+      // 커서가 기호 뒤에 있는데 "## " 의 공백이 지워지는 변경은 되돌림 (직접 누른 Backspace·Delete·잘라내기·실행취소는 제외)
+      S.EditorState.transactionFilter.of(tr => {
+        if (!tr.docChanged || Date.now() - lastDeleteKey < 400 || tr.isUserEvent('undo') || tr.isUserEvent('redo')) return tr;
+        const sel = tr.startState.selection.main;
+        if (!sel.empty) return tr;
+        const before = tr.startState.doc.lineAt(sel.head);
+        const m = before.text.match(/^(#{1,6}|[-*+]|\d+\.) /);
+        if (!m || sel.head < before.from + m[0].length) return tr;
+        if (tr.changes.touchesRange(before.from, before.from + m[1].length - 1)) return tr;
+        const at = tr.changes.mapPos(before.from + m[1].length, -1);
+        if (tr.newDoc.sliceString(at, at + 1) === ' ') return tr;
+        console.warn('[editor] restored marker space', JSON.stringify(before.text.slice(0, 40)), tr.annotation(S.Transaction.userEvent));
+        toast('Space after ' + m[1] + ' restored');
+        return [tr, { changes: { from: at, insert: ' ' }, sequential: true }];
+      }),
       // 입력·붙여넣기로 들어오는 특수 공백도 일반 공백으로
       V.EditorView.inputHandler.of((v, from, to, text) => {
         if (!text.match(ODD_SPACE)) return false;
@@ -5897,6 +5912,7 @@ const LPE = (() => {
       V.EditorView.domEventHandlers({
         // 스페이스는 에디터가 직접 넣음 (서식이 바뀌는 순간 브라우저 입력에 맡기면 공백이 빠지는 경우 방지)
         beforeinput(e, v) {
+          if (/^delete/.test(e.inputType)) lastDeleteKey = Date.now();   // 모바일 키보드의 지우기
           if (e.inputType !== 'insertText' || e.data !== ' ' || e.isComposing || v.composing) return false;
           e.preventDefault();
           v.dispatch(v.state.replaceSelection(' '), { userEvent: 'input.type', scrollIntoView: true });
@@ -5935,6 +5951,11 @@ const LPE = (() => {
     wrapEl.removeAttribute('contenteditable');
     view = new V.EditorView({ state: newState(pendingValue ?? hidden.value ?? ''), parent: wrapEl });
     pendingValue = null;
+    // 직접 지우는 키는 단축키 처리보다 먼저 기록
+    view.contentDOM.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' || e.key === 'Delete' || ((e.ctrlKey || e.metaKey) && /^[xX]$/.test(e.key))) lastDeleteKey = Date.now();
+    }, true);
+    view.contentDOM.addEventListener('cut', () => { lastDeleteKey = Date.now(); }, true);
     // 화면 폭이 바뀌면(모바일 글자 크기 등) 여백 값을 다시 읽음
     let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { probeCache = null; view.dispatch({ effects: remeasure.of(null) }); }, 150); });
     // 수식 글꼴이 늦게 로드돼도 다시 그림
