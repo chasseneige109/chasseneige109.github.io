@@ -5858,7 +5858,11 @@ const LPE = (() => {
     remeasure = S.StateEffect.define();
     focusField = S.StateField.define({
       create: () => false,
-      update(v, tr) { for (const e of tr.effects) if (e.is(setFocus)) v = e.value; return v; }
+      update(v, tr) {
+        if (tr.isUserEvent('input') || tr.isUserEvent('delete')) v = true;
+        for (const e of tr.effects) if (e.is(setFocus)) v = e.value;
+        return v;
+      }
     });
     decoField = S.StateField.define({
       create: st => build(st),
@@ -5882,7 +5886,22 @@ const LPE = (() => {
         { key:'Mod-e', run: wrapSel('`', '`') },
         ...C.historyKeymap, C.indentWithTab, ...C.defaultKeymap
       ]),
+      // 입력·붙여넣기로 들어오는 특수 공백도 일반 공백으로
+      V.EditorView.inputHandler.of((v, from, to, text) => {
+        if (!text.match(ODD_SPACE)) return false;
+        const t = text.replace(ODD_SPACE, ' ');
+        v.dispatch({ changes: { from, to, insert: t }, selection: { anchor: from + t.length }, userEvent: 'input.type', scrollIntoView: true });
+        return true;
+      }),
+      V.EditorView.clipboardInputFilter.of(t => t.replace(ODD_SPACE, ' ')),
       V.EditorView.domEventHandlers({
+        // 스페이스는 에디터가 직접 넣음 (서식이 바뀌는 순간 브라우저 입력에 맡기면 공백이 빠지는 경우 방지)
+        beforeinput(e, v) {
+          if (e.inputType !== 'insertText' || e.data !== ' ' || e.isComposing || v.composing) return false;
+          e.preventDefault();
+          v.dispatch(v.state.replaceSelection(' '), { userEvent: 'input.type', scrollIntoView: true });
+          return true;
+        },
         paste(e, v) {
           const items = [...(e.clipboardData?.items || [])];
           if (items.some(i => i.type.startsWith('image/'))) return true;   // 이미지 붙여넣기는 아래 업로드 처리기로
@@ -5932,7 +5951,7 @@ const LPE = (() => {
   function getValue() { return view ? view.state.doc.toString() : (pendingValue ?? ''); }
   // 다른 글을 불러올 때는 상태를 새로 만들어 이전 글로 Ctrl+Z 되돌아가지 않게
   function setValue(md) {
-    md = md || '';
+    md = (md || '').replace(ODD_SPACE, ' ');
     if (!view) { pendingValue = md; if (hidden) hidden.value = md; return; }
     probeCache = null;
     view.setState(newState(md));
@@ -6108,6 +6127,7 @@ function closeModal(id,event){
 
 // ── MARKDOWN ──────────────────────────────────────────────────────
 // 인라인 토큰: 코드·\이스케이프·수식을 왼쪽부터 찾음 — 글 페이지(pmi)와 편집창(LPE)이 같이 사용
+const ODD_SPACE = /[\u00A0\u2002\u2003\u202F\u3000]/g;
 const MD_TOKEN = /`([^`]+)`|\\([$*`~])|\$\$([\s\S]*?)\$\$|\$((?:[^$\\]|\\.)+?)\$/g;
 function mdTokens(t){
   return [...t.matchAll(MD_TOKEN)].map(m => ({ a:m.index, b:m.index+m[0].length, code:m[1], lit:m[2], disp:m[3], tex:m[4] }));
@@ -6161,7 +6181,7 @@ function pmi(t){
 // Line-by-line renderer — 1 input line = 1 display block, no injected spacing
 function parseMd(md){
   if(!md) return '';
-  md=md.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  md=md.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(ODD_SPACE,' ');
   const lines=md.split('\n');
   const parts=[];
   let inCode=false, codeLines=[];
