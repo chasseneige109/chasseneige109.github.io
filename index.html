@@ -5859,7 +5859,7 @@ const LPE = (() => {
     focusField = S.StateField.define({
       create: () => false,
       update(v, tr) {
-        if (tr.isUserEvent('input') || tr.isUserEvent('delete')) v = true;
+        if (tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('select')) v = true;
         for (const e of tr.effects) if (e.is(setFocus)) v = e.value;
         return v;
       }
@@ -5898,7 +5898,6 @@ const LPE = (() => {
         const at = tr.changes.mapPos(before.from + m[1].length, -1);
         if (tr.newDoc.sliceString(at, at + 1) === ' ') return tr;
         console.warn('[editor] restored marker space', JSON.stringify(before.text.slice(0, 40)), tr.annotation(S.Transaction.userEvent));
-        toast('Space after ' + m[1] + ' restored');
         return [tr, { changes: { from: at, insert: ' ' }, sequential: true }];
       }),
       // 입력·붙여넣기로 들어오는 특수 공백도 일반 공백으로
@@ -5976,6 +5975,7 @@ const LPE = (() => {
     if (!view) { pendingValue = md; if (hidden) hidden.value = md; return; }
     probeCache = null;
     view.setState(newState(md));
+    if (view.hasFocus) view.dispatch({ effects: setFocus.of(true) });
     syncHidden();
     if (typeof rpDeferUpdate === 'function') rpDeferUpdate();
     if (typeof buildWriteToc === 'function') buildWriteToc();
