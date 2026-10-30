@@ -13,7 +13,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script defer src="assets/cm6.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1953,6 +1952,7 @@ body:has(#page-article.active) .right-panel{display:none !important}
 #lp-editor .cm-line{padding:0 3px}
 #lp-editor .cm-placeholder{color:#c8c8c8}
 #lp-editor .cm-mk{color:#b4b4b4;font-weight:400;font-style:normal;text-decoration:none}
+#lp-editor .cm-mk-line{letter-spacing:0;word-spacing:.22em}
 #lp-editor .cm-math-src{font-family:var(--mono);font-size:.88em;color:#444;background:#f2f2f2;border-radius:3px}
 #lp-editor .cm-line.cm-math-src-line{font-family:var(--mono);font-size:.9rem;line-height:1.7;color:#444;background:#f2f2f2;padding:0 22px}
 #lp-editor .cm-line.cm-code-src{font-family:var(--mono);font-size:.85rem;line-height:1.7;color:#cbd5e1;background:var(--s900);padding:0 24px;caret-color:#fff}
@@ -4774,11 +4774,7 @@ async function openPost(id,section) {
   if(section==='projects'){ p.meta=split.meta; renderArticleHeader(p, section); }
   bodyEl.innerHTML=parseMd((split.body||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n'));
   buildArticleToc(bodyEl);
-  setTimeout(()=>{
-    if(window.renderMathInElement) renderMathInElement(bodyEl,{
-      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false
-    });
-  },60);
+  renderMath(bodyEl);
   rpUpdate();
 }
 // 글 머리: 제목 아래 설명 + 정보 칸 (참고 사이트의 TEAM / MY ROLE / PERIOD 형식)
@@ -4814,7 +4810,7 @@ function buildArticleToc(bodyEl) {
   toc.innerHTML = hs.map((h, i) => {
     h.id = 'sec-' + i;
     const lv = h.matches('.ep-h1,h1') ? 1 : h.matches('.ep-h2,h2') ? 2 : 3;
-    return `<a class="toc-item toc-l${lv}" href="#" onclick="event.preventDefault();document.getElementById('sec-${i}').scrollIntoView({behavior:'smooth',block:'start'})">${esc(h.textContent)}</a>`;
+    return `<a class="toc-item toc-l${lv}" href="#" onclick="event.preventDefault();document.getElementById('sec-${i}').scrollIntoView({behavior:'smooth',block:'start'})">${esc(plainHeading(h))}</a>`;
   }).join('');
 }
 function editCurrentArticle(){if(currentPostId)openEdit(currentPostId,currentSection);}
@@ -5567,6 +5563,7 @@ function rmTag(t){editorTags=editorTags.filter(x=>x!==t);renderEditorTags();}
 // 제목·인용·목록 기호는 커서 위치가 아니라 선택한 모든 줄의 맨 앞에 붙임
 function ins(before,after){
   if(!after && /^(#{1,6} |> |- |1\. )$/.test(before)) LPE.linePrefix(before);
+  else if((before+after).includes('\n')) LPE.insertBlock(before,after);
   else LPE.insertAtCursor(before,after);
 }
 function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
@@ -5578,7 +5575,7 @@ function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'
 const LPE = (() => {
   'use strict';
   let view = null, hidden = null, pendingValue = null, extensions = null;
-  let S, V, C, setFocus, remeasure, MK, HIDE;
+  let S, V, C, setFocus, remeasure, MK, LMK, HIDE;
 
   // ── 실제 글 페이지와 같은 여백/테두리 값을 읽어 오는 숨은 견본 ──
   // (CodeMirror는 줄의 margin을 높이 계산에 넣지 못하므로 같은 값을 padding+배경선으로 옮겨 그린다)
@@ -5621,11 +5618,6 @@ const LPE = (() => {
   }
 
   // ── 위젯 (수식, 이미지, 코드 블록 등 — 실제 글 페이지와 같은 HTML) ──
-  function katexIn(el) {
-    if (window.renderMathInElement) {
-      try { renderMathInElement(el, { delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false }); } catch (e) {}
-    }
-  }
   function makeWidgets() {
     class HtmlWidget extends V.WidgetType {
       constructor(html, block) { super(); this.html = html; this.block = block; }
@@ -5635,7 +5627,7 @@ const LPE = (() => {
         const el = document.createElement(this.block ? 'div' : 'span');
         el.className = 'cm-rendered' + (this.block ? ' cm-rendered-block' : '') + (/^<div/.test(this.html) ? ' cm-rendered-flow' : '');
         el.innerHTML = this.html;
-        katexIn(el);
+        renderMath(el);
         return el;
       }
       ignoreEvent() { return false; }   // 클릭하면 커서가 그 자리로 → 원문이 열림
@@ -5670,23 +5662,14 @@ const LPE = (() => {
     const mk = (a, b, show) => { if (b > a) out.push(show ? MK.range(off + a, off + b) : HIDE.range(off + a, off + b)); };
     const mark = (a, b, deco) => { if (b > a) out.push(deco.range(off + a, off + b)); };
 
-    // 1) $$..$$ (한 줄 안), 2) $..$
-    for (const m of all(/\$\$([\s\S]*?)\$\$/g)) {
-      const a = m.index, b = a + m[0].length;
-      if (touched(off + a, off + b)) mark(a, b, V.Decoration.mark({ class:'cm-math-src' }));
-      else out.push(V.Decoration.replace({ widget: new W.HtmlWidget(pmi(m[0]), false) }).range(off + a, off + b));   // 실제 글(pmi)과 같은 HTML
-      mask(a, b);
-    }
-    for (const m of all(/\$((?:[^$\\\0]|\\.)+?)\$/g)) {
-      const a = m.index, b = a + m[0].length;
-      if (touched(off + a, off + b)) mark(a, b, V.Decoration.mark({ class:'cm-math-src' }));
-      else out.push(V.Decoration.replace({ widget: new W.MathWidget(m[1]) }).range(off + a, off + b));
-      mask(a, b);
-    }
-    // 3) `code`
-    for (const m of all(/`([^`\0]+)`/g)) {
-      const a = m.index, b = a + m[0].length, t = touched(off + a, off + b);
-      mk(a, a + 1, t); mark(a + 1, b - 1, V.Decoration.mark({ tagName:'code', class:'ep-code' })); mk(b - 1, b, t);
+    // 1) `코드`, \이스케이프, 수식 — pmi와 같은 토큰
+    for (const k of mdTokens(text)) {
+      const { a, b } = k, t = touched(off + a, off + b);
+      if (k.lit !== undefined) mk(a, a + 1, t);
+      else if (k.code !== undefined) { mk(a, a + 1, t); mark(a + 1, b - 1, V.Decoration.mark({ tagName:'code', class:'ep-code' })); mk(b - 1, b, t); }
+      else if (t) mark(a, b, V.Decoration.mark({ class:'cm-math-src' }));
+      else if (k.disp !== undefined) out.push(V.Decoration.replace({ widget: new W.HtmlWidget(mathHTML(k.disp, true), false) }).range(off + a, off + b));
+      else out.push(V.Decoration.replace({ widget: new W.MathWidget(k.tex) }).range(off + a, off + b));
       mask(a, b);
     }
     // 4) ![alt](src)
@@ -5697,7 +5680,7 @@ const LPE = (() => {
       mask(a, b);
     }
     // 5) [text](url) — 글자에는 서식 유지, 괄호·주소만 숨김
-    for (const m of all(/\[([^\]\0]+)\]\(([^)\0]+)\)/g)) {
+    for (const m of all(/\[([^\]]+)\]\(([^)\0]+)\)/g)) {
       const a = m.index, b = a + m[0].length, t = touched(off + a, off + b), te = a + 1 + m[1].length;
       mk(a, a + 1, t);
       mark(a + 1, te, V.Decoration.mark({ tagName:'a', class:'media-link-inline', attributes:{ title:m[2] } }));
@@ -5713,10 +5696,10 @@ const LPE = (() => {
       }
     };
     const strong = V.Decoration.mark({ tagName:'strong' }), em = V.Decoration.mark({ tagName:'em' });
-    pair(/\*\*\*([^\0]+?)\*\*\*/g, 3, [strong, em]);
-    pair(/\*\*([^\0]+?)\*\*/g, 2, [strong]);
-    pair(/(?<!\*)\*([^*\n\0]+?)\*(?!\*)/g, 1, [em]);
-    pair(/~~([^\0]+?)~~/g, 2, [V.Decoration.mark({ tagName:'s' })]);
+    pair(/\*\*\*(.+?)\*\*\*/g, 3, [strong, em]);
+    pair(/\*\*(.+?)\*\*/g, 2, [strong]);
+    pair(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, 1, [em]);
+    pair(/~~(.+?)~~/g, 2, [V.Decoration.mark({ tagName:'s' })]);
   }
 
   // ── 문서 전체 장식 계산 ──
@@ -5741,18 +5724,23 @@ const LPE = (() => {
         } else block(line.from, end.to, parseMd(src));
         i = end.number; prevKind = 'blk'; continue;
       }
-      // 수식 블록 $$ … $$
-      if (raw.trim() === '$$') {
-        let j = i + 1; while (j <= doc.lines && doc.line(j).text.trim() !== '$$') j++;
-        if (j <= doc.lines) {
-          const end = doc.line(j), src = doc.sliceString(line.from, end.to);
-          if (touched(line.from, end.to)) {
-            for (let k = i; k <= j; k++) lineDeco(doc.line(k), 'cm-math-src-line');
-            // 고치는 동안에도 결과를 바로 아래에 보여 줌
-            out.push(V.Decoration.widget({ widget: new W.HtmlWidget(parseMd(src), true), block: true, side: 1 }).range(end.to));
-          } else block(line.from, end.to, parseMd(src));
-          i = j; prevKind = 'blk'; continue;
+      // 수식 블록 $$ … $$ (닫는 $$ 뒤에 글자가 붙어 있어도 됨)
+      const mf = mathFence(k => doc.line(k + 1).text, i - 1, doc.lines);
+      if (mf) {
+        const end = doc.line(mf.end + 1), close = end.from + mf.at + 2, rest = end.text.slice(mf.at + 2);
+        const html = parseMd(doc.sliceString(line.from, close));
+        if (touched(line.from, close)) {
+          for (let k = i; k <= end.number; k++) lineDeco(doc.line(k), 'cm-math-src-line');
+          // 고치는 동안에도 결과를 바로 아래에 보여 줌
+          out.push(V.Decoration.widget({ widget: new W.HtmlWidget(html, true), block: true, side: 1 }).range(end.to));
+        } else if (!rest.trim()) block(line.from, end.to, html);
+        else {
+          block(line.from, doc.line(end.number - 1).to, html);
+          out.push(HIDE.range(end.from, close));
+          lineDeco(end, 'ep-line ep-text', lineStyle('text', 'blk', false));
+          inline(rest, close, out, touched);
         }
+        i = end.number; prevKind = 'blk'; continue;
       }
       const onLine = touched(line.from, line.to);
       // 한 줄짜리 $$수식$$ → 실제 글과 같은 수식 상자 (고치는 동안엔 원문 + 바로 아래 미리보기)
@@ -5775,19 +5763,19 @@ const LPE = (() => {
       const hm = raw.match(/^(#{1,6}) +/), um = raw.match(/^([ \t]*)[-*+] +/), om = raw.match(/^([ \t]*)(\d+)\. +/);
       if (hm) {
         const n = hm[1].length; kind = n <= 4 ? 'h' + n : 'text'; cls = `ep-line ep-h ep-h${n}`; cs = hm[0].length;
-        out.push((onLine ? MK : HIDE).range(line.from, line.from + cs));
+        out.push((onLine ? LMK : HIDE).range(line.from, line.from + cs));
       } else if (/^>/.test(raw)) {
         kind = 'bq'; cls = 'ep-line ep-bq'; cs = /^> /.test(raw) ? 2 : 1;
-        out.push((onLine ? MK : HIDE).range(line.from, line.from + cs));
+        out.push((onLine ? LMK : HIDE).range(line.from, line.from + cs));
       } else if (um) {
         const d = Math.floor(um[1].replace(/\t/g, '  ').length / 2);
         kind = 'li' + Math.min(d, 2); cls = 'ep-line ep-li'; attrs = { 'data-d': String(d) }; cs = um[0].length;
-        out.push(onLine ? MK.range(line.from, line.from + cs)
+        out.push(onLine ? LMK.range(line.from, line.from + cs)
                         : V.Decoration.replace({ widget: new W.TextWidget('• ') }).range(line.from, line.from + cs));
       } else if (om) {
         const d = Math.floor(om[1].replace(/\t/g, '  ').length / 2);
         kind = 'li' + Math.min(d, 2); cls = 'ep-line ep-li'; attrs = { 'data-d': String(d) }; cs = om[0].length;
-        if (onLine) out.push(MK.range(line.from, line.from + cs));
+        if (onLine) out.push(LMK.range(line.from, line.from + cs));
         else out.push(V.Decoration.replace({ widget: new W.TextWidget(om[2] + '. ') }).range(line.from, line.from + cs));
       }
       lineDeco(line, cls, lineStyle(kind, prevKind, isFirst), attrs);
@@ -5810,9 +5798,24 @@ const LPE = (() => {
       return true;
     };
   }
+  function inBlock(st, n) {
+    const d = st.doc;
+    for (let i = 1; i <= n; i++) {
+      if (/^```/.test(d.line(i).text)) {
+        let j = i + 1; while (j <= d.lines && !/^```/.test(d.line(j).text)) j++;
+        if (n <= j) return true;
+        i = j; continue;
+      }
+      const mf = mathFence(k => d.line(k + 1).text, i - 1, d.lines);
+      if (mf) { if (n <= mf.end + 1) return true; i = mf.end + 1; }
+      else if (d.line(i).text.trim() === '$$') return true;   // 아직 안 닫힌 수식 블록을 쓰는 중
+    }
+    return false;
+  }
   function enterList(v) {
     const r = v.state.selection.main; if (!r.empty) return false;
     const line = v.state.doc.lineAt(r.head);
+    if (inBlock(v.state, line.number)) return false;
     if (r.head !== line.to && r.head < line.from + 2) return false;
     const m = line.text.match(/^([ \t]*)([-*+]|\d+\.|>) (.*)$/) || line.text.match(/^([ \t]*)(>)()$/);
     if (!m) return false;
@@ -5849,6 +5852,7 @@ const LPE = (() => {
     S = CM.state; V = CM.view; C = CM.commands;
     W = makeWidgets();
     MK = V.Decoration.mark({ class:'cm-mk' });
+    LMK = V.Decoration.mark({ class:'cm-mk cm-mk-line' });
     HIDE = V.Decoration.replace({});
     setFocus = S.StateEffect.define();
     remeasure = S.StateEffect.define();
@@ -5936,12 +5940,34 @@ const LPE = (() => {
     if (typeof rpDeferUpdate === 'function') rpDeferUpdate();
     if (typeof buildWriteToc === 'function') buildWriteToc();
   }
+  // 툴바 버튼용 변경: 포커스를 같은 변경에 넣어 커서가 있는 블록이 곧바로 열린 상태로 그려지게
+  function edit(spec) {
+    view.focus();
+    view.dispatch({ ...spec, effects: setFocus.of(true), scrollIntoView: true, userEvent: 'input' });
+  }
   function insertAtCursor(before, after) {
     if (!view) return;
     const r = view.state.selection.main, t = view.state.sliceDoc(r.from, r.to);
-    view.dispatch({ changes: { from: r.from, to: r.to, insert: before + t + after },
-                    selection: { anchor: r.from + before.length + t.length }, scrollIntoView: true, userEvent: 'input' });
-    view.focus();
+    edit({ changes: { from: r.from, to: r.to, insert: before + t + after },
+           selection: { anchor: r.from + before.length + t.length } });
+  }
+  // 코드·수식 블록, 구분선, 그림은 글자 중간에서 눌러도 자기 줄에 들어가게
+  function insertBlock(before, after) {
+    if (!view) return;
+    const st = view.state, r = st.selection.main, t = st.sliceDoc(r.from, r.to);
+    const a = st.doc.lineAt(r.from), b = st.doc.lineAt(r.to);
+    const pre = r.from > a.from ? '\n' : '';
+    const midLine = r.to < b.to, atEnd = r.to === st.doc.length;
+    before = before.replace(/^\n+/, ''); after = after.replace(/\n+$/, '');
+    if (!after) {                       // 구분선·그림: 끝낸 뒤 커서는 다음 줄로
+      const body = before.replace(/\n+$/, '');
+      const insert = pre + body + (midLine || atEnd ? '\n' : '');
+      const anchor = r.from + pre.length + body.length + 1;
+      edit({ changes: { from: r.from, to: r.to, insert }, selection: { anchor } });
+    } else {                            // 코드·수식 블록: 커서는 블록 안
+      const insert = pre + before + t + after + (midLine ? '\n' : '');
+      edit({ changes: { from: r.from, to: r.to, insert }, selection: { anchor: r.from + pre.length + before.length + t.length } });
+    }
   }
   // 선택한 줄들 맨 앞에 # / > / - / 1. 붙이기 (이미 모두 같은 기호면 해제, 다른 제목 단계면 교체)
   function linePrefix(prefix) {
@@ -5962,8 +5988,7 @@ const LPE = (() => {
       const indent = m && /^[ 	]/.test(m[0]) ? m[0].match(/^[ 	]*/)[0] : '';
       return { from: line.from, to: line.from + (m ? m[0].length : 0), insert: remove ? '' : indent + (ol ? (i + 1) + '. ' : prefix) };
     });
-    view.dispatch({ changes, userEvent: 'input', scrollIntoView: true });
-    view.focus();
+    edit({ changes });
   }
   function headings() {
     if (!view) return [];
@@ -5984,7 +6009,7 @@ const LPE = (() => {
   function focus() { if (view) view.focus(); }
   function select(a, b) { if (view) view.dispatch({ selection: { anchor: a, head: b ?? a } }); }
 
-  return { init, getValue, setValue, insertAtCursor, linePrefix, select, syncHidden, commit(){}, headings, scrollToLine, focus };
+  return { init, getValue, setValue, insertAtCursor, insertBlock, linePrefix, select, syncHidden, commit(){}, headings, scrollToLine, focus };
 })();
 
 
@@ -6082,22 +6107,54 @@ function closeModal(id,event){
 }
 
 // ── MARKDOWN ──────────────────────────────────────────────────────
-// Shared inline renderer — used by parseMd (published) and LPE (live editor)
+// 인라인 토큰: 코드·\이스케이프·수식을 왼쪽부터 찾음 — 글 페이지(pmi)와 편집창(LPE)이 같이 사용
+const MD_TOKEN = /`([^`]+)`|\\([$*`~])|\$\$([\s\S]*?)\$\$|\$((?:[^$\\]|\\.)+?)\$/g;
+function mdTokens(t){
+  return [...t.matchAll(MD_TOKEN)].map(m => ({ a:m.index, b:m.index+m[0].length, code:m[1], lit:m[2], disp:m[3], tex:m[4] }));
+}
+// 수식은 data-tex에 담아 두고 renderMath가 그림 (본문의 다른 $ 글자가 수식으로 잘못 잡히지 않게)
+function mathHTML(tex, display){
+  return display ? `<div class="math-block" data-tex="${esc(tex)}" data-display="1"></div>` : `<span class="md-math" data-tex="${esc(tex)}"></span>`;
+}
+function renderMath(root){
+  root.querySelectorAll('[data-tex]').forEach(el => {
+    if (el.dataset.done) return;
+    const tex = el.dataset.tex, display = el.dataset.display === '1';
+    if (!window.katex) { el.textContent = display ? `$$${tex}$$` : `$${tex}$`; return; }
+    try { katex.render(tex, el, { displayMode: display, throwOnError: false }); el.dataset.done = '1'; }
+    catch (e) { el.textContent = tex; }
+  });
+}
+// 제목 글자 (수식은 원문으로)
+function plainHeading(el){
+  const c = el.cloneNode(true);
+  c.querySelectorAll('[data-tex]').forEach(n => n.replaceWith(n.dataset.tex));
+  return c.textContent.trim();
+}
+// 여러 줄 수식: $$ 만 있는 줄(또는 $$로 시작해 줄 안에서 안 닫힌 줄)부터 다음 $$까지. 닫는 $$ 뒤에 글자가 붙어 있어도 됨
+function mathFence(getLine, i, n){
+  const raw = getLine(i), bare = raw.trim() === '$$';
+  if (!bare && !(/^\s*\$\$/.test(raw) && !raw.replace(/^\s*\$\$/, '').includes('$$'))) return null;
+  for (let j = i + 1; j < n; j++) { const at = getLine(j).indexOf('$$'); if (at >= 0) return { end: j, at }; }
+  return null;
+}
 function pmi(t){
-  const mb=[],mi=[];
-  // protect math before escaping
-  t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,m)=>{mb.push(m);return`\x02MB${mb.length-1}\x02`;});
-  t=t.replace(/\$((?:[^$\\]|\\.)+?)\$/g,(_,m)=>{mi.push(m);return`\x02MI${mi.length-1}\x02`;});
-  t=esc(t);
-  t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
-  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  t=t.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g,'<em>$1</em>');
-  t=t.replace(/~~(.+?)~~/g,'<s>$1</s>');
-  t=t.replace(/`([^`]+)`/g,'<code class="ep-code">$1</code>');
-  t=t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1" style="max-width:100%;border-radius:var(--r);vertical-align:middle">');
-  t=t.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a class="media-link-inline" href="$2" target="_blank">$1</a>');
-  mb.forEach((m,i)=>{t=t.replace(`\x02MB${i}\x02`,`<div class="math-block">$$${m}$$</div>`);});
-  mi.forEach((m,i)=>{t=t.replace(`\x02MI${i}\x02`,`$${m}$`);});
+  const slot = [], put = h => { slot.push(h); return `\x02${slot.length-1}\x02`; };
+  let out = '', p = 0;
+  for (const k of mdTokens(t)) {
+    out += t.slice(p, k.a); p = k.b;
+    out += put(k.code !== undefined ? `<code class="ep-code">${esc(k.code)}</code>`
+             : k.lit !== undefined ? esc(k.lit)
+             : k.disp !== undefined ? mathHTML(k.disp, true) : mathHTML(k.tex, false));
+  }
+  t = esc(out + t.slice(p));
+  t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, a, u) => put(`<img src="${u}" alt="${a}" style="max-width:100%;border-radius:var(--r);vertical-align:middle">`));
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, x, u) => `<a class="media-link-inline" href="${put(u)}" target="_blank">${x}</a>`);
+  t = t.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+  t = t.replace(/~~(.+?)~~/g, '<s>$1</s>');
+  for (let n = 0; n < 2; n++) t = t.replace(/\x02(\d+)\x02/g, (_, i) => slot[+i]);
   return t;
 }
 
@@ -6107,7 +6164,7 @@ function parseMd(md){
   md=md.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const lines=md.split('\n');
   const parts=[];
-  let inCode=false, codeLines=[], inMath=false, mathLines=[];
+  let inCode=false, codeLines=[];
   for(let i=0;i<lines.length;i++){
     const raw=lines[i];
     // Code fence
@@ -6121,30 +6178,29 @@ function parseMd(md){
       continue;
     }
     if(inCode){codeLines.push(raw);continue;}
-    // Math fence $$
-    if(raw.trim()==='$$'){
-      if(!inMath){inMath=true;mathLines=[];}
-      else{
-        inMath=false;
-        parts.push(`<div class="math-block">$$${mathLines.join('\n')}$$</div>`);
-        mathLines=[];
-      }
+    // Math block
+    const mf=mathFence(k=>lines[k],i,lines.length);
+    if(mf){
+      const open=lines[i].trim()==='$$'?[]:[lines[i].replace(/^\s*\$\$/,'')];
+      const tex=open.concat(lines.slice(i+1,mf.end),[lines[mf.end].slice(0,mf.at)]).join('\n').trim();
+      parts.push(mathHTML(tex,true));
+      const rest=lines[mf.end].slice(mf.at+2);
+      if(rest.trim()){lines[mf.end]=rest;i=mf.end-1;}else i=mf.end;   // 닫는 $$ 뒤 글자는 다음 줄처럼 이어서 처리
       continue;
     }
-    if(inMath){mathLines.push(raw);continue;}
     // Empty line
     if(!raw.trim()){parts.push('<span class="ep-line ep-blank">\u200B</span>');continue;}
     // HR
     if(/^[ \t]*(-{3,}|\*{3,}|_{3,})[ \t]*$/.test(raw)){parts.push('<span class="ep-line ep-hr">\u200B</span>');continue;}
     // Media tags (inserted on own line by editor)
     let mm;
-    if((mm=raw.match(/^%%IMG%%([^%]+)%%([^%]*)%%/))){
+    if((mm=raw.match(/^%%IMG%%(.+?)%%(.*?)%%/))){
       parts.push(`<div class="media-img-wrap"><img src="${mm[1]}" loading="lazy">${mm[2]?`<div class="media-caption">${mm[2]}</div>`:''}</div>`);continue;
     }
-    if((mm=raw.match(/^%%VID%%([^%]+)%%([^%]*)%%/))){
+    if((mm=raw.match(/^%%VID%%(.+?)%%(.*?)%%/))){
       parts.push(`<div class="media-video-wrap"><iframe src="${mm[1]}" allowfullscreen></iframe>${mm[2]?`<div class="media-caption">${mm[2]}</div>`:''}</div>`);continue;
     }
-    if((mm=raw.match(/^%%PDF%%([^%]+)%%([^%]*)%%/))){
+    if((mm=raw.match(/^%%PDF%%(.+?)%%(.*?)%%/))){
       parts.push(`<div class="media-pdf-wrap"><a class="media-pdf-link" href="#" onclick="openPdf('${mm[1].length>100?'blob':mm[1]}',${JSON.stringify(mm[1])});return false;"><span class="media-pdf-icon">📄</span>${mm[2]}<span style="font-size:.65rem;color:var(--s400);margin-left:8px">Open in new tab ↗</span></a></div>`);continue;
     }
     // Heading
@@ -6330,7 +6386,7 @@ function confirmInsertMedia() {
   }
 
   closeModal('modal-media');
-  LPE.insertAtCursor(tag, '');
+  if (tag.startsWith('\n')) LPE.insertBlock(tag, ''); else LPE.insertAtCursor(tag, '');
   toast('Inserted.');
 }
 function openPdf(type, src) {
@@ -6727,7 +6783,7 @@ function _rpBuildToc(isEditor) {
       body.querySelectorAll('.ep-h1,.ep-h2,.ep-h3,.ep-h4').forEach((el, i) => {
         const level = el.classList.contains('ep-h1') ? 1 : el.classList.contains('ep-h2') ? 2 : el.classList.contains('ep-h3') ? 3 : 4;
         if (!el.id) el.id = 'rp-h-' + i;
-        headings.push({ level, text: el.textContent.trim(), id: el.id });
+        headings.push({ level, text: plainHeading(el), id: el.id });
       });
     }
   }
@@ -6841,7 +6897,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (url) {
       LPE.syncHidden();
       const tag = `\n%%IMG%%${url}%%캡처%%\n`;
-      LPE.insertAtCursor(tag, '');
+      LPE.insertBlock(tag, '');
       toast('✅ Image inserted');
     }
   });
