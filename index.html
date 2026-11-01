@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/mhchem.min.js"></script>
 <script defer src="assets/cm6.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -5638,7 +5639,7 @@ const LPE = (() => {
       toDOM() {
         const el = document.createElement('span');
         el.className = 'cm-math-inline';
-        if (window.katex) { try { katex.render(this.tex, el, { throwOnError:false }); } catch (e) { el.textContent = '$' + this.tex + '$'; } }
+        if (window.katex) { try { drawMath(el, this.tex, false); } catch (e) { el.textContent = '$' + this.tex + '$'; } }
         else el.textContent = '$' + this.tex + '$';
         return el;
       }
@@ -5714,8 +5715,9 @@ const LPE = (() => {
 
     for (let i = 1; i <= doc.lines; i++) {
       const line = doc.line(i), raw = line.text, isFirst = i === 1;
+      const mf = mathFence(k => doc.line(k + 1).text, i - 1, doc.lines);
       // 코드 블록 ``` … ```
-      if (/^```/.test(raw)) {
+      if (/^```/.test(raw) && !mf) {
         let j = i + 1; while (j <= doc.lines && !/^```/.test(doc.line(j).text)) j++;
         const end = doc.line(Math.min(j, doc.lines));
         const src = doc.sliceString(line.from, end.to);
@@ -5724,10 +5726,9 @@ const LPE = (() => {
         } else block(line.from, end.to, parseMd(src));
         i = end.number; prevKind = 'blk'; continue;
       }
-      // 수식 블록 $$ … $$ (닫는 $$ 뒤에 글자가 붙어 있어도 됨)
-      const mf = mathFence(k => doc.line(k + 1).text, i - 1, doc.lines);
+      // 수식 블록 (닫는 표기 뒤에 글자가 붙어 있어도 됨)
       if (mf) {
-        const end = doc.line(mf.end + 1), close = end.from + mf.at + 2, rest = end.text.slice(mf.at + 2);
+        const end = doc.line(mf.end + 1), close = end.from + mf.at + mf.len, rest = end.text.slice(mf.at + mf.len);
         const html = parseMd(doc.sliceString(line.from, close));
         if (touched(line.from, close)) {
           for (let k = i; k <= end.number; k++) lineDeco(doc.line(k), 'cm-math-src-line');
@@ -5744,7 +5745,7 @@ const LPE = (() => {
       }
       const onLine = touched(line.from, line.to);
       // 한 줄짜리 $$수식$$ → 실제 글과 같은 수식 상자 (고치는 동안엔 원문 + 바로 아래 미리보기)
-      if (raw.trim() !== '$$' && /^\s*\$\$[\s\S]+\$\$\s*$/.test(raw)) {
+      if (raw.trim() !== '$$' && (/^\s*\$\$[\s\S]+\$\$\s*$/.test(raw) || soloMath(raw))) {
         if (onLine) {
           lineDeco(line, 'cm-math-src-line');
           out.push(V.Decoration.widget({ widget: new W.HtmlWidget(parseMd(raw), true), block: true, side: 1 }).range(line.to));
@@ -5801,14 +5802,14 @@ const LPE = (() => {
   function inBlock(st, n) {
     const d = st.doc;
     for (let i = 1; i <= n; i++) {
-      if (/^```/.test(d.line(i).text)) {
+      const mf = mathFence(k => d.line(k + 1).text, i - 1, d.lines);
+      if (/^```/.test(d.line(i).text) && !mf) {
         let j = i + 1; while (j <= d.lines && !/^```/.test(d.line(j).text)) j++;
         if (n <= j) return true;
         i = j; continue;
       }
-      const mf = mathFence(k => d.line(k + 1).text, i - 1, d.lines);
       if (mf) { if (n <= mf.end + 1) return true; i = mf.end + 1; }
-      else if (d.line(i).text.trim() === '$$') return true;   // 아직 안 닫힌 수식 블록을 쓰는 중
+      else if (MATH_OPEN.test(d.line(i).text) && !soloMath(d.line(i).text) && !/^\s*\$\$.+\$\$/.test(d.line(i).text)) return true;   // 아직 안 닫힌 수식 블록을 쓰는 중
     }
     return false;
   }
@@ -5827,6 +5828,21 @@ const LPE = (() => {
     return true;
   }
 
+  // 다른 사이트의 수식 요소 → TeX 원문 (KaTeX: 블로그·Notion·ChatGPT, MathML·이미지 alt: Wikipedia, script: MathJax)
+  function pastedMath(el) {
+    const tag = el.tagName.toLowerCase(), wrap = (t, block) => {
+      t = (t || '').trim().replace(/^\{\\displaystyle\s*([\s\S]*)\}$/, '$1').trim();
+      return t ? (block ? `$$${t}$$` : `$${t}$`) : null;
+    };
+    const anno = n => n.querySelector('annotation[encoding*="tex"]')?.textContent;
+    if (el.classList.contains('katex-display')) return wrap(anno(el), true);
+    if (el.classList.contains('katex')) return wrap(anno(el), false);
+    if (el.classList.contains('mwe-math-element')) { const m = el.querySelector('math'); return m ? pastedMath(m) : null; }
+    if (tag === 'math') return wrap(anno(el) || el.getAttribute('alttext'), el.getAttribute('display') === 'block');
+    if (tag === 'script' && /^math\/tex/.test(el.type)) return wrap(el.textContent, /display/.test(el.type));
+    if (el.dataset.latex || el.dataset.tex) return wrap(el.dataset.latex || el.dataset.tex, el.dataset.display === '1');
+    return null;
+  }
   function htmlToPlain(html) {
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
@@ -5838,8 +5854,8 @@ const LPE = (() => {
         else if (ch.nodeType === 1) {
           const tag = ch.tagName.toLowerCase();
           if (tag === 'br') o += '\n';
-          else if (ch.classList.contains('katex-display')) { const a = ch.querySelector('annotation[encoding="application/x-tex"]'); if (a) o += `$$${a.textContent}$$`; }
-          else if (ch.classList.contains('katex')) { const a = ch.querySelector('annotation[encoding="application/x-tex"]'); if (a) o += `$${a.textContent}$`; }
+          else if (/\bMathJax/.test(ch.className) && tag !== 'script') continue;   // MathJax 화면용 사본 (원문은 script에 있음)
+          else if (/\b(katex|mwe-math)/.test(ch.className) || tag === 'math' || tag === 'script' || ch.dataset.latex || ch.dataset.tex) o += pastedMath(ch) || '';
           else { o += walk(ch); if (BLOCK.has(tag)) o += '\n'; }
         }
       }
@@ -5924,7 +5940,7 @@ const LPE = (() => {
           const items = [...(e.clipboardData?.items || [])];
           if (items.some(i => i.type.startsWith('image/'))) return true;   // 이미지 붙여넣기는 아래 업로드 처리기로
           const html = e.clipboardData?.getData('text/html');
-          if (html && html.includes('katex')) {                          // 블로그 글에서 복사한 수식 → $..$ 원문으로
+          if (html && /katex|<math|mwe-math|math\/tex|data-latex/.test(html)) {   // 다른 곳에서 복사한 수식 → $..$ 원문으로
             e.preventDefault();
             v.dispatch(v.state.replaceSelection(htmlToPlain(html)), { scrollIntoView: true, userEvent: 'input.paste' });
             return true;
@@ -6152,20 +6168,33 @@ function closeModal(id,event){
 // ── MARKDOWN ──────────────────────────────────────────────────────
 // 인라인 토큰: 코드·\이스케이프·수식을 왼쪽부터 찾음 — 글 페이지(pmi)와 편집창(LPE)이 같이 사용
 const ODD_SPACE = /[\u00A0\u2002\u2003\u202F\u3000]/g;
-const MD_TOKEN = /`([^`]+)`|\\([$*`~])|\$\$([\s\S]*?)\$\$|\$((?:[^$\\]|\\.)+?)\$/g;
+// 수식 표기: $x$ $$x$$ $`x`$ \(x\) \[x\] \begin{align}..\end{align} ```math
+const MATH_BEGIN = /\\begin\{(equation|align|alignat|flalign|gather|multline|eqnarray|aligned|gathered|split|cases|array|matrix|[pbBvV]matrix|smallmatrix|CD)\*?\}/;
+const MD_TOKEN = new RegExp(/`([^`]+)`|\\([$*`~])|\$`([^`]+)`\$|\$\$([\s\S]*?)\$\$|\$((?:[^$\\]|\\.)+?)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]|/.source + MATH_BEGIN.source + /[\s\S]*?\\end\{\8\*?\}/.source, 'g');
+const MATH_OPEN = new RegExp('^\\s*(?:\\$\\$|\\\\\\[|```math\\s*$|' + MATH_BEGIN.source + ')');
 function mdTokens(t){
-  return [...t.matchAll(MD_TOKEN)].map(m => ({ a:m.index, b:m.index+m[0].length, code:m[1], lit:m[2], disp:m[3], tex:m[4] }));
+  return [...t.matchAll(MD_TOKEN)].map(m => ({ a:m.index, b:m.index+m[0].length, code:m[1], lit:m[2], disp:m[4] ?? m[7] ?? (m[8] !== undefined ? m[0] : undefined), tex:m[5] ?? m[6] ?? m[3] }));
+}
+// 줄 전체가 수식 하나인지
+function soloMath(raw){
+  const t = raw.trim(), k = mdTokens(t);
+  return k.length === 1 && k[0].disp !== undefined && k[0].a === 0 && k[0].b === t.length;
 }
 // 수식은 data-tex에 담아 두고 renderMath가 그림 (본문의 다른 $ 글자가 수식으로 잘못 잡히지 않게)
 function mathHTML(tex, display){
   return display ? `<div class="math-block" data-tex="${esc(tex)}" data-display="1"></div>` : `<span class="md-math" data-tex="${esc(tex)}"></span>`;
+}
+// KaTeX에 없는 표기는 가까운 것으로 바꾸고, 블록 전용 환경은 항상 블록으로 그림
+function drawMath(el, tex, display){
+  const t = tex.replace(/\\label\{[^{}]*\}/g, '').replace(/\\(begin|end)\{(eqnarray|flalign)(\*?)\}/g, '\\$1{align$3}').replace(/\\(begin|end)\{multline(\*?)\}/g, '\\$1{gather$2}');
+  katex.render(t, el, { displayMode: display || /\\begin\{(equation|align|alignat|gather|CD)\*?\}/.test(t), throwOnError: false, strict: 'ignore' });
 }
 function renderMath(root){
   root.querySelectorAll('[data-tex]').forEach(el => {
     if (el.dataset.done) return;
     const tex = el.dataset.tex, display = el.dataset.display === '1';
     if (!window.katex) { el.textContent = display ? `$$${tex}$$` : `$${tex}$`; return; }
-    try { katex.render(tex, el, { displayMode: display, throwOnError: false }); el.dataset.done = '1'; }
+    try { drawMath(el, tex, display); el.dataset.done = '1'; }
     catch (e) { el.textContent = tex; }
   });
 }
@@ -6175,11 +6204,22 @@ function plainHeading(el){
   c.querySelectorAll('[data-tex]').forEach(n => n.replaceWith(n.dataset.tex));
   return c.textContent.trim();
 }
-// 여러 줄 수식: $$ 만 있는 줄(또는 $$로 시작해 줄 안에서 안 닫힌 줄)부터 다음 $$까지. 닫는 $$ 뒤에 글자가 붙어 있어도 됨
+// 여러 줄 수식: 여는 표기로 시작해 줄 안에서 안 닫힌 줄부터 닫는 표기까지. 닫는 표기 뒤에 글자가 붙어 있어도 됨
 function mathFence(getLine, i, n){
-  const raw = getLine(i), bare = raw.trim() === '$$';
-  if (!bare && !(/^\s*\$\$/.test(raw) && !raw.replace(/^\s*\$\$/, '').includes('$$'))) return null;
-  for (let j = i + 1; j < n; j++) { const at = getLine(j).indexOf('$$'); if (at >= 0) return { end: j, at }; }
+  const raw = getLine(i), m = raw.match(MATH_OPEN);
+  if (!m) return null;
+  const head = m[0].trim(), env = head.startsWith('\\begin');
+  const closer = env ? head.replace('\\begin', '\\end') : head === '\\[' ? '\\]' : head === '$$' ? '$$' : '```';
+  const first = raw.slice(m[0].length);
+  if (first.includes(closer)) return null;
+  const body = [first];
+  for (let j = i + 1; j < n; j++) {
+    const at = getLine(j).indexOf(closer);
+    if (at < 0) { body.push(getLine(j)); continue; }
+    body.push(getLine(j).slice(0, at));
+    const tex = body.join('\n').trim();
+    return { end: j, at, len: closer.length, tex: env ? `${head}\n${tex}\n${closer}` : tex };
+  }
   return null;
 }
 function pmi(t){
@@ -6211,8 +6251,9 @@ function parseMd(md){
   let inCode=false, codeLines=[];
   for(let i=0;i<lines.length;i++){
     const raw=lines[i];
+    const mf=inCode?null:mathFence(k=>lines[k],i,lines.length);
     // Code fence
-    if(/^```/.test(raw)){
+    if(/^```/.test(raw)&&!mf){
       if(!inCode){inCode=true;codeLines=[];}
       else{
         inCode=false;
@@ -6223,13 +6264,10 @@ function parseMd(md){
     }
     if(inCode){codeLines.push(raw);continue;}
     // Math block
-    const mf=mathFence(k=>lines[k],i,lines.length);
     if(mf){
-      const open=lines[i].trim()==='$$'?[]:[lines[i].replace(/^\s*\$\$/,'')];
-      const tex=open.concat(lines.slice(i+1,mf.end),[lines[mf.end].slice(0,mf.at)]).join('\n').trim();
-      parts.push(mathHTML(tex,true));
-      const rest=lines[mf.end].slice(mf.at+2);
-      if(rest.trim()){lines[mf.end]=rest;i=mf.end-1;}else i=mf.end;   // 닫는 $$ 뒤 글자는 다음 줄처럼 이어서 처리
+      parts.push(mathHTML(mf.tex,true));
+      const rest=lines[mf.end].slice(mf.at+mf.len);
+      if(rest.trim()){lines[mf.end]=rest;i=mf.end-1;}else i=mf.end;   // 닫는 표기 뒤 글자는 다음 줄처럼 이어서 처리
       continue;
     }
     // Empty line
