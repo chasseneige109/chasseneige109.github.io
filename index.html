@@ -6499,9 +6499,13 @@ function isOwnerDevice() {
   return localStorage.getItem(OWNER_KEY) === 'true';
 }
 
-// 관리자 로그인 성공 시 소유자 기기로 표시
+// 관리자 로그인 성공 시 소유자 기기로 표시 (이번 방문이 이미 기록됐으면 그 기록도 지움)
 function markAsOwnerDevice() {
   localStorage.setItem(OWNER_KEY, 'true');
+  const visitId = sessionStorage.getItem('_visit_id');
+  if (!visitId) return;
+  sessionStorage.removeItem('_visit_id');
+  supa.from('visitors').delete().eq('id', visitId).then(({ error }) => { if (error) console.warn('[visit] 본인 방문 삭제 실패:', error.message); });
 }
 
 // 방문자 UA 분석
@@ -6602,7 +6606,7 @@ async function recordVisit() {
     loadVisitorCount();
     return;
   }
-  if (isLikelyBot() || !(await waitForHuman(60000))) {
+  if (isLikelyBot() || !(await waitForHuman(60000)) || isOwnerDevice()) {
     _visitIdResolve(null);
     return;
   }
@@ -6642,6 +6646,8 @@ async function recordVisit() {
       }
     } catch(e) {}
 
+    if (isOwnerDevice()) { _visitIdResolve(null); return; }   // 기다리는 사이 비밀번호를 푼 경우
+
     const { data: inserted, error } = await supa.from('visitors').insert([{
       visited_at: now,
       device, os, browser,
@@ -6664,16 +6670,20 @@ async function recordVisit() {
   loadVisitorCount();
 }
 
-// 글 읽기 추적 — openPost 시 호출
+// 글 읽기 추적 — openPost 시 호출. 이번 방문에서 읽은 글을 순서대로 한 줄씩 기록 (같은 글을 연달아 열면 한 번만)
+const _readTitles = [];
 async function updateVisitArticle(title) {
   if (isOwnerDevice()) return;
+  if (_readTitles[_readTitles.length - 1] === title) return;
+  _readTitles.push(String(title).replace(/\s*\n\s*/g, ' '));
   const visitId = await Promise.race([
     _visitIdPromise,
     new Promise(r => setTimeout(() => r(null), 75000))
   ]);
   if (!visitId) { console.warn('[visit] visitId 없음 — insert 실패했거나 소유자 기기'); return; }
   try {
-    const { error } = await supa.from('visitors').update({ article: title }).eq('id', visitId);
+    if (isOwnerDevice()) return;
+    const { error } = await supa.from('visitors').update({ article: _readTitles.join('\n') }).eq('id', visitId);
     if (error) console.warn('[visit] article 업데이트 실패:', error.message, error.code);
   } catch(e) { console.warn('[visit] article 업데이트 예외:', e); }
 }
@@ -6766,8 +6776,9 @@ async function openVisitorLog() {
       }
       const refLine = ref ? `↪ ${ref}` : '↪ Direct';
 
-      const articleHtml = row.article
-        ? `<div class="vlog-article-box"><div class="vlog-article-lbl">Read</div><div class="vlog-article-ttl" title="${esc(row.article)}">${esc(row.article.length > 40 ? row.article.slice(0,40)+'…' : row.article)}</div></div>`
+      const reads = row.article ? row.article.split('\n') : [];
+      const articleHtml = reads.length
+        ? `<div class="vlog-article-box"><div class="vlog-article-lbl">Read${reads.length > 1 ? ' · ' + reads.length : ''}</div>${reads.map(t => `<div class="vlog-article-ttl" title="${esc(t)}">${esc(t.length > 40 ? t.slice(0,40)+'…' : t)}</div>`).join('')}</div>`
         : `<div class="vlog-no-article">No post read</div>`;
 
       return `<div class="vlog-card">
