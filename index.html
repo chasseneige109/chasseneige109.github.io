@@ -15,7 +15,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/mhchem.min.js"></script>
 <script defer src="assets/cm6.js?v=20261107"></script>
-<script defer src="assets/robot.js?v=20261107e"></script>
+<script defer src="assets/robot.js?v=20261107f"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -2113,7 +2113,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </span>
   <div class="nav-tabs">
     <button class="nav-tab" id="tab-landing" onclick="showSection('landing')">Home</button>
-    <button class="nav-tab" id="tab-home"  onclick="showSection('home')">Me</button>
+    <button class="nav-tab" id="tab-home"  onclick="showSection('home')">CV</button>
     <button class="nav-tab" id="tab-projects" onclick="showSection('projects')">Projects</button>
     <button class="nav-tab" id="tab-posts" onclick="showSection('posts')">Posts</button>
     <button class="nav-tab" id="tab-paper" onclick="showSection('paper')">Paper Review</button>
@@ -2140,7 +2140,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
 <div class="mbn-wrap" id="mbn-wrap">
   <div class="mbn-inner">
     <button class="mbn-btn on" id="mbn-landing" onclick="showSection('landing')"><span class="mbn-ic">🏠</span><span class="mbn-lb">Home</span></button>
-    <button class="mbn-btn"   id="mbn-home"    onclick="showSection('home')"><span class="mbn-ic">👤</span><span class="mbn-lb">Me</span></button>
+    <button class="mbn-btn"   id="mbn-home"    onclick="showSection('home')"><span class="mbn-ic">👤</span><span class="mbn-lb">CV</span></button>
     <button class="mbn-btn"   id="mbn-projects" onclick="showSection('projects')"><span class="mbn-ic">🧩</span><span class="mbn-lb">Projects</span></button>
     <button class="mbn-btn"   id="mbn-posts"   onclick="showSection('posts')"><span class="mbn-ic">✍️</span><span class="mbn-lb">Posts</span></button>
     <button class="mbn-btn"   id="mbn-paper"   onclick="showSection('paper')"><span class="mbn-ic">📄</span><span class="mbn-lb">Papers</span></button>
@@ -2170,7 +2170,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
           <circle class="hero-logo-ball" cx="105" cy="105" r="17"></circle>
         </svg>
       </div>
-      <h1 class="landing-title" id="landing-title-text" data-edit-key="heroTitle"></h1>
+      <h1 class="landing-title" id="landing-title-text" data-edit-key="heroTitle" data-placeholder="Add a title…"></h1>
       <p class="landing-desc" id="landing-hero-desc" data-edit-key="heroDesc" data-placeholder="Add a tagline…"></p>
       <div class="lau-links hero-social" id="landing-author-links"></div>
       <div class="landing-btns">
@@ -3403,14 +3403,13 @@ function renderLanding() {
   // Hero title & desc from profile (bilingual)
   const titleEl = document.getElementById('landing-title-text');
   if (titleEl) {
-    const koTitle = profile.landingTitle || 'Thoughts, recorded.|Knowledge, shared.';
-    // 영어 타이틀이 비어 있으면 기존(한국어 칸) 타이틀을 그대로 사용
-    const enTitle = profile.landingTitleEn || profile.landingTitle || 'Thoughts, recorded.|Knowledge, shared.';
-    const raw = currentLang === 'en' ? enTitle : koTitle;
-    const parts = raw.split('|');
+    // 비워 두면 다른 칸(예전 제목·블로그 이름)으로 채우지 않고 비워 둠 — 채우면 편집할 때 그 글자가 섞여 저장됨
+    const raw = profile.landingTitleEn || '';
+    const parts = raw ? raw.split('|') : [];
     titleEl.innerHTML = parts.map((p,i) =>
       i === parts.length-1 ? `<span>${esc(p)}</span>` : esc(p) + '<br>'
     ).join('');
+    titleEl.style.display = (raw || isAdmin) ? '' : 'none';
   }
   const descEl = document.getElementById('landing-hero-desc');
   if (descEl) {
@@ -3924,7 +3923,7 @@ function applyHomeTexts() {
 }
 function rawEditValue(el) {
   const k = el.dataset.editKey;
-  if (k === 'heroTitle') return (profile.landingTitleEn || profile.landingTitle || '').replace(/\|/g, '\n');
+  if (k === 'heroTitle') return (profile.landingTitleEn || '').replace(/\|/g, '\n');
   if (k === 'heroDesc') return profile.landingDescEn || profile.landingDesc || '';
   if (k === 'profileName') return profile.name || '';
   if (k === 'profileHandle') return '@' + (profile.handle || '');

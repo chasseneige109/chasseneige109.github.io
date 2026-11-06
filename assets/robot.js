@@ -809,7 +809,7 @@
       }
     }
 
-    let camAz = 0.5, camEl = 0.8, camDist = 12, down = null;
+    let camAz = 0.5, camEl = 0.8, camDist = 10.5, down = null;
     const camTarget = new T.Vector3(0.3, 0, 0.4);
     canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: camAz, el: camEl, moved: false }; stage.focus({ preventScroll: true }); });
     window.addEventListener('pointermove', e => {
