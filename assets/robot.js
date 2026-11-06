@@ -196,8 +196,8 @@
       else if (d.kind === 'ball') { geo = new T.SphereGeometry(0.05, 24, 16); h = 0.1; w = 0.05; }
       else if (d.kind === 'mug') { geo = new T.CylinderGeometry(0.038, 0.034, 0.085, 24); h = 0.085; w = 0.04; }
       else if (d.kind === 'apple') { geo = new T.SphereGeometry(0.045, 24, 16); h = 0.09; w = 0.045; }
-      else if (d.kind === 'donut') { geo = new T.TorusGeometry(0.045, 0.022, 14, 28); geo.rotateX(Math.PI / 2); h = 0.044; w = 0.045; }
-      else { geo = new T.ConeGeometry(0.05, 0.1, 24); h = 0.1; w = 0.04; }
+      else if (d.kind === 'donut') { geo = new T.TorusGeometry(0.033, 0.016, 14, 28); geo.rotateX(Math.PI / 2); h = 0.032; w = 0.049; }
+      else { geo = new T.ConeGeometry(0.05, 0.1, 24); h = 0.1; w = 0.05; }
       const m = mesh(geo, std(d.color, { roughness: 0.4 }), scene);
       if (d.kind === 'mug') { const hd = mesh(new T.TorusGeometry(0.022, 0.007, 8, 16), std(d.color, { roughness: 0.4 }), m, 0.04, 0, 0); hd.rotation.y = Math.PI / 2; mesh(new T.CircleGeometry(0.032, 20), std(0x6b4a33), m, 0, 0.038, 0).rotation.x = -Math.PI / 2; }
       if (d.kind === 'apple') { mesh(new T.CylinderGeometry(0.004, 0.004, 0.025, 6), std(0x6b4a33), m, 0, 0.048, 0); mesh(new T.SphereGeometry(0.014, 8, 6), std(0x6fae78), m, 0.012, 0.05, 0).scale.set(1.4, 0.4, 0.8); }
@@ -720,10 +720,10 @@
         }
         R.handManual = true; R.qGoal.copy(qTop()); R.look = p;
         t.st += dt;
-        if (t.s === 1) { R.crouchGoal = t.c; R.gripGoal.copy(t.above); R.fingersGoal = 0.04; if ((handReached(0.02) && Math.abs(R.crouch - t.c) < 0.01) || t.st > 4) { t.s = 2; t.st = 0; } }
+        if (t.s === 1) { R.crouchGoal = t.c; R.gripGoal.copy(t.above); R.fingersGoal = toy.w + 0.03; if ((handReached(0.02) && Math.abs(R.crouch - t.c) < 0.01) || t.st > 4) { t.s = 2; t.st = 0; } }
         else if (t.s === 2) { R.gripGoal.copy(t.grip); if (handReached(0.008) || t.st > 3) { t.s = 3; t.st = 0; } }
         else if (t.s === 3) {
-          R.fingersGoal = toy.w + 0.006;
+          R.fingersGoal = toy.w + 0.007;
           if (t.st > 0.2) {
             if (gripPos().distanceTo(p) > 0.09) { speak("Hmm, I can't reach that one."); R.fingersGoal = 0.035; tasks.shift(); R.look = null; return; }
             armR.wrist.attach(toy.mesh); toy.held = true; toy.inBin = false; R.held = toy;
@@ -753,7 +753,7 @@
         if (t.s === 1) { R.crouchGoal = t.c; R.gripGoal.copy(t.above); if ((handReached(0.02) && Math.abs(R.crouch - t.c) < 0.01) || t.st > 4) { t.s = 2; t.st = 0; } }
         else if (t.s === 2) { R.gripGoal.copy(t.grip); if (handReached(0.008) || t.st > 3) { t.s = 3; t.st = 0; } }
         else if (t.s === 3) {
-          R.fingersGoal = 0.04;
+          R.fingersGoal = toy.w + 0.03;
           if (t.st > 0.15) {
             scene.attach(toy.mesh); toy.held = false; R.held = null; toy.vy = 0;
             const pos = toy.mesh.position;
