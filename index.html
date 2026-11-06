@@ -221,6 +221,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--s800);line-height:
 .ep-bq{border-left:3px solid #dddddd;padding-left:.8em;color:var(--s600);font-style:italic}
 .ep-li{padding-left:1.4em}.ep-li[data-d="1"]{padding-left:2.8em}.ep-li[data-d="2"]{padding-left:4.2em}
 .ep-code{font-family:var(--mono);font-size:.95em;background:var(--s100);padding:1px 4px;border-radius:3px}
+.ep-table-wrap{display:block;overflow-x:auto;margin:.9em 0 1.1em}
+.ep-table{border-collapse:collapse;min-width:60%;font-size:.95em;line-height:1.55}
+.ep-table th,.ep-table td{padding:9px 16px;border-bottom:1px solid rgba(0,0,0,.12);text-align:left;vertical-align:top}
+.ep-table th{font-weight:600;border-bottom:1.5px solid #000;white-space:nowrap}
+.ep-table tbody tr:last-child td{border-bottom:none}
+.ep-table td .md-math,.ep-table th .md-math{white-space:nowrap}
 .ep-pre{display:block;background:var(--s900);border-radius:12px;padding:20px 24px;overflow-x:auto;margin:4px 0}
 .ep-pre code{background:none;color:#cbd5e1;font-size:.85rem;padding:0;font-family:var(--mono);line-height:1.7}
 .ep-code-fence{font-family:var(--mono);font-size:.82rem;color:#9a9a9a}
@@ -2000,6 +2006,7 @@ body:has(#page-article.active) .right-panel{display:none !important}
 #lp-editor .cm-line.cm-math-src-line{font-family:var(--mono);font-size:.9rem;line-height:1.7;color:#444;background:#f2f2f2;padding:0 22px}
 #lp-editor .cm-line.cm-code-src{font-family:var(--mono);font-size:.85rem;line-height:1.7;color:#cbd5e1;background:var(--s900);padding:0 24px;caret-color:#fff}
 #lp-editor .cm-line.cm-code-fence{color:#8a8a8a}
+#lp-editor .cm-line.cm-table-src-line{font-family:var(--mono);font-size:.85rem;line-height:1.75;color:#444;background:#f6f6f5;padding:0 14px}
 #lp-editor .cm-line.cm-src-line{font-family:var(--mono);font-size:.85rem;color:#777}
 #lp-editor .cm-rendered-block,#lp-editor .cm-rendered-flow{display:flow-root;cursor:text}
 #lp-editor .cm-rendered img{cursor:text}
@@ -5829,6 +5836,16 @@ const LPE = (() => {
         } else block(line.from, line.to, parseMd(raw));
         prevKind = 'blk'; continue;
       }
+      // 표
+      const tb = tableAt(k => doc.line(k + 1).text, i - 1, doc.lines);
+      if (tb) {
+        const end = doc.line(tb.end + 1), html = tableHTML(tb);
+        if (touched(line.from, end.to)) {
+          for (let k = i; k <= end.number; k++) lineDeco(doc.line(k), 'cm-table-src-line');
+          out.push(V.Decoration.widget({ widget: new W.HtmlWidget(html, true), block: true, side: 1 }).range(end.to));
+        } else block(line.from, end.to, html);
+        i = end.number; prevKind = 'blk'; continue;
+      }
       // 빈 줄
       if (!raw.trim()) { lineDeco(line, 'ep-line', lineStyle('text', prevKind, isFirst)); prevKind = 'text'; continue; }
       // 구분선, 이미지/영상/PDF 줄 → 실제 글과 같은 블록
@@ -6247,10 +6264,47 @@ function closeModal(id,event){
 const ODD_SPACE = /[\u00A0\u2002\u2003\u202F\u3000]/g;
 // 수식 표기: $x$ $$x$$ $`x`$ \(x\) \[x\] \begin{align}..\end{align} ```math
 const MATH_BEGIN = /\\begin\{(equation|align|alignat|flalign|gather|multline|eqnarray|aligned|gathered|split|cases|array|matrix|[pbBvV]matrix|smallmatrix|CD)\*?\}/;
-const MD_TOKEN = new RegExp(/`([^`]+)`|\\([$*`~])|\$`([^`]+)`\$|\$\$([\s\S]*?)\$\$|\$((?:[^$\\]|\\.)+?)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]|/.source + MATH_BEGIN.source + /[\s\S]*?\\end\{\8\*?\}/.source, 'g');
+const MD_TOKEN = new RegExp(/`([^`]+)`|\\([$*`~])|\$`([^`]+)`\$|\$\$([\s\S]*?)\$\$|\$((?:[^$\\]|\\.)+?)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]|/.source + MATH_BEGIN.source + /[\s\S]*?\\end\{\8\*?\}|\\\\\(([\s\S]+?)\\\\\)|\\\\\[([\s\S]+?)\\\\\]/.source, 'g');
 const MATH_OPEN = new RegExp('^\\s*(?:\\$\\$|\\\\\\[|```math\\s*$|' + MATH_BEGIN.source + ')');
 function mdTokens(t){
-  return [...t.matchAll(MD_TOKEN)].map(m => ({ a:m.index, b:m.index+m[0].length, code:m[1], lit:m[2], disp:m[4] ?? m[7] ?? (m[8] !== undefined ? m[0] : undefined), tex:m[5] ?? m[6] ?? m[3] }));
+  return [...t.matchAll(MD_TOKEN)].map(m => ({ a:m.index, b:m.index+m[0].length, code:m[1], lit:m[2], disp:m[4] ?? m[7] ?? (m[8] !== undefined ? m[0] : m[10]), tex:m[5] ?? m[6] ?? m[3] ?? m[9] }));
+}
+// 표: 헤더 줄 + |---|:---:| 구분선 + 본문 줄 (GFM). 칸은 | 로 나누되 `코드`·$수식$·\| 안의 | 는 나누지 않음
+const TABLE_DELIM = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+function tableCells(line){
+  let t = line.trim();
+  if (t.startsWith('|')) t = t.slice(1);
+  if (t.endsWith('|') && !t.endsWith('\\|')) t = t.slice(0, -1);
+  const out = []; let cur = '', code = false, math = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (c === '\\' && t[i + 1] === '|') { cur += '|'; i++; continue; }
+    if (c === '\\' && i + 1 < t.length) { cur += c + t[i + 1]; i++; continue; }
+    if (c === '`' && !math) code = !code;
+    else if (c === '$' && !code) math = !math;
+    if (c === '|' && !code && !math) { out.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+}
+function tableAt(getLine, i, n){
+  if (i + 1 >= n) return null;
+  const head = getLine(i), delim = getLine(i + 1);
+  if (!head.includes('|') || !TABLE_DELIM.test(delim) || !delim.includes('-')) return null;
+  const cols = tableCells(head);
+  const aligns = tableCells(delim).map(d => /^:-+:$/.test(d) ? 'center' : /-:$/.test(d) ? 'right' : /^:-/.test(d) ? 'left' : '');
+  if (cols.length < 2 && !/^\s*\|/.test(head)) return null;
+  let end = i + 1;
+  while (end + 1 < n && getLine(end + 1).includes('|') && getLine(end + 1).trim()) end++;
+  const rows = [];
+  for (let k = i + 2; k <= end; k++) rows.push(tableCells(getLine(k)));
+  return { end, cols, aligns, rows };
+}
+function tableHTML(tb){
+  const cell = (tag, v, j) => `<${tag}${tb.aligns[j] ? ` style="text-align:${tb.aligns[j]}"` : ''}>${pmi(v || '')}</${tag}>`;
+  return `<div class="ep-table-wrap"><table class="ep-table"><thead><tr>${tb.cols.map((v, j) => cell('th', v, j)).join('')}</tr></thead>`
+    + `<tbody>${tb.rows.map(r => `<tr>${tb.cols.map((_, j) => cell('td', r[j], j)).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 // 줄 전체가 수식 하나인지
 function soloMath(raw){
@@ -6347,6 +6401,9 @@ function parseMd(md){
       if(rest.trim()){lines[mf.end]=rest;i=mf.end-1;}else i=mf.end;   // 닫는 표기 뒤 글자는 다음 줄처럼 이어서 처리
       continue;
     }
+    // Table
+    const tb=tableAt(k=>lines[k],i,lines.length);
+    if(tb){parts.push(tableHTML(tb));i=tb.end;continue;}
     // Empty line
     if(!raw.trim()){parts.push('<span class="ep-line ep-blank">\u200B</span>');continue;}
     // HR
