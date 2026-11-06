@@ -443,6 +443,23 @@
       const st = standFor(BIN.x, BIN.z, Math.PI, 0.3);
       return [{ k: 'go', x: st.x, z: st.z }, { k: 'turn', yaw: Math.PI }, { k: 'place', bin: true }];
     }
+    // 가구 앞 가장자리에서 (px, pz)에 가장 가까운 놓을 자리와, 그 앞에 서는 위치
+    function surfaceSpot(sf, px, pz) {
+      const yaw = Math.atan2(-sf.nx, -sf.nz);
+      const x = sf.nx ? sf.x + sf.nx * (sf.hw - 0.09) : clamp(px, sf.x - sf.hw + 0.1, sf.x + sf.hw - 0.1);
+      const z = sf.nz ? sf.z + sf.nz * (sf.hd - 0.09) : clamp(pz, sf.z - sf.hd + 0.1, sf.z + sf.hd - 0.1);
+      const st = standFor(x, z, yaw);
+      return [{ k: 'go', x: st.x, z: st.z }, { k: 'turn', yaw }, { k: 'place' }];
+    }
+    // 내려놓기: 책상·협탁 바로 옆이면 그 위에, 아니면 앞 바닥에
+    function planPlace() {
+      let best = null, bd = 0.55;
+      for (const sf of Object.values(SURF)) {
+        const d = Math.hypot(Math.max(Math.abs(R.x - sf.x) - sf.hw, 0), Math.max(Math.abs(R.z - sf.z) - sf.hd, 0));
+        if (d < bd) { bd = d; best = sf; }
+      }
+      return best ? surfaceSpot(best, R.x, R.z) : [{ k: 'place' }];
+    }
     function cancel() { tasks.length = 0; resetPolicy(); }
     function command(list, text) { cancel(); tasks.push(...list); if (text) speak(text); }
 
@@ -716,9 +733,10 @@
         return;
       }
       if (t.k === 'place') {
-        const toy = R.held;
+        const toy = t.toy || R.held;   // 놓은 뒤에도 마지막 단계(일어서기)까지 이어지게 시작할 때 기억
         if (!toy) { tasks.shift(); return; }
         if (!t.s) {
+          t.toy = toy;
           if (t.bin) {
             t.grip = new T.Vector3(BIN.x, BIN.h + toy.h * 0.55 + 0.04, BIN.z);
           } else {
@@ -783,7 +801,7 @@
       if (tasks.length && ['pick', 'place'].includes(tasks[0].k)) return;
       if (R.held) {
         if (Math.hypot(R.x - BIN.x, R.z - BIN.z) < 0.9) command(planBin(), 'Into the basket.');
-        else command([{ k: 'place' }]);
+        else command(planPlace());
       } else {
         const n = nearestToy();
         if (!n) return speak('Nothing left on the floor.');
@@ -826,7 +844,7 @@
       const p = hits[0].point, b = inBounds(p);
       if (o === furniture && R.held) {   // 들고 있을 때 가구 윗면을 누르면 거기에 올려 둠
         const sf = surfaceAt(p.x, p.z);
-        if (sf) { const yaw = Math.atan2(-sf.nx, -sf.nz), st = standFor(clamp(p.x, sf.x - sf.hw + 0.08, sf.x + sf.hw - 0.08) * Math.abs(sf.nz) + (sf.x + sf.nx * (sf.hw - 0.09)) * Math.abs(sf.nx), clamp(p.z, sf.z - sf.hd + 0.08, sf.z + sf.hd - 0.08) * Math.abs(sf.nx) + (sf.z + sf.nz * (sf.hd - 0.09)) * Math.abs(sf.nz), yaw); return command([{ k: 'go', x: st.x, z: st.z }, { k: 'turn', yaw }, { k: 'place' }]); }
+        if (sf) return command(surfaceSpot(sf, p.x, p.z));
       }
       command([{ k: 'go', x: b.x, z: b.z }], '');
     }
@@ -834,7 +852,7 @@
       const a = btn.dataset.rb;
       stage.focus({ preventScroll: true });
       if (a === 'pick') { if (R.held) return speak('Already holding something.'); const n = nearestToy(); return n ? command(planPick(n), 'Going for the closest one.') : speak('Nothing left on the floor.'); }
-      if (a === 'drop') { if (!R.held) return speak('My hand is empty.'); return command([{ k: 'place' }]); }
+      if (a === 'drop') { if (!R.held) return speak('My hand is empty.'); return command(planPlace()); }
       if (a === 'tidy') return command([{ k: 'tidy' }], "Let's tidy up!");
       if (a === 'reset') { cancel(); R.held = null; resetToys(); Object.assign(R, { x: -0.6, z: 1.0, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
     }));
@@ -982,6 +1000,6 @@
     requestAnimationFrame(loop);
     stage.classList.add('ready');
     // 테스트·디버그용
-    window.RobotLab = { findPath, OBST, SURF, surfaceAt, POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
+    window.RobotLab = { planPlace, findPath, OBST, SURF, surfaceAt, POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
   }
 })();
