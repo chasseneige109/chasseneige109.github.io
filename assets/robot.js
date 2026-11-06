@@ -101,7 +101,7 @@
       rr(0, '#2b2b2b'); rr(14, '#e9e9e7'); rr(22, '#2b2b2b'); rr(26, '#e4e4e2');
     });
     const rug = new T.Mesh(new T.PlaneGeometry(2.1, 1.48), new T.MeshStandardMaterial({ map: rugTex, transparent: true, roughness: 1 }));
-    rug.rotation.x = -Math.PI / 2; rug.position.set(-0.55, 0.004, 0.55); rug.receiveShadow = true; scene.add(rug);
+    rug.rotation.x = -Math.PI / 2; rug.position.set(-1.2, 0.004, 1.15); rug.receiveShadow = true; scene.add(rug);
     // 책장 (왼쪽 벽)
     const shelf = new T.Group(); shelf.position.set(-FX + 0.19, 0, -0.75); scene.add(shelf);
     const shelfMat = std(0xfafafa, { roughness: 0.6 });
@@ -140,17 +140,17 @@
     const furniture = new T.Group(); scene.add(furniture);
     const walnut = std(0x2b2b2b, { roughness: 0.5 }), maple = std(0xfafafa, { roughness: 0.55 });
     // 책상
-    const DESK = { x: 0.7, z: -FZ + 0.27, hw: 0.55, hd: 0.25, h: 0.34, nx: 0, nz: 1 };
+    const DESK = { x: 0.3, z: -0.35, hw: 0.75, hd: 0.36, h: 0.36, nx: 0, nz: 1 };
     const desk = new T.Group(); desk.position.set(DESK.x, 0, DESK.z); furniture.add(desk);
     mesh(new T.BoxGeometry(DESK.hw * 2, 0.035, DESK.hd * 2), maple, desk, 0, DESK.h - 0.0175, 0);
     for (const [lx, lz] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) mesh(new T.CylinderGeometry(0.018, 0.014, DESK.h - 0.035, 12), walnut, desk, lx * (DESK.hw - 0.05), (DESK.h - 0.035) / 2, lz * (DESK.hd - 0.05));
-    mesh(new T.BoxGeometry(0.34, 0.08, DESK.hd * 2 - 0.06), maple, desk, DESK.hw - 0.22, DESK.h - 0.075, 0);
-    mesh(new T.BoxGeometry(0.06, 0.012, 0.012), walnut, desk, DESK.hw - 0.22, DESK.h - 0.075, DESK.hd - 0.03);
-    const lamp = new T.Group(); lamp.position.set(-0.42, DESK.h, -0.12); desk.add(lamp);
+    mesh(new T.BoxGeometry(0.4, 0.08, DESK.hd * 2 - 0.06), maple, desk, DESK.hw - 0.26, DESK.h - 0.075, 0);
+    mesh(new T.BoxGeometry(0.07, 0.012, 0.012), walnut, desk, DESK.hw - 0.26, DESK.h - 0.075, DESK.hd - 0.03);
+    const lamp = new T.Group(); lamp.position.set(-0.58, DESK.h, -0.2); desk.add(lamp);
     mesh(new T.CylinderGeometry(0.05, 0.055, 0.015, 20), std(0x2d2f33), lamp, 0, 0.008, 0);
     const lampArm = mesh(new T.CylinderGeometry(0.008, 0.008, 0.24, 8), std(0x2d2f33), lamp, 0.03, 0.12, 0); lampArm.rotation.z = -0.25;
     const shade = mesh(new T.ConeGeometry(0.06, 0.07, 20, 1, true), std(0xf3e2c3, { side: T.DoubleSide, emissive: 0x6b5328 }), lamp, 0.08, 0.24, 0); shade.rotation.z = 0.5;
-    [[0x222222, 0.05], [0xd9d9d9, 0.04], [0x8a8a8a, 0.045]].forEach(([c, t], k) => mesh(new T.BoxGeometry(0.2, t, 0.14), std(c, { roughness: 0.8 }), desk, 0.36, DESK.h + 0.02 + k * 0.045, -0.12).rotation.y = k * 0.15);
+    [[0x222222, 0.05], [0xd9d9d9, 0.04], [0x8a8a8a, 0.045]].forEach(([c, t], k) => mesh(new T.BoxGeometry(0.2, t, 0.14), std(c, { roughness: 0.8 }), desk, 0.5, DESK.h + 0.02 + k * 0.045, -0.2).rotation.y = k * 0.15);
     SURF.desk = DESK; OBST.push(DESK);
     // 소파 (오른쪽, 방 안쪽을 봄)
     const SOFA = { x: 2.62, z: 0.82, hw: 0.32, hd: 0.72 };
@@ -322,7 +322,7 @@
     const gripPos = () => armR.wrist.localToWorld(new T.Vector3(0, -GRIP, 0));
 
     // ── 상태 ──
-    const R = { x: -0.3, z: 0.2, yaw: 0.6, v: 0, w: 0, phase: 0, amp: 0, crouch: 0, crouchGoal: 0, lean: 0,
+    const R = { x: -0.6, z: 1.0, yaw: 0.6, v: 0, w: 0, phase: 0, amp: 0, crouch: 0, crouchGoal: 0, lean: 0,
       grip: new T.Vector3(), gripGoal: new T.Vector3(), q: new T.Quaternion(), qGoal: new T.Quaternion(), handManual: false,
       fingers: 0.035, fingersGoal: 0.035, held: null, look: null, blink: 0 };
     const tasks = [];
@@ -679,7 +679,7 @@
       R.v = 0; R.w = 0;
       if (t.k === 'pick') {
         const toy = t.toy, p = toy.mesh.position;
-        if (R.held || toy.held) { tasks.shift(); return; }
+        if (!t.s && (R.held || toy.held)) { tasks.shift(); return; }
         if (!t.s) {
           const gy = toy.inBin ? p.y + toy.h * 0.1 : p.y - toy.h / 2 + Math.max(toy.h * 0.55, 0.04);
           t.grip = new T.Vector3(p.x, gy, p.z);
@@ -822,7 +822,7 @@
       if (a === 'pick') { if (R.held) return speak('Already holding something.'); const n = nearestToy(); return n ? command(planPick(n), 'Going for the closest one.') : speak('Nothing left on the floor.'); }
       if (a === 'drop') { if (!R.held) return speak('My hand is empty.'); return command([{ k: 'place' }]); }
       if (a === 'tidy') return command([{ k: 'tidy' }], "Let's tidy up!");
-      if (a === 'reset') { cancel(); R.held = null; resetToys(); Object.assign(R, { x: -0.3, z: 0.2, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
+      if (a === 'reset') { cancel(); R.held = null; resetToys(); Object.assign(R, { x: -0.6, z: 1.0, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
     }));
 
     // ── 매 프레임 ──
