@@ -43,52 +43,105 @@
       m.castShadow = true; m.receiveShadow = true; if (parent) parent.add(m); return m;
     };
 
-    // ── 장면 ──
+    // ── 장면: 햇살 드는 원목 마루 방 ──
     const scene = new T.Scene();
     const cam = new T.PerspectiveCamera(32, 1.6, 0.1, 60);
-    scene.add(new T.HemisphereLight(0xffffff, 0xd9dde6, 0.75));
-    const sun = new T.DirectionalLight(0xffffff, 0.75);
-    sun.position.set(3.5, 6, 3); sun.castShadow = true;
+    scene.add(new T.HemisphereLight(0xfff6ea, 0xb9a891, 0.55));
+    const sun = new T.DirectionalLight(0xffeed6, 0.75);
+    sun.position.set(3, 7, 3.5); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.radius = 4;
     Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 });
     sun.shadow.bias = -0.0005;
     scene.add(sun);
 
+    const canvasTex = (w, h, draw) => {
+      const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+      const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.anisotropy = 8; return t;
+    };
+    // 마루: 엇갈린 널판 + 결
+    const woodTex = canvasTex(1024, 768, (x, w, h) => {
+      const rows = 12, rh = h / rows;
+      let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let r = 0; r < rows; r++) {
+        let px = -rnd() * 260;
+        while (px < w) {
+          const len = 220 + rnd() * 200, l = 66 + rnd() * 7;
+          x.fillStyle = `hsl(${28 + rnd() * 6},${30 + rnd() * 8}%,${l}%)`;
+          x.fillRect(px, r * rh, len, rh);
+          x.strokeStyle = 'rgba(150,110,70,.10)'; x.lineWidth = 1;
+          for (let g = 0; g < 4; g++) { const gy = r * rh + 6 + rnd() * (rh - 12); x.beginPath(); x.moveTo(px + 8, gy); x.bezierCurveTo(px + len * .3, gy + 3, px + len * .6, gy - 3, px + len - 8, gy + 1); x.stroke(); }
+          x.fillStyle = 'rgba(120,85,50,.22)'; x.fillRect(px, r * rh, 2, rh);
+          px += len;
+        }
+        x.fillStyle = 'rgba(120,85,50,.25)'; x.fillRect(0, r * rh, w, 2);
+      }
+    });
     const FX = 3, FZ = 2.2;   // 바닥 반폭
-    const floor = mesh(new T.BoxGeometry(FX * 2, 0.08, FZ * 2), std(0xf2efe9, { roughness: 0.9 }), scene, 0, -0.04, 0);
+    const oak = std(0xb48c62, { roughness: 0.8 });
+    const floor = mesh(new T.BoxGeometry(FX * 2, 0.14, FZ * 2), [oak, oak, new T.MeshStandardMaterial({ map: woodTex, roughness: 0.7 }), oak, oak, oak], scene, 0, -0.07, 0);
     floor.castShadow = false;
-    // 바닥 줄눈
-    const grid = new T.GridHelper(4.4, 11, 0xe3dfd6, 0xe3dfd6);
-    grid.scale.set(FX * 2 / 4.4, 1, 1); grid.position.y = 0.002; scene.add(grid);
-    const rug = mesh(new T.CylinderGeometry(0.9, 0.9, 0.01, 48), std(0xdfe6f2, { roughness: 1 }), scene, -0.9, 0.005, 0.35);
-    rug.castShadow = false;
-    const wallMat = std(0xebe8e1, { roughness: 0.95 });
-    mesh(new T.BoxGeometry(FX * 2, 0.9, 0.08), wallMat, scene, 0, 0.45, -FZ - 0.04).castShadow = false;
-    mesh(new T.BoxGeometry(0.08, 0.9, FZ * 2 + 0.08), wallMat, scene, -FX - 0.04, 0.45, -0.04).castShadow = false;
-    // 벽의 작은 액자와 화분 (분위기용)
-    mesh(new T.BoxGeometry(0.7, 0.42, 0.02), std(0x2a2d34), scene, -1.4, 0.55, -FZ + 0.01);
-    mesh(new T.BoxGeometry(0.62, 0.34, 0.01), std(0xbfd4ea), scene, -1.4, 0.55, -FZ + 0.025);
-    const pot = mesh(new T.CylinderGeometry(0.12, 0.09, 0.2, 24), std(0xc96f4a), scene, -2.65, 0.1, -1.85);
-    mesh(new T.SphereGeometry(0.2, 20, 14), std(0x5aa469), pot, 0, 0.24, 0).scale.set(1, 1.25, 1);
+    // 벽 + 걸레받이
+    const wallMat = std(0xefe6d8, { roughness: 0.95 }), trim = std(0xfffcf7, { roughness: 0.6 });
+    const WH = 1.25;
+    mesh(new T.BoxGeometry(FX * 2 + 0.1, WH, 0.1), wallMat, scene, -0.05, WH / 2 - 0.14, -FZ - 0.05).castShadow = false;
+    mesh(new T.BoxGeometry(0.1, WH, FZ * 2), wallMat, scene, -FX - 0.05, WH / 2 - 0.14, 0).castShadow = false;
+    mesh(new T.BoxGeometry(FX * 2, 0.07, 0.02), trim, scene, 0, 0.035, -FZ + 0.01);
+    mesh(new T.BoxGeometry(0.02, 0.07, FZ * 2), trim, scene, -FX + 0.01, 0.035, 0);
+    // 창문
+    const win = new T.Group(); win.position.set(0.7, 0.62, -FZ + 0.01); scene.add(win);
+    mesh(new T.BoxGeometry(1.06, 0.72, 0.03), trim, win);
+    mesh(new T.PlaneGeometry(0.96, 0.62), new T.MeshBasicMaterial({ color: 0xcfe5f5 }), win, 0, 0, 0.017).castShadow = false;
+    mesh(new T.BoxGeometry(0.025, 0.62, 0.02), trim, win, 0, 0, 0.025);
+    mesh(new T.BoxGeometry(0.96, 0.025, 0.02), trim, win, 0, 0, 0.025);
+    mesh(new T.BoxGeometry(1.16, 0.035, 0.08), trim, win, 0, -0.37, 0.04);
+    // 러그
+    const rugTex = canvasTex(512, 360, (x, w, h) => {
+      const rr = (p, c) => { x.fillStyle = c; x.beginPath(); x.roundRect ? x.roundRect(p, p, w - 2 * p, h - 2 * p, 60 - p / 2) : x.rect(p, p, w - 2 * p, h - 2 * p); x.fill(); };
+      rr(0, '#b9c4cf'); rr(22, '#d6dde3'); rr(34, '#b9c4cf'); rr(40, '#cdd6de');
+    });
+    const rug = new T.Mesh(new T.PlaneGeometry(2.1, 1.48), new T.MeshStandardMaterial({ map: rugTex, transparent: true, roughness: 1 }));
+    rug.rotation.x = -Math.PI / 2; rug.position.set(-0.55, 0.004, 0.55); rug.receiveShadow = true; scene.add(rug);
+    // 책장 (왼쪽 벽)
+    const shelf = new T.Group(); shelf.position.set(-FX + 0.19, 0, -0.75); scene.add(shelf);
+    const shelfMat = std(0xe2c9a6, { roughness: 0.7 });
+    mesh(new T.BoxGeometry(0.34, 0.03, 1.1), shelfMat, shelf, 0, 0.56, 0);
+    mesh(new T.BoxGeometry(0.34, 0.03, 1.1), shelfMat, shelf, 0, 0.29, 0);
+    mesh(new T.BoxGeometry(0.34, 0.03, 1.1), shelfMat, shelf, 0, 0.03, 0);
+    mesh(new T.BoxGeometry(0.34, 0.58, 0.03), shelfMat, shelf, 0, 0.29, 0.54);
+    mesh(new T.BoxGeometry(0.34, 0.58, 0.03), shelfMat, shelf, 0, 0.29, -0.54);
+    const BOOKS = [0x8fb8de, 0xf2c6a0, 0xb7d3b0, 0xe8a5a5, 0xd9c8e8, 0xf4dd9a, 0x9fc9c1];
+    let bz = -0.48;
+    for (let i = 0; i < 9; i++) { const bh = 0.15 + ((i * 37) % 7) / 70, bw = 0.035 + ((i * 13) % 3) / 100; mesh(new T.BoxGeometry(0.22, bh, bw), std(BOOKS[i % BOOKS.length], { roughness: 0.8 }), shelf, 0.02, 0.045 + bh / 2 + 0.27, bz); bz += bw + 0.012; }
+    mesh(new T.SphereGeometry(0.07, 20, 14), std(0xf6f1ea), shelf, 0, 0.64, 0.3);
+    // 화분
+    const pot = mesh(new T.CylinderGeometry(0.13, 0.1, 0.24, 28), std(0xd98b63, { roughness: 0.8 }), scene, -2.62, 0.12, -1.82);
+    [[0, 0.32, 0, 0.2, 0x6fae78], [0.09, 0.26, 0.06, 0.13, 0x7dbb84], [-0.08, 0.24, -0.04, 0.12, 0x5e9d68], [0.02, 0.45, -0.02, 0.12, 0x86c28c]]
+      .forEach(([x, y, z, r, c]) => mesh(new T.SphereGeometry(r, 20, 14), std(c, { roughness: 0.8 }), pot, x, y, z));
+    // 작은 액자 둘 (왼쪽 벽)
+    [[0.55, 0.78, 0xf0c9b8], [0.95, 0.66, 0xc3d9ec]].forEach(([z, y, c]) => {
+      const f = mesh(new T.BoxGeometry(0.02, 0.3, 0.24), trim, scene, -FX + 0.01, y, z);
+      mesh(new T.BoxGeometry(0.01, 0.24, 0.18), std(c), f, 0.012, 0, 0);
+    });
 
-    // 바구니
-    const BIN = { x: 2.35, z: -1.75, hw: 0.22, hd: 0.16, h: 0.24 };
+    // 둥근 바구니
+    const BIN = { x: 2.3, z: -1.7, hw: 0.16, hd: 0.16, h: 0.2 };
     const bin = new T.Group(); bin.position.set(BIN.x, 0, BIN.z); scene.add(bin);
-    const binMat = std(0xd8c3a0, { roughness: 0.8 });
-    mesh(new T.BoxGeometry(BIN.hw * 2, 0.02, BIN.hd * 2), binMat, bin, 0, 0.01, 0);
-    mesh(new T.BoxGeometry(BIN.hw * 2, BIN.h, 0.02), binMat, bin, 0, BIN.h / 2, BIN.hd);
-    mesh(new T.BoxGeometry(BIN.hw * 2, BIN.h, 0.02), binMat, bin, 0, BIN.h / 2, -BIN.hd);
-    mesh(new T.BoxGeometry(0.02, BIN.h, BIN.hd * 2), binMat, bin, BIN.hw, BIN.h / 2, 0);
-    mesh(new T.BoxGeometry(0.02, BIN.h, BIN.hd * 2), binMat, bin, -BIN.hw, BIN.h / 2, 0);
+    const binMat = std(0xd6b98d, { roughness: 0.9, side: T.DoubleSide });
+    mesh(new T.CylinderGeometry(0.17, 0.15, BIN.h, 36, 1, true), binMat, bin, 0, BIN.h / 2, 0);
+    mesh(new T.CircleGeometry(0.15, 36), binMat, bin, 0, 0.01, 0).rotation.x = -Math.PI / 2;
+    const rim = mesh(new T.TorusGeometry(0.17, 0.012, 10, 40), std(0xc4a173, { roughness: 0.8 }), bin, 0, BIN.h, 0);
+    rim.rotation.x = Math.PI / 2;
+    [0.06, 0.12].forEach(y => { const band = mesh(new T.TorusGeometry(0.163 - y * 0.08, 0.006, 8, 40), std(0xc4a173), bin, 0, y, 0); band.rotation.x = Math.PI / 2; });
 
     // 장난감
     const TOYS = [
-      { kind: 'cube', color: 0xef6f6c, x: -1.6, z: -0.9 },
-      { kind: 'ball', color: 0x5b8def, x: 0.4, z: 1.2 },
-      { kind: 'can', color: 0xf6c445, x: 1.5, z: 0.3 },
-      { kind: 'cube', color: 0x5cc08b, x: -0.6, z: 1.45 },
-      { kind: 'donut', color: 0xf28fb5, x: 0.9, z: -1.0 },
-      { kind: 'cone', color: 0x9b7be0, x: -2.2, z: 0.9 },
+      { kind: 'cube', color: 0xf08a7e, x: -1.6, z: -0.9 },
+      { kind: 'ball', color: 0x7aa7f0, x: 0.4, z: 1.2 },
+      { kind: 'can', color: 0xf5cd5b, x: 1.5, z: 0.3 },
+      { kind: 'cube', color: 0x76c99b, x: -0.6, z: 1.45 },
+      { kind: 'donut', color: 0xf4a3c2, x: 0.9, z: -1.0 },
+      { kind: 'cone', color: 0xab92e6, x: -2.2, z: 0.9 },
     ];
     const toys = TOYS.map((d, i) => {
       let geo, h, w;
@@ -604,7 +657,7 @@
       }
     }
 
-    let camAz = 0.5, camEl = 0.82, camDist = 9.2, down = null;
+    let camAz = 0.5, camEl = 0.8, camDist = 12, down = null;
     const camTarget = new T.Vector3(0.3, 0, 0.4);
     canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: camAz, el: camEl, moved: false }; stage.focus({ preventScroll: true }); });
     window.addEventListener('pointermove', e => {
