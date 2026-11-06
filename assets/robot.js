@@ -473,18 +473,24 @@
       const geo = new T.BufferGeometry();
       geo.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3));
       geo.setAttribute('color', new T.BufferAttribute(new Float32Array(n * 3), 3));
-      const pts = new T.Points(geo, new T.PointsMaterial({ size, map: square ? null : dotTex, vertexColors: true, transparent: true, opacity, alphaTest: square ? 0 : 0.3, depthTest: false }));
-      const line = new T.Line(geo, new T.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: opacity * 0.8, depthTest: false }));
-      const g = new T.Group(); g.add(line, pts); g.renderOrder = 10; pts.renderOrder = 11; line.renderOrder = 10;
+      const px = size * renderer.getPixelRatio();
+      const pts = new T.Points(geo, new T.PointsMaterial({ size: px, sizeAttenuation: false, map: square ? null : dotTex, vertexColors: true, transparent: true, opacity, alphaTest: square ? 0 : 0.3, depthTest: false }));
+      // 흰 테두리: 같은 점을 조금 크게 흰색으로 뒤에 깔아 나무 바닥 위에서도 또렷하게
+      const halo = new T.Points(geo, new T.PointsMaterial({ size: px + 5 * renderer.getPixelRatio(), sizeAttenuation: false, map: square ? null : dotTex, color: 0xffffff, transparent: true, opacity: Math.min(1, opacity * 1.2), alphaTest: square ? 0 : 0.3, depthTest: false }));
+      const line = new T.Line(geo, new T.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: opacity * 0.9, depthTest: false }));
+      const g = new T.Group(); g.add(line, halo, pts); g.renderOrder = 10; line.renderOrder = 10; halo.renderOrder = 11; pts.renderOrder = 12;
       viz.add(g);
-      return { g, geo, n };
+      // 팔 궤적은 걸음보다 훨씬 촘촘하므로 점을 작게
+      const scale = k => { pts.material.size = px * k; halo.material.size = (px + 5 * renderer.getPixelRatio()) * k; };
+      return { g, geo, n, scale };
     }
-    const tracks = { cur: makeTrack(HORIZON + 1, 0.085, 1), next: makeTrack(HORIZON + 1, 0.07, 0.9), g1: makeTrack(HORIZON + 1, 0.05, 0.4), g2: makeTrack(HORIZON + 1, 0.05, 0.4), trail: makeTrack(40, 0.055, 0.9), tok: makeTrack(24, 0.075, 1, true), tokNew: makeTrack(1, 0.11, 1, true) };
+    const tracks = { cur: makeTrack(HORIZON + 1, 11, 1), next: makeTrack(HORIZON + 1, 9, 0.95), g1: makeTrack(HORIZON + 1, 7, 0.55), g2: makeTrack(HORIZON + 1, 7, 0.55), trail: makeTrack(40, 7, 0.9), tok: makeTrack(24, 10, 1, true), tokNew: makeTrack(1, 14, 1, true) };
+    const scaleTracks = kind => Object.values(tracks).forEach(t => t.scale(kind === 'base' ? 1 : 0.72));
     const arrow = new T.ArrowHelper(new T.Vector3(0, 0, 1), new T.Vector3(), 0.3, 0xe5484d, 0.07, 0.045);
     arrow.line.material.depthTest = false; arrow.cone.material.depthTest = false; arrow.renderOrder = 12; viz.add(arrow);
     viz.traverse(o => o.layers.set(1));
     cam.layers.enable(1);
-    const C_TOK = new T.Color(0x111111), C_TOK_NEW = new T.Color(0xf59e0b), C_EXEC = new T.Color(0x2f6fe4), C_TAIL = new T.Color(0xa9c3f2), C_DONE = new T.Color(0xd4dbe8), C_NOISE = new T.Color(0x9b7be0), C_TRAIL = new T.Color(0xe5484d);
+    const C_TOK = new T.Color(0x111111), C_TOK_NEW = new T.Color(0xf97316), C_EXEC = new T.Color(0x1d4ed8), C_TAIL = new T.Color(0x7ea6f2), C_DONE = new T.Color(0xb8c0cf), C_NOISE = new T.Color(0x7c3aed), C_TRAIL = new T.Color(0xe5484d);
     function drawTrack(tr, points, colorAt, first) {
       const pos = tr.geo.attributes.position, col = tr.geo.attributes.color;
       const list = first ? [first, ...points] : points;
@@ -552,6 +558,7 @@
     }
     // 실행 중인 묶음을 따라가고, 끝나기 4스텝 전에 다음 묶음을 미리 디노이징
     function runChunks(ctl, kind, dt, pos, goal, heading) {
+      scaleTracks(kind);
       const label = kind === 'base' ? 'walking' : 'arm';
       if (!ctl.cur) ctl.cur = makeChunk(kind, pos, goal, heading());
       const cur = ctl.cur;
@@ -584,6 +591,7 @@
     // 생성된 토큰까지만 10Hz로 실행하고, 실행보다 최대 AHEAD개 앞서서 생성
     const TOK_T = 0.06, AHEAD = 7;
     function runTokens(ctl, kind, dt, pos, goalFn, end) {
+      scaleTracks(kind);
       if (!ctl.toks) { ctl.toks = []; ctl.from = pos.clone(); ctl.exec = 0; ctl.genT = 0; ctl.done = false; ctl.born = 0; }
       const q = kind === 'base' ? 0.05 : 0.015, stepLen = kind === 'base' ? 0.072 : 0.036;
       const qz = v => Math.round(v / q) * q;
@@ -810,7 +818,7 @@
     }
 
     let camAz = 0.5, camEl = 0.8, camDist = 10.5, down = null;
-    const camTarget = new T.Vector3(0.3, 0, 0.4);
+    const camTarget = new T.Vector3(0, 0.3, 0);
     canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: camAz, el: camEl, moved: false }; stage.focus({ preventScroll: true }); });
     window.addEventListener('pointermove', e => {
       if (!down) return;
@@ -966,9 +974,38 @@
     }
     new ResizeObserver(resize).observe(stage);
     resize();
+    // 방(바닥+벽) 모서리가 화면에 꽉 차도록 카메라 거리와 중심을 맞춤 (여백 최소화)
+    const ROOM = [];
+    for (const x of [-FX - 0.1, FX]) for (const z of [-FZ - 0.1, FZ]) for (const y of [-0.14, 1.11]) ROOM.push(new T.Vector3(x, y, z));
+    const _p = new T.Vector3(), _right = new T.Vector3(), _up = new T.Vector3();
+    function placeCam(d) {
+      cam.position.set(camTarget.x + d * Math.cos(camEl) * Math.sin(camAz), camTarget.y + d * Math.sin(camEl), camTarget.z + d * Math.cos(camEl) * Math.cos(camAz));
+      cam.lookAt(camTarget); cam.updateMatrixWorld(); cam.matrixWorldInverse.copy(cam.matrixWorld).invert();
+    }
+    function roomBox() {
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (const c of ROOM) { _p.copy(c).project(cam); x0 = Math.min(x0, _p.x); x1 = Math.max(x1, _p.x); y0 = Math.min(y0, _p.y); y1 = Math.max(y1, _p.y); }
+      return { x0, x1, y0, y1 };
+    }
+    function fitCamera() {
+      const M = 0.97;
+      for (let k = 0; k < 3; k++) {   // 중심 맞추기 → 거리 맞추기를 몇 번 반복
+        let lo = 2, hi = 30;
+        for (let i = 0; i < 22; i++) {
+          const mid = (lo + hi) / 2; placeCam(mid);
+          const b = roomBox();
+          if (b.x0 < -M || b.x1 > M || b.y0 < -M || b.y1 > M) lo = mid; else hi = mid;
+        }
+        camDist = hi; placeCam(camDist);
+        const b = roomBox(), cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+        if (Math.abs(cx) < 0.01 && Math.abs(cy) < 0.01) break;
+        _right.setFromMatrixColumn(cam.matrixWorld, 0); _up.setFromMatrixColumn(cam.matrixWorld, 1);
+        const h = Math.tan(cam.fov * Math.PI / 360) * camDist;
+        camTarget.addScaledVector(_right, cx * h * cam.aspect).addScaledVector(_up, cy * h);
+      }
+    }
     function render() {
-      cam.position.set(camTarget.x + camDist * Math.cos(camEl) * Math.sin(camAz), camTarget.y + camDist * Math.sin(camEl), camTarget.z + camDist * Math.cos(camEl) * Math.cos(camAz));
-      cam.lookAt(camTarget);
+      fitCamera();
       renderer.setScissorTest(false);
       renderer.setViewport(0, 0, W, H);
       renderer.setClearColor(0x000000, 0); renderer.clear();

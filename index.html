@@ -15,7 +15,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/mhchem.min.js"></script>
 <script defer src="assets/cm6.js?v=20261107"></script>
-<script defer src="assets/robot.js?v=20261107f"></script>
+<script defer src="assets/robot.js?v=20261107j"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -1741,7 +1741,7 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 :root{--page-w:1268px}                       /* 1220 본문 + 좌우 24 여백 */
 .topnav{height:53px;padding:0 max(16px,calc((100% - 1250px)/2))}
 .nav-logo{font-size:18px;font-weight:400;letter-spacing:-.7px}
-.nav-tab{font-size:14px;letter-spacing:-.5px;padding:6px 10px}
+.nav-tab{font-size:15.5px;letter-spacing:-.4px;padding:6px 16px}
 .right-panel{top:53px;height:calc(100vh - 53px)}
 
 /* Home 상단 */
@@ -1752,6 +1752,8 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .landing-desc{font-size:1rem;margin-top:14px;max-width:1010px}
 .hero-social{display:flex;justify-content:flex-end;gap:22px;margin-top:21px}
 .hero-social .lau-icon{width:28px;height:28px}
+.landing-aside .hero-social{justify-content:center;margin-top:20px}
+.landing-aside .hero-social .lau-icon{width:24px;height:24px}
 .landing-grid{grid-template-columns:minmax(0,1fr) 320px;gap:70px;padding-top:22px}
 
 /* 섹션 제목 */
@@ -1898,6 +1900,7 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 .robot-lab{position:relative;aspect-ratio:16/10;min-height:340px;overflow:hidden;outline:none;background:#f6f6f5;border:1px solid var(--rule);border-radius:6px}
 .robot-lab:focus-visible{border-color:#000}
 .robot-lab canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:pan-y}
+.rb-title{position:absolute;left:18px;top:14px;margin:0;font-size:22px;font-weight:400;letter-spacing:-.02em;line-height:1.2;color:#000;pointer-events:none;z-index:1}
 .robot-lab canvas:active{cursor:grabbing}
 .rb-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;flex-wrap:wrap}
 .rb-policy{display:inline-flex;gap:2px;padding:4px;background:#f1f1f0;border-radius:10px}
@@ -2172,7 +2175,6 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       </div>
       <h1 class="landing-title" id="landing-title-text" data-edit-key="heroTitle" data-placeholder="Add a title…"></h1>
       <p class="landing-desc" id="landing-hero-desc" data-edit-key="heroDesc" data-placeholder="Add a tagline…"></p>
-      <div class="lau-links hero-social" id="landing-author-links"></div>
       <div class="landing-btns">
         <button class="landing-btn-secondary admin-only" onclick="openProfileEdit()" style="border-style:dashed">✎ Edit Home</button>
       </div>
@@ -2182,8 +2184,8 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <div class="landing-main">
         <!-- 로봇 방 (assets/robot.js) -->
         <section class="robot-lab-wrap" aria-label="Interactive humanoid robot demo">
-          <div class="landing-section-label">Robot Playground</div>
           <div class="robot-lab" id="robot-lab">
+            <h2 class="rb-title">Robot Playground</h2>
             <div class="rb-insets">
               <div class="rb-inset"><span>Robot view</span></div>
               <div class="rb-inset"><span>Wrist cam</span></div>
@@ -2267,6 +2269,7 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
             <div class="lau-handle" id="landing-author-handle" data-edit-key="profileHandle">@handle</div>
             <div class="lau-bio" id="landing-author-bio" data-edit-key="profileBio" data-placeholder="Add a short bio…"></div>
           </div>
+          <div class="lau-links hero-social" id="landing-author-links"></div>
           <button class="lau-me-btn" data-edit-key="profileBtn" data-default="Full Profile →" onclick="if(!isAdmin)showSection('home')">Full Profile →</button>
         </div>
       </aside>
