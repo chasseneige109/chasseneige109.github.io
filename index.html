@@ -15,7 +15,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/mhchem.min.js"></script>
 <script defer src="assets/cm6.js?v=20261107"></script>
-<script defer src="assets/robot.js?v=20261107"></script>
+<script defer src="assets/robot.js?v=20261107b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -1376,11 +1376,11 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 .landing-card:hover .lc-title{color:var(--muted)}
 .landing-aside{position:sticky;top:80px}
 .landing-author-card{display:block;padding:0;border-radius:0}
-.lau-avatar{width:160px;height:auto;aspect-ratio:3/4;margin-left:auto;border-radius:0;border:none;background:var(--s100);font-size:3rem;color:#000}
-.lau-name{font-size:1.65rem;font-weight:400;letter-spacing:-.035em;text-align:right;margin:20px 0 2px}
-.lau-handle{text-align:right;font-family:var(--sans);font-size:.85rem;color:var(--muted);margin-bottom:20px}
-.lau-bio{font-size:.93rem;color:#000;line-height:1.75}
-.lau-links{margin-top:16px;justify-content:flex-end}
+.lau-avatar{width:190px;height:auto;aspect-ratio:3/4;margin:0 auto;border-radius:0;border:none;background:var(--s100);font-size:3rem;color:#000}
+.lau-name{font-size:1.65rem;font-weight:400;letter-spacing:-.035em;text-align:center;margin:20px 0 2px}
+.lau-handle{text-align:center;font-family:var(--sans);font-size:.85rem;color:var(--muted);margin-bottom:20px}
+.lau-bio{font-size:.93rem;color:#000;line-height:1.75;text-align:center}
+.lau-links{margin-top:16px;justify-content:center}
 .lau-link{background:var(--tag);border-radius:4px;color:#333;font-weight:500}
 .lau-link:hover{background:#000;color:#fff}
 .lau-me-btn{position:static;display:block;width:100%;margin-top:20px;border-color:var(--rule);color:#000;border-radius:999px}
@@ -1761,9 +1761,9 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 
 /* 사이드바 */
 .landing-aside{top:69px}
-.lau-name{font-size:24px;line-height:1;margin:50px 0 6px}
+.lau-name{font-size:24px;line-height:1;margin:26px 0 6px}
 .lau-handle{margin-bottom:28px}
-.lau-bio{font-size:14px;line-height:1.6;text-align:left;word-break:keep-all}
+.lau-bio{font-size:14px;line-height:1.6;text-align:center;word-break:keep-all}
 #page-home .two-col{gap:70px}
 .p-name{font-size:24px;line-height:1;margin:50px 0 6px}
 .p-bio{font-size:14px;line-height:1.6;text-align:left;word-break:keep-all}
@@ -2068,7 +2068,7 @@ textarea.w-inp-block{display:block;width:100%;resize:none;overflow:hidden}
   .landing-btns{align-items:stretch}
   .landing-btn-primary,.landing-btn-secondary{max-width:none}
   .landing-aside{position:static;order:-1;max-width:360px}
-  .lau-avatar{width:104px}
+  .lau-avatar{width:124px}
   #page-home .profile-sidebar{order:0;max-width:360px}
 }
 @media(max-width:768px){
