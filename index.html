@@ -1899,26 +1899,34 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 .robot-lab:focus-visible{border-color:#000}
 .robot-lab canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:pan-y}
 .robot-lab canvas:active{cursor:grabbing}
-.rb-cmds,.rb-policy{position:absolute;display:flex;gap:6px}
-.rb-cmds{left:14px;top:14px}
-.rb-policy{left:14px;bottom:14px}
-.rb-cmds button,.rb-policy button{font:500 13px/1 var(--sans);letter-spacing:-.01em;color:#000;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:8px 13px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
-.rb-cmds button:hover,.rb-policy button:hover{border-color:#000}
-.rb-cmds button:active{background:#eee}
-.rb-policy button[aria-pressed="true"]{background:#000;border-color:#000;color:#fff}
+.rb-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;flex-wrap:wrap}
+.rb-policy{display:inline-flex;gap:2px;padding:4px;background:#f1f1f0;border-radius:10px}
+.rb-policy button{display:inline-flex;align-items:center;gap:8px;font:500 13px/1 var(--sans);letter-spacing:-.01em;color:var(--muted);background:none;border:0;border-radius:7px;padding:9px 14px;cursor:pointer;transition:background .18s,color .18s,box-shadow .18s}
+.rb-policy button:hover{color:#000}
+.rb-policy button svg{width:16px;height:16px;fill:currentColor;flex:none}
+.rb-policy button[aria-pressed="true"]{background:#fff;color:#000;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.1)}
+.rb-cmds{display:inline-flex;gap:8px}
+.rb-cmds button{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:40px;padding:0 16px;font:500 13px/1 var(--sans);letter-spacing:-.01em;color:#000;background:#fff;border:1px solid var(--rule);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.rb-cmds button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.rb-cmds button:hover{border-color:#000}
+.rb-cmds button:active{transform:translateY(1px)}
+.rb-cmds .rb-primary{background:#000;border-color:#000;color:#fff}
+.rb-cmds .rb-primary:hover{background:#2b2b2b}
+.rb-cmds .rb-icon{width:40px;padding:0}
 .rb-insets{position:absolute;right:14px;bottom:14px;display:flex;gap:8px;pointer-events:none}
 .rb-inset{position:relative;width:184px;aspect-ratio:4/3;border:1px solid var(--rule);border-radius:6px}
 .rb-inset span{position:absolute;left:6px;top:6px;font:500 11px/1 var(--sans);color:#000;background:#fff;padding:4px 7px;border-radius:4px}
-.robot-lab.nogl canvas,.robot-lab.nogl .rb-insets,.robot-lab.nogl .rb-policy,.robot-lab.nogl .rb-cmds{display:none}
+.robot-lab.nogl canvas,.robot-lab.nogl .rb-insets{display:none}
 .robot-lab.nogl::after{content:"This little robot room needs WebGL, which isn't available in this browser.";position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted);font-size:13px}
 @media(max-width:1200px){.rb-inset{width:140px}}
 @media(max-width:700px){
-  .robot-lab{aspect-ratio:auto;height:460px}
+  .robot-lab{aspect-ratio:auto;height:440px}
   .rb-insets{left:12px;right:12px;bottom:12px}
   .rb-inset{flex:1;width:auto;aspect-ratio:auto;height:110px}
-  .rb-policy{left:12px;bottom:134px}
-  .rb-cmds{left:12px;top:12px}
-  .rb-cmds button,.rb-policy button{font-size:12px;padding:7px 10px}
+  .rb-bar{flex-direction:column;align-items:stretch}
+  .rb-policy button{flex:1;justify-content:center;padding:9px 6px;font-size:12px}
+  .rb-cmds button{flex:1}
+  .rb-cmds .rb-icon{flex:none}
 }
 
 /* ══ 글 페이지 — 참고 사이트 project 페이지: 왼쪽 목차 320 + 본문 930 ══ */
@@ -2175,18 +2183,34 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
         <section class="robot-lab-wrap" aria-label="Interactive humanoid robot demo">
           <div class="landing-section-label">Robot Playground</div>
           <div class="robot-lab" id="robot-lab">
-            <div class="rb-policy" role="group" aria-label="Policy">
-              <button type="button" data-policy="diffusion" aria-pressed="true">Diffusion</button>
-              <button type="button" data-policy="mlp" aria-pressed="false">MLP</button>
-            </div>
-            <div class="rb-cmds">
-              <button type="button" data-rb="pick">Pick up</button>
-              <button type="button" data-rb="drop">Put down</button>
-              <button type="button" data-rb="reset">Reset</button>
-            </div>
             <div class="rb-insets">
               <div class="rb-inset"><span>Robot view</span></div>
               <div class="rb-inset"><span>Wrist cam</span></div>
+            </div>
+          </div>
+          <div class="rb-bar">
+            <div class="rb-policy" role="group" aria-label="Policy">
+              <button type="button" data-policy="diffusion" aria-pressed="true">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="11" r="1.6"/><circle cx="6.5" cy="7.5" r="1.6"/><circle cx="10" cy="5.5" r="1.6"/><circle cx="13.5" cy="4.5" r="1.6"/><circle cx="4.5" cy="4" r=".9" opacity=".4"/><circle cx="11.5" cy="11" r=".9" opacity=".4"/><circle cx="8.5" cy="12.5" r=".9" opacity=".4"/></svg>
+                Diffusion Policy
+              </button>
+              <button type="button" data-policy="ar" aria-pressed="false">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="10" width="3" height="3" rx=".6"/><rect x="5.5" y="7.5" width="3" height="3" rx=".6"/><rect x="9.5" y="5" width="3" height="3" rx=".6" opacity=".55"/><rect x="13" y="2.5" width="2" height="2" rx=".5" opacity=".25"/></svg>
+                Autoregressive Policy
+              </button>
+            </div>
+            <div class="rb-cmds">
+              <button type="button" data-rb="pick" class="rb-primary">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 12.5V3.5M4.5 7 8 3.5 11.5 7"/></svg>
+                Pick up
+              </button>
+              <button type="button" data-rb="drop">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M4.5 9 8 12.5 11.5 9"/></svg>
+                Put down
+              </button>
+              <button type="button" data-rb="reset" class="rb-icon" aria-label="Reset" title="Reset">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8a4.8 4.8 0 1 0 1.5-3.5"/><path d="M4.4 2.2v2.6H7"/></svg>
+              </button>
             </div>
           </div>
         </section>

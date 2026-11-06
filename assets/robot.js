@@ -446,28 +446,28 @@
     function cancel() { tasks.length = 0; resetPolicy(); }
     function command(list, text) { cancel(); tasks.push(...list); if (text) speak(text); }
 
-    // ── 정책: Diffusion Policy(행동 묶음을 디노이징으로 계획 → 앞부분만 실행) vs MLP Policy(10Hz 한 스텝씩) ──
+    // ── 정책: Diffusion Policy(행동 묶음 전체를 디노이징으로 한꺼번에 계획 → 앞부분만 실행) vs Autoregressive Policy(행동 토큰을 하나씩 이어서 생성 → 생성된 만큼 실행) ──
     const POL = { mode: 'diffusion' };
     const HZ = 10, DT_A = 1 / HZ, HORIZON = 16, EXEC = 8, K_STEPS = 10, DENOISE_T = 0.5;
     const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
     const viz = new T.Group(); scene.add(viz);
     const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.beginPath(); x.arc(32, 32, 28, 0, 7); x.fillStyle = '#fff'; x.fill(); return new T.CanvasTexture(c); })();
-    function makeTrack(n, size, opacity) {
+    function makeTrack(n, size, opacity, square) {
       const geo = new T.BufferGeometry();
       geo.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3));
       geo.setAttribute('color', new T.BufferAttribute(new Float32Array(n * 3), 3));
-      const pts = new T.Points(geo, new T.PointsMaterial({ size, map: dotTex, vertexColors: true, transparent: true, opacity, alphaTest: 0.3, depthTest: false }));
+      const pts = new T.Points(geo, new T.PointsMaterial({ size, map: square ? null : dotTex, vertexColors: true, transparent: true, opacity, alphaTest: square ? 0 : 0.3, depthTest: false }));
       const line = new T.Line(geo, new T.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: opacity * 0.8, depthTest: false }));
       const g = new T.Group(); g.add(line, pts); g.renderOrder = 10; pts.renderOrder = 11; line.renderOrder = 10;
       viz.add(g);
       return { g, geo, n };
     }
-    const tracks = { cur: makeTrack(HORIZON + 1, 0.085, 1), next: makeTrack(HORIZON + 1, 0.07, 0.9), g1: makeTrack(HORIZON + 1, 0.05, 0.4), g2: makeTrack(HORIZON + 1, 0.05, 0.4), trail: makeTrack(40, 0.055, 0.9) };
+    const tracks = { cur: makeTrack(HORIZON + 1, 0.085, 1), next: makeTrack(HORIZON + 1, 0.07, 0.9), g1: makeTrack(HORIZON + 1, 0.05, 0.4), g2: makeTrack(HORIZON + 1, 0.05, 0.4), trail: makeTrack(40, 0.055, 0.9), tok: makeTrack(24, 0.075, 1, true), tokNew: makeTrack(1, 0.11, 1, true) };
     const arrow = new T.ArrowHelper(new T.Vector3(0, 0, 1), new T.Vector3(), 0.3, 0xe5484d, 0.07, 0.045);
     arrow.line.material.depthTest = false; arrow.cone.material.depthTest = false; arrow.renderOrder = 12; viz.add(arrow);
     viz.traverse(o => o.layers.set(1));
     cam.layers.enable(1);
-    const C_EXEC = new T.Color(0x2f6fe4), C_TAIL = new T.Color(0xa9c3f2), C_DONE = new T.Color(0xd4dbe8), C_NOISE = new T.Color(0x9b7be0), C_TRAIL = new T.Color(0xe5484d);
+    const C_TOK = new T.Color(0x111111), C_TOK_NEW = new T.Color(0xf59e0b), C_EXEC = new T.Color(0x2f6fe4), C_TAIL = new T.Color(0xa9c3f2), C_DONE = new T.Color(0xd4dbe8), C_NOISE = new T.Color(0x9b7be0), C_TRAIL = new T.Color(0xe5484d);
     function drawTrack(tr, points, colorAt, first) {
       const pos = tr.geo.attributes.position, col = tr.geo.attributes.color;
       const list = first ? [first, ...points] : points;
@@ -498,7 +498,7 @@
       return p0.clone().multiplyScalar(2 * t3 - 3 * t2 + 1).add(m0.clone().multiplyScalar(t3 - 2 * t2 + t)).add(p1.clone().multiplyScalar(-2 * t3 + 3 * t2)).add(m1.clone().multiplyScalar(t3 - t2));
     }
     function makeChunk(kind, from, goal, heading) {
-      const stepLen = kind === 'base' ? 0.055 : 0.022;
+      const stepLen = kind === 'base' ? 0.072 : 0.022;
       const dist = from.distanceTo(goal), total = Math.min(dist, stepLen * HORIZON);
       const end = from.clone().lerp(goal, dist > 1e-6 ? total / dist : 1);
       const d = end.clone().sub(from);
@@ -563,6 +563,40 @@
       }
       return target;
     }
+    // Autoregressive Policy: 직전 토큰에 이어 다음 행동 토큰을 하나씩 생성(격자로 양자화, 가끔 이웃 칸이 뽑힘)
+    // 생성된 토큰까지만 10Hz로 실행하고, 실행보다 최대 AHEAD개 앞서서 생성
+    const TOK_T = 0.06, AHEAD = 7;
+    function runTokens(ctl, kind, dt, pos, goalFn, end) {
+      if (!ctl.toks) { ctl.toks = []; ctl.from = pos.clone(); ctl.exec = 0; ctl.genT = 0; ctl.done = false; ctl.born = 0; }
+      const q = kind === 'base' ? 0.05 : 0.015, stepLen = kind === 'base' ? 0.072 : 0.022;
+      const qz = v => Math.round(v / q) * q;
+      ctl.genT += dt;
+      while (!ctl.done && ctl.genT >= TOK_T && ctl.toks.length - ctl.exec < AHEAD) {
+        ctl.genT -= TOK_T;
+        const last = ctl.toks.length ? ctl.toks[ctl.toks.length - 1] : ctl.from;
+        if (last.distanceTo(end) <= stepLen * 1.2) { ctl.toks.push(end.clone()); ctl.done = true; break; }
+        const g = goalFn(last), d = g.sub(last), len = d.length();
+        if (len < 1e-6) { ctl.toks.push(end.clone()); ctl.done = true; break; }
+        const c = last.clone().addScaledVector(d, Math.min(stepLen, len) / len);
+        const tok = new T.Vector3(qz(c.x), kind === 'base' ? c.y : qz(c.y), qz(c.z));
+        if (Math.random() < 0.12) { if (Math.random() < 0.5) tok.x += (Math.random() < 0.5 ? -q : q); else tok.z += (Math.random() < 0.5 ? -q : q); }
+        if (tok.distanceTo(last) < q * 0.5) tok.copy(c);
+        ctl.toks.push(tok); ctl.born = 0;
+      }
+      ctl.genT = Math.min(ctl.genT, TOK_T);
+      ctl.born += dt;
+      ctl.exec = Math.min(ctl.toks.length, ctl.exec + dt / DT_A);
+      const i = Math.floor(ctl.exec), f = ctl.exec - i, n = ctl.toks.length;
+      const a = i === 0 ? ctl.from : ctl.toks[i - 1];
+      const target = i >= n ? (n ? ctl.toks[n - 1] : ctl.from).clone() : a.clone().lerp(ctl.toks[i], f);
+      // 실행한 최근 토큰은 흐리게, 생성됐지만 아직 실행 안 한 토큰은 진하게, 방금 생성한 토큰은 주황
+      const s0 = Math.max(0, i - 8), shown = ctl.toks.slice(s0);
+      if (shown.length) {
+        drawTrack(tracks.tok, shown, k => (s0 + k < i ? C_DONE : C_TOK));
+        if (!ctl.done || ctl.born < 0.25) drawTrack(tracks.tokNew, [ctl.toks[n - 1]], () => C_TOK_NEW);
+      }
+      return target;
+    }
     // MLP Policy: 매 틱마다 현재 관측으로 한 스텝 행동, 다음 틱까지 그대로 유지
     function trailPush(ctl, p) {
       ctl.trail.push(p.clone());
@@ -577,7 +611,7 @@
     const baseCtl = { cur: null, next: null, tick: 0, act: { v: 0, w: 0 }, trail: [] };
     const armCtl = { cur: null, next: null, tick: 0, cmd: null, act: new T.Vector3(), trail: [] };
     function resetPolicy() {
-      for (const c of [baseCtl, armCtl]) { c.cur = null; c.next = null; c.tick = 0; c.trail = []; }
+      for (const c of [baseCtl, armCtl]) { c.cur = null; c.next = null; c.tick = 0; c.trail = []; c.toks = null; }
       armCtl.cmd = null;
     }
     // 걷기: 목표 지점까지
@@ -589,7 +623,7 @@
       const heading = () => new T.Vector3(Math.sin(R.yaw), 0, Math.cos(R.yaw));
       if (POL.mode === 'diffusion') {
         if (dist < 0.03 && !baseCtl.cur) return true;
-        const target = runChunks(baseCtl, 'base', dt, pos, lookAhead(t.path, t.wi, pos, 0.9), heading);
+        const target = runChunks(baseCtl, 'base', dt, pos, lookAhead(t.path, t.wi, pos, 1.2), heading);
         if (target) {
           R.direct = target;
           const dir = target.clone().sub(pos);
@@ -597,21 +631,11 @@
         }
         return !baseCtl.cur && pos.distanceTo(end) < 0.05;
       }
-      if (dist < 0.04) { R.v = 0; R.w = 0; return true; }
-      const goal = lookAhead(t.path, t.wi, pos, 0.35);
-      baseCtl.tick -= dt;
-      if (baseCtl.tick <= 0) {
-        baseCtl.tick += DT_A;
-        const da = angDiff(R.yaw, Math.atan2(goal.x - pos.x, goal.z - pos.z));
-        baseCtl.act.w = clamp(da * 3.5 + gauss() * 0.6, -2.8, 2.8);
-        baseCtl.act.v = Math.max(0, (Math.abs(da) > 0.6 ? 0.04 : 0.55 * Math.min(1, dist / 0.3 + 0.2)) + gauss() * 0.08);
-        trailPush(baseCtl, pos);
-      }
-      R.v = baseCtl.act.v; R.w = baseCtl.act.w;
-      drawTrack(tracks.trail, baseCtl.trail.length ? baseCtl.trail : [pos], (i, n) => C_TRAIL.clone().lerp(new T.Color(0xffffff), 1 - i / n * 0.9));
-      showArrow(pos, new T.Vector3(Math.sin(R.yaw + R.w * 0.25), 0, Math.cos(R.yaw + R.w * 0.25)).multiplyScalar(R.v), 1.3);
-      setStatus(`MLP Policy · ${HZ} Hz · action = (v ${R.v.toFixed(2)} m/s, ω ${R.w.toFixed(2)} rad/s)`);
-      return false;
+      const target = runTokens(baseCtl, 'base', dt, pos, last => lookAhead(t.path, t.wi, last, 0.4), end);
+      R.direct = target;
+      const dir = target.clone().sub(pos);
+      if (dir.length() > 0.004) R.yaw += angDiff(R.yaw, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 10);
+      return baseCtl.done && baseCtl.exec >= baseCtl.toks.length && pos.distanceTo(end) < 0.05;
     }
     // 팔: 집게 위치를 목표까지 (R.grip을 직접 움직임)
     function armStep(dt, goal) {
@@ -623,27 +647,17 @@
         if (target) R.grip.copy(target);
         return;
       }
-      if (!armCtl.cmd) armCtl.cmd = R.grip.clone();
-      armCtl.tick -= dt;
-      if (armCtl.tick <= 0) {
-        armCtl.tick += DT_A;
-        const a = goal.clone().sub(armCtl.cmd), d = a.length();
-        if (d > 0.03) a.multiplyScalar(0.03 / d);
-        const n = Math.min(1, d / 0.05) * 0.005;
-        a.add(new T.Vector3(gauss() * n, gauss() * n, gauss() * n));
-        armCtl.act.copy(a); armCtl.cmd.add(a);
-        trailPush(armCtl, R.grip);
-      }
-      R.grip.lerp(armCtl.cmd, Math.min(1, dt * 18));
-      if (armCtl.trail.length) drawTrack(tracks.trail, armCtl.trail, (i, n) => C_TRAIL.clone().lerp(new T.Color(0xffffff), 1 - i / n * 0.9));
-      showArrow(R.grip, armCtl.act, 5);
-      setStatus(`MLP Policy · ${HZ} Hz · action = Δgripper (${(armCtl.act.length() * 100).toFixed(1)} cm)`);
+      if (armCtl.goal && armCtl.goal.distanceTo(goal) > 0.01) armCtl.toks = null;
+      armCtl.goal = goal.clone();
+      if (armCtl.toks && armCtl.done && armCtl.exec >= armCtl.toks.length) { R.grip.lerp(goal, Math.min(1, dt * 10)); return; }
+      R.grip.copy(runTokens(armCtl, 'arm', dt, R.grip, () => goal.clone(), goal));
     }
-    stage.querySelectorAll('[data-policy]').forEach(btn => btn.addEventListener('click', () => {
+    const ui = stage.closest('.robot-lab-wrap') || stage;
+    ui.querySelectorAll('[data-policy]').forEach(btn => btn.addEventListener('click', () => {
       POL.mode = btn.dataset.policy;
-      stage.querySelectorAll('[data-policy]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      ui.querySelectorAll('[data-policy]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
       resetPolicy();
-      speak(POL.mode === 'diffusion' ? 'Diffusion Policy: I plan a 16-step chunk by denoising, then act.' : 'MLP Policy: one action every 0.1 s, no look-ahead.');
+      speak(POL.mode === 'diffusion' ? 'Diffusion Policy' : 'Autoregressive Policy');
       stage.focus({ preventScroll: true });
     }));
 
@@ -816,7 +830,7 @@
       }
       command([{ k: 'go', x: b.x, z: b.z }], '');
     }
-    stage.querySelectorAll('[data-rb]').forEach(btn => btn.addEventListener('click', () => {
+    ui.querySelectorAll('[data-rb]').forEach(btn => btn.addEventListener('click', () => {
       const a = btn.dataset.rb;
       stage.focus({ preventScroll: true });
       if (a === 'pick') { if (R.held) return speak('Already holding something.'); const n = nearestToy(); return n ? command(planPick(n), 'Going for the closest one.') : speak('Nothing left on the floor.'); }
@@ -830,12 +844,12 @@
       viz.children.forEach(o => { o.visible = false; });
       R.direct = null;
       step(dt);
-      if (!tasks.length || !['go', 'pick', 'place'].includes(tasks[0].k)) setStatus(POL.mode === 'diffusion' ? 'Diffusion Policy · idle' : 'MLP Policy · idle');
+      if (!tasks.length || !['go', 'pick', 'place'].includes(tasks[0].k)) setStatus(POL.mode === 'diffusion' ? 'Diffusion Policy · idle' : 'Autoregressive Policy · idle');
       // 직접 운전
       if (keys.size) {
         const f = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
         const tr = (keys.has('a') || keys.has('arrowleft') ? 1 : 0) - (keys.has('d') || keys.has('arrowright') ? 1 : 0);
-        R.v = lerp(R.v, f > 0 ? 0.5 : f < 0 ? -0.25 : 0, Math.min(1, dt * 6));
+        R.v = lerp(R.v, f > 0 ? 0.68 : f < 0 ? -0.3 : 0, Math.min(1, dt * 6));
         R.w = tr * 2.2;
       } else if (!tasks.length) { R.v = lerp(R.v, 0, Math.min(1, dt * 6)); R.w = 0; }
       let nx, nz;
@@ -854,7 +868,7 @@
       // 걸음
       const walking = moved > 1e-4 || Math.abs(R.w) > 0.2 || (tasks[0] && tasks[0].k === 'turn');
       R.amp = lerp(R.amp, walking ? 1 : 0, Math.min(1, dt * 6));
-      R.phase += walking ? (moved / 0.15) * Math.PI + (moved < 1e-4 ? Math.max(Math.abs(R.w), 1.5) * dt * 3 : 0) : 0;
+      R.phase += walking ? (moved / 0.19) * Math.PI + (moved < 1e-4 ? Math.max(Math.abs(R.w), 1.5) * dt * 3 : 0) : 0;
       if (!walking && R.amp < 0.05) R.phase = lerp(R.phase, Math.round(R.phase / Math.PI) * Math.PI, Math.min(1, dt * 4));
       // 장난감 밀어내기
       for (const t of toys) {
@@ -881,7 +895,7 @@
       robot.position.set(R.x, 0, R.z); robot.rotation.y = R.yaw;
       for (const leg of legs) {
         const ph = R.phase + (leg.s > 0 ? 0 : Math.PI);
-        const fz = Math.sin(ph) * 0.075 * R.amp + R.crouch * 0.3;
+        const fz = Math.sin(ph) * 0.09 * R.amp + R.crouch * 0.3;
         const lift = Math.max(0, Math.cos(ph)) * 0.05 * R.amp;
         solveLeg(leg, fz, lift);
       }
