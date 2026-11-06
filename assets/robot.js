@@ -817,14 +817,15 @@
       }
     }
 
-    let camAz = 0.5, camEl = 0.8, camDist = 10.5, down = null;
+    const AZ0 = 0.5, EL0 = 0.8;
+    let camAz = AZ0, camEl = EL0, camDist = 10.5, down = null, azGoal = AZ0, elGoal = EL0, fitDirty = true;
     const camTarget = new T.Vector3(0, 0.3, 0);
-    canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: camAz, el: camEl, moved: false }; stage.focus({ preventScroll: true }); });
+    canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: azGoal, el: elGoal, moved: false }; stage.focus({ preventScroll: true }); });
     window.addEventListener('pointermove', e => {
       if (!down) return;
       const dx = e.clientX - down.x, dy = e.clientY - down.y;
       if (!down.moved && Math.hypot(dx, dy) > 5) down.moved = true;
-      if (down.moved) { camAz = down.az - dx * 0.006; camEl = clamp(down.el + dy * 0.004, 0.18, 1.25); }
+      if (down.moved) { azGoal = down.az - dx * 0.006; elGoal = clamp(down.el + dy * 0.004, 0.18, 1.25); }
     });
     window.addEventListener('pointerup', e => { if (down && !down.moved && e.target === canvas) click(e); down = null; });
     canvas.addEventListener('pointercancel', () => { down = null; });
@@ -970,7 +971,7 @@
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
       renderer.setSize(W, H, false);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-      cam.aspect = W / H; cam.fov = W < 560 ? 50 : 32; cam.updateProjectionMatrix();
+      cam.aspect = W / H; cam.fov = W < 560 ? 50 : 32; cam.updateProjectionMatrix(); fitDirty = true;
     }
     new ResizeObserver(resize).observe(stage);
     resize();
@@ -988,7 +989,8 @@
       return { x0, x1, y0, y1 };
     }
     function fitCamera() {
-      const M = 0.97;
+      const M = 0.97, az = camAz, el = camEl;
+      camAz = AZ0; camEl = EL0; camTarget.set(0, 0.3, 0);
       for (let k = 0; k < 3; k++) {   // 중심 맞추기 → 거리 맞추기를 몇 번 반복
         let lo = 2, hi = 30;
         for (let i = 0; i < 22; i++) {
@@ -1003,9 +1005,14 @@
         const h = Math.tan(cam.fov * Math.PI / 360) * camDist;
         camTarget.addScaledVector(_right, cx * h * cam.aspect).addScaledVector(_up, cy * h);
       }
+      camAz = az; camEl = el;
     }
+    let dtFrame = 0.016;
     function render() {
-      fitCamera();
+      if (fitDirty) { fitCamera(); fitDirty = false; }
+      const k = 1 - Math.exp(-dtFrame * 14);
+      camAz += (azGoal - camAz) * k; camEl += (elGoal - camEl) * k;
+      placeCam(camDist);
       renderer.setScissorTest(false);
       renderer.setViewport(0, 0, W, H);
       renderer.setClearColor(0x000000, 0); renderer.clear();
@@ -1032,11 +1039,12 @@
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       if (!running || document.hidden) return;
       update(dt);
+      dtFrame = dt;
       render();
     }
     requestAnimationFrame(loop);
     stage.classList.add('ready');
     // 테스트·디버그용
-    window.RobotLab = { planPlace, findPath, OBST, SURF, surfaceAt, POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
+    window.RobotLab = { cam, camState: () => ({ dist: camDist, x: cam.position.x, z: cam.position.z, t: camTarget.toArray().map(v => +v.toFixed(3)) }), planPlace, findPath, OBST, SURF, surfaceAt, POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
   }
 })();
