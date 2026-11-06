@@ -1899,9 +1899,10 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
   background:radial-gradient(110% 90% at 35% 20%,#fbf8f3 0%,#efe9df 75%)}
 .robot-lab canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:pan-y}
 .robot-lab canvas:active{cursor:grabbing}
-.rb-policy{position:absolute;left:14px;top:14px;display:flex;padding:3px;border-radius:10px;background:rgba(255,255,255,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.rb-policy button{font:500 12px/1 var(--sans);color:#6b6459;background:none;border:0;border-radius:7px;padding:6px 11px;cursor:pointer;transition:background .15s,color .15s}
-.rb-policy button[aria-pressed="true"]{background:#fff;color:#1d1b18;box-shadow:0 1px 3px rgba(60,45,25,.12)}
+.rb-policy{position:absolute;left:14px;bottom:14px;display:flex;gap:2px;padding:4px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px rgba(60,45,25,.08),0 6px 18px rgba(60,45,25,.14)}
+.rb-policy button{font:600 13px/1 var(--sans);letter-spacing:-.01em;color:#7a7368;background:none;border:0;border-radius:999px;padding:9px 16px;cursor:pointer;transition:background .2s,color .2s}
+.rb-policy button:hover{color:#1d1b18}
+.rb-policy button[aria-pressed="true"]{background:#1d1b18;color:#fff}
 .rb-insets{position:absolute;right:14px;bottom:14px;display:flex;gap:10px;pointer-events:none}
 .rb-inset{position:relative;width:184px;aspect-ratio:4/3;border-radius:10px;box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 6px 18px rgba(60,45,25,.14)}
 .rb-inset span{position:absolute;left:7px;top:6px;font:500 10px/1 var(--sans);color:#fff;background:rgba(29,27,24,.45);padding:3px 6px;border-radius:5px}
@@ -1912,6 +1913,7 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
   .robot-lab{aspect-ratio:auto;height:460px}
   .rb-insets{left:12px;right:12px;bottom:12px}
   .rb-inset{flex:1;width:auto;aspect-ratio:auto;height:110px}
+  .rb-policy{left:50%;transform:translateX(-50%);bottom:134px}
 }
 
 /* ══ 글 페이지 — 참고 사이트 project 페이지: 왼쪽 목차 320 + 본문 930 ══ */
