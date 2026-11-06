@@ -468,29 +468,27 @@
     const HZ = 10, DT_A = 1 / HZ, HORIZON = 16, EXEC = 8, K_STEPS = 10, DENOISE_T = 0.35;
     const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
     const viz = new T.Group(); scene.add(viz);
-    const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.beginPath(); x.arc(32, 32, 28, 0, 7); x.fillStyle = '#fff'; x.fill(); return new T.CanvasTexture(c); })();
+    const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(32, 32, 0, 32, 32, 31); g.addColorStop(0, '#fff'); g.addColorStop(0.72, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new T.CanvasTexture(c); })();
     function makeTrack(n, size, opacity, square) {
       const geo = new T.BufferGeometry();
       geo.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3));
       geo.setAttribute('color', new T.BufferAttribute(new Float32Array(n * 3), 3));
       const px = size * renderer.getPixelRatio();
-      const pts = new T.Points(geo, new T.PointsMaterial({ size: px, sizeAttenuation: false, map: square ? null : dotTex, vertexColors: true, transparent: true, opacity, alphaTest: square ? 0 : 0.3, depthTest: false }));
-      // 흰 테두리: 같은 점을 조금 크게 흰색으로 뒤에 깔아 나무 바닥 위에서도 또렷하게
-      const halo = new T.Points(geo, new T.PointsMaterial({ size: px + 5 * renderer.getPixelRatio(), sizeAttenuation: false, map: square ? null : dotTex, color: 0xffffff, transparent: true, opacity: Math.min(1, opacity * 1.2), alphaTest: square ? 0 : 0.3, depthTest: false }));
+      const pts = new T.Points(geo, new T.PointsMaterial({ size: px, sizeAttenuation: false, map: square ? null : dotTex, vertexColors: true, transparent: true, opacity, depthTest: false, depthWrite: false }));
       const line = new T.Line(geo, new T.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: opacity * 0.9, depthTest: false }));
-      const g = new T.Group(); g.add(line, halo, pts); g.renderOrder = 10; line.renderOrder = 10; halo.renderOrder = 11; pts.renderOrder = 12;
+      const g = new T.Group(); g.add(line, pts); g.renderOrder = 10; line.renderOrder = 10; pts.renderOrder = 11;
       viz.add(g);
       // 팔 궤적은 걸음보다 훨씬 촘촘하므로 점을 작게
-      const scale = k => { pts.material.size = px * k; halo.material.size = (px + 5 * renderer.getPixelRatio()) * k; };
+      const scale = k => { pts.material.size = px * k; };
       return { g, geo, n, scale };
     }
-    const tracks = { cur: makeTrack(HORIZON + 1, 11, 1), next: makeTrack(HORIZON + 1, 9, 0.95), g1: makeTrack(HORIZON + 1, 7, 0.55), g2: makeTrack(HORIZON + 1, 7, 0.55), trail: makeTrack(40, 7, 0.9), tok: makeTrack(24, 10, 1, true), tokNew: makeTrack(1, 14, 1, true) };
-    const scaleTracks = kind => Object.values(tracks).forEach(t => t.scale(kind === 'base' ? 1 : 0.72));
+    const tracks = { cur: makeTrack(HORIZON + 1, 5, 0.95), next: makeTrack(HORIZON + 1, 4, 0.7), g1: makeTrack(HORIZON + 1, 3.5, 0.5), g2: makeTrack(HORIZON + 1, 3.5, 0.5), trail: makeTrack(40, 3.5, 0.8), tok: makeTrack(24, 5, 0.95, true), tokNew: makeTrack(1, 7, 1, true) };
+    const scaleTracks = kind => Object.values(tracks).forEach(t => t.scale(kind === 'base' ? 1 : 0.85));
     const arrow = new T.ArrowHelper(new T.Vector3(0, 0, 1), new T.Vector3(), 0.3, 0xe5484d, 0.07, 0.045);
     arrow.line.material.depthTest = false; arrow.cone.material.depthTest = false; arrow.renderOrder = 12; viz.add(arrow);
     viz.traverse(o => o.layers.set(1));
     cam.layers.enable(1);
-    const C_TOK = new T.Color(0x111111), C_TOK_NEW = new T.Color(0xf97316), C_EXEC = new T.Color(0x1d4ed8), C_TAIL = new T.Color(0x7ea6f2), C_DONE = new T.Color(0xb8c0cf), C_NOISE = new T.Color(0x7c3aed), C_TRAIL = new T.Color(0xe5484d);
+    const C_TOK = new T.Color(0x1a1a1a), C_TOK_NEW = new T.Color(0x2563eb), C_EXEC = new T.Color(0x1a1a1a), C_TAIL = new T.Color(0x9a9a9a), C_DONE = new T.Color(0xd6d3cd), C_NOISE = new T.Color(0x6b6b6b), C_TRAIL = new T.Color(0xe5484d);
     function drawTrack(tr, points, colorAt, first) {
       const pos = tr.geo.attributes.position, col = tr.geo.attributes.color;
       const list = first ? [first, ...points] : points;
