@@ -46,8 +46,8 @@
     // ── 장면: 햇살 드는 원목 마루 방 ──
     const scene = new T.Scene();
     const cam = new T.PerspectiveCamera(32, 1.6, 0.1, 60);
-    scene.add(new T.HemisphereLight(0xfff6ea, 0xb9a891, 0.55));
-    const sun = new T.DirectionalLight(0xffeed6, 0.75);
+    scene.add(new T.HemisphereLight(0xffffff, 0xbdbdbd, 0.6));
+    const sun = new T.DirectionalLight(0xffffff, 0.75);
     sun.position.set(3, 7, 3.5); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.radius = 4;
@@ -67,7 +67,7 @@
         let px = -rnd() * 260;
         while (px < w) {
           const len = 220 + rnd() * 200, l = 66 + rnd() * 7;
-          x.fillStyle = `hsl(${28 + rnd() * 6},${30 + rnd() * 8}%,${l}%)`;
+          x.fillStyle = `hsl(${30 + rnd() * 6},${14 + rnd() * 6}%,${l + 8}%)`;
           x.fillRect(px, r * rh, len, rh);
           x.strokeStyle = 'rgba(150,110,70,.10)'; x.lineWidth = 1;
           for (let g = 0; g < 4; g++) { const gy = r * rh + 6 + rnd() * (rh - 12); x.beginPath(); x.moveTo(px + 8, gy); x.bezierCurveTo(px + len * .3, gy + 3, px + len * .6, gy - 3, px + len - 8, gy + 1); x.stroke(); }
@@ -78,11 +78,11 @@
       }
     });
     const FX = 3, FZ = 2.2;   // 바닥 반폭
-    const oak = std(0xb48c62, { roughness: 0.8 });
+    const oak = std(0xbfb3a4, { roughness: 0.8 });
     const floor = mesh(new T.BoxGeometry(FX * 2, 0.14, FZ * 2), [oak, oak, new T.MeshStandardMaterial({ map: woodTex, roughness: 0.7 }), oak, oak, oak], scene, 0, -0.07, 0);
     floor.castShadow = false;
     // 벽 + 걸레받이
-    const wallMat = std(0xefe6d8, { roughness: 0.95 }), trim = std(0xfffcf7, { roughness: 0.6 });
+    const wallMat = std(0xf1f1ef, { roughness: 0.95 }), trim = std(0xffffff, { roughness: 0.6 });
     const WH = 1.25;
     mesh(new T.BoxGeometry(FX * 2 + 0.1, WH, 0.1), wallMat, scene, -0.05, WH / 2 - 0.14, -FZ - 0.05).castShadow = false;
     mesh(new T.BoxGeometry(0.1, WH, FZ * 2), wallMat, scene, -FX - 0.05, WH / 2 - 0.14, 0).castShadow = false;
@@ -98,28 +98,28 @@
     // 러그
     const rugTex = canvasTex(512, 360, (x, w, h) => {
       const rr = (p, c) => { x.fillStyle = c; x.beginPath(); x.roundRect ? x.roundRect(p, p, w - 2 * p, h - 2 * p, 60 - p / 2) : x.rect(p, p, w - 2 * p, h - 2 * p); x.fill(); };
-      rr(0, '#b9c4cf'); rr(22, '#d6dde3'); rr(34, '#b9c4cf'); rr(40, '#cdd6de');
+      rr(0, '#2b2b2b'); rr(14, '#e9e9e7'); rr(22, '#2b2b2b'); rr(26, '#e4e4e2');
     });
     const rug = new T.Mesh(new T.PlaneGeometry(2.1, 1.48), new T.MeshStandardMaterial({ map: rugTex, transparent: true, roughness: 1 }));
     rug.rotation.x = -Math.PI / 2; rug.position.set(-0.55, 0.004, 0.55); rug.receiveShadow = true; scene.add(rug);
     // 책장 (왼쪽 벽)
     const shelf = new T.Group(); shelf.position.set(-FX + 0.19, 0, -0.75); scene.add(shelf);
-    const shelfMat = std(0xe2c9a6, { roughness: 0.7 });
+    const shelfMat = std(0xfafafa, { roughness: 0.6 });
     mesh(new T.BoxGeometry(0.34, 0.03, 1.1), shelfMat, shelf, 0, 0.56, 0);
     mesh(new T.BoxGeometry(0.34, 0.03, 1.1), shelfMat, shelf, 0, 0.29, 0);
     mesh(new T.BoxGeometry(0.34, 0.03, 1.1), shelfMat, shelf, 0, 0.03, 0);
     mesh(new T.BoxGeometry(0.34, 0.58, 0.03), shelfMat, shelf, 0, 0.29, 0.54);
     mesh(new T.BoxGeometry(0.34, 0.58, 0.03), shelfMat, shelf, 0, 0.29, -0.54);
-    const BOOKS = [0x8fb8de, 0xf2c6a0, 0xb7d3b0, 0xe8a5a5, 0xd9c8e8, 0xf4dd9a, 0x9fc9c1];
+    const BOOKS = [0x222222, 0xd9d9d9, 0x8a8a8a, 0xf2f2f2, 0x4a4a4a, 0xbdbdbd, 0x6b8fb8];
     let bz = -0.48;
     for (let i = 0; i < 9; i++) { const bh = 0.15 + ((i * 37) % 7) / 70, bw = 0.035 + ((i * 13) % 3) / 100; mesh(new T.BoxGeometry(0.22, bh, bw), std(BOOKS[i % BOOKS.length], { roughness: 0.8 }), shelf, 0.02, 0.045 + bh / 2 + 0.27, bz); bz += bw + 0.012; }
     mesh(new T.SphereGeometry(0.07, 20, 14), std(0xf6f1ea), shelf, 0, 0.64, 0.3);
     // 화분
-    const pot = mesh(new T.CylinderGeometry(0.13, 0.1, 0.24, 28), std(0xd98b63, { roughness: 0.8 }), scene, -2.62, 0.12, -1.82);
+    const pot = mesh(new T.CylinderGeometry(0.13, 0.1, 0.24, 28), std(0xf7f7f7, { roughness: 0.6 }), scene, -2.62, 0.12, -1.82);
     [[0, 0.32, 0, 0.2, 0x6fae78], [0.09, 0.26, 0.06, 0.13, 0x7dbb84], [-0.08, 0.24, -0.04, 0.12, 0x5e9d68], [0.02, 0.45, -0.02, 0.12, 0x86c28c]]
       .forEach(([x, y, z, r, c]) => mesh(new T.SphereGeometry(r, 20, 14), std(c, { roughness: 0.8 }), pot, x, y, z));
     // 작은 액자 둘 (왼쪽 벽)
-    [[0.55, 0.78, 0xf0c9b8], [0.95, 0.66, 0xc3d9ec]].forEach(([z, y, c]) => {
+    [[0.55, 0.78, 0x2b2b2b], [0.95, 0.66, 0xd9d9d9]].forEach(([z, y, c]) => {
       const f = mesh(new T.BoxGeometry(0.02, 0.3, 0.24), trim, scene, -FX + 0.01, y, z);
       mesh(new T.BoxGeometry(0.01, 0.24, 0.18), std(c), f, 0.012, 0, 0);
     });
@@ -127,39 +127,90 @@
     // 둥근 바구니
     const BIN = { x: 2.3, z: -1.7, hw: 0.16, hd: 0.16, h: 0.2 };
     const bin = new T.Group(); bin.position.set(BIN.x, 0, BIN.z); scene.add(bin);
-    const binMat = std(0xd6b98d, { roughness: 0.9, side: T.DoubleSide });
+    const binMat = std(0xd8cfc2, { roughness: 0.9, side: T.DoubleSide });
     mesh(new T.CylinderGeometry(0.17, 0.15, BIN.h, 36, 1, true), binMat, bin, 0, BIN.h / 2, 0);
     mesh(new T.CircleGeometry(0.15, 36), binMat, bin, 0, 0.01, 0).rotation.x = -Math.PI / 2;
     const rim = mesh(new T.TorusGeometry(0.17, 0.012, 10, 40), std(0xc4a173, { roughness: 0.8 }), bin, 0, BIN.h, 0);
     rim.rotation.x = Math.PI / 2;
     [0.06, 0.12].forEach(y => { const band = mesh(new T.TorusGeometry(0.163 - y * 0.08, 0.006, 8, 40), std(0xc4a173), bin, 0, y, 0); band.rotation.x = Math.PI / 2; });
 
-    // 장난감
+    // ── 가구: 창가 책상, 소파와 협탁, 스탠드 (OBST = 못 지나가는 곳, SURF = 물건을 올려 두는 면) ──
+    const OBST = [{ x: BIN.x, z: BIN.z, hw: BIN.hw, hd: BIN.hd }, { x: -FX + 0.19, z: -0.75, hw: 0.18, hd: 0.56 }, { x: -2.62, z: -1.82, hw: 0.15, hd: 0.15 }];
+    const SURF = {};
+    const furniture = new T.Group(); scene.add(furniture);
+    const walnut = std(0x2b2b2b, { roughness: 0.5 }), maple = std(0xfafafa, { roughness: 0.55 });
+    // 책상
+    const DESK = { x: 0.7, z: -FZ + 0.27, hw: 0.55, hd: 0.25, h: 0.34, nx: 0, nz: 1 };
+    const desk = new T.Group(); desk.position.set(DESK.x, 0, DESK.z); furniture.add(desk);
+    mesh(new T.BoxGeometry(DESK.hw * 2, 0.035, DESK.hd * 2), maple, desk, 0, DESK.h - 0.0175, 0);
+    for (const [lx, lz] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) mesh(new T.CylinderGeometry(0.018, 0.014, DESK.h - 0.035, 12), walnut, desk, lx * (DESK.hw - 0.05), (DESK.h - 0.035) / 2, lz * (DESK.hd - 0.05));
+    mesh(new T.BoxGeometry(0.34, 0.08, DESK.hd * 2 - 0.06), maple, desk, DESK.hw - 0.22, DESK.h - 0.075, 0);
+    mesh(new T.BoxGeometry(0.06, 0.012, 0.012), walnut, desk, DESK.hw - 0.22, DESK.h - 0.075, DESK.hd - 0.03);
+    const lamp = new T.Group(); lamp.position.set(-0.42, DESK.h, -0.12); desk.add(lamp);
+    mesh(new T.CylinderGeometry(0.05, 0.055, 0.015, 20), std(0x2d2f33), lamp, 0, 0.008, 0);
+    const lampArm = mesh(new T.CylinderGeometry(0.008, 0.008, 0.24, 8), std(0x2d2f33), lamp, 0.03, 0.12, 0); lampArm.rotation.z = -0.25;
+    const shade = mesh(new T.ConeGeometry(0.06, 0.07, 20, 1, true), std(0xf3e2c3, { side: T.DoubleSide, emissive: 0x6b5328 }), lamp, 0.08, 0.24, 0); shade.rotation.z = 0.5;
+    [[0x222222, 0.05], [0xd9d9d9, 0.04], [0x8a8a8a, 0.045]].forEach(([c, t], k) => mesh(new T.BoxGeometry(0.2, t, 0.14), std(c, { roughness: 0.8 }), desk, 0.36, DESK.h + 0.02 + k * 0.045, -0.12).rotation.y = k * 0.15);
+    SURF.desk = DESK; OBST.push(DESK);
+    // 소파 (오른쪽, 방 안쪽을 봄)
+    const SOFA = { x: 2.62, z: 0.82, hw: 0.32, hd: 0.72 };
+    const sofa = new T.Group(); sofa.position.set(SOFA.x, 0, SOFA.z); furniture.add(sofa);
+    const fabric = std(0xcfcfcd, { roughness: 0.95 }), fabric2 = std(0xdededc, { roughness: 0.95 });
+    mesh(new T.BoxGeometry(0.62, 0.14, 1.36), fabric, sofa, 0, 0.11, 0);
+    mesh(new T.BoxGeometry(0.17, 0.38, 1.36), fabric, sofa, 0.23, 0.29, 0);
+    for (const sz of [-1, 1]) mesh(new T.BoxGeometry(0.62, 0.27, 0.13), fabric, sofa, 0, 0.17, sz * 0.66);
+    for (const sz of [-0.31, 0.31]) mesh(new T.BoxGeometry(0.44, 0.07, 0.6), fabric2, sofa, -0.04, 0.215, sz);
+    mesh(new T.BoxGeometry(0.08, 0.2, 0.22), std(0x2b2b2b, { roughness: 0.95 }), sofa, 0.1, 0.33, -0.3).rotation.z = 0.25;
+    for (const [lx, lz] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) mesh(new T.CylinderGeometry(0.015, 0.012, 0.05, 8), walnut, sofa, lx * 0.26, 0.025, lz * 0.62);
+    OBST.push(SOFA);
+    // 협탁 (소파 옆)
+    const SIDE = { x: 2.62, z: -0.3, hw: 0.17, hd: 0.17, h: 0.3, nx: -1, nz: 0 };
+    const side = new T.Group(); side.position.set(SIDE.x, 0, SIDE.z); furniture.add(side);
+    mesh(new T.CylinderGeometry(0.18, 0.18, 0.03, 32), maple, side, 0, SIDE.h - 0.015, 0);
+    mesh(new T.CylinderGeometry(0.025, 0.03, SIDE.h - 0.03, 12), walnut, side, 0, (SIDE.h - 0.03) / 2, 0);
+    mesh(new T.CylinderGeometry(0.12, 0.13, 0.02, 24), walnut, side, 0, 0.01, 0);
+    SURF.side = SIDE; OBST.push(SIDE);
+    // 플로어 스탠드
+    const fl = new T.Group(); fl.position.set(2.72, 0, 1.85); furniture.add(fl);
+    mesh(new T.CylinderGeometry(0.1, 0.11, 0.02, 24), std(0x2d2f33), fl, 0, 0.01, 0);
+    mesh(new T.CylinderGeometry(0.01, 0.01, 0.75, 8), std(0x2d2f33), fl, 0, 0.38, 0);
+    mesh(new T.CylinderGeometry(0.1, 0.14, 0.16, 24, 1, true), std(0xf6ead2, { side: T.DoubleSide, emissive: 0x7a6236 }), fl, 0, 0.8, 0);
+    OBST.push({ x: 2.72, z: 1.85, hw: 0.12, hd: 0.12 });
+    const surfaceAt = (x, z) => Object.values(SURF).find(o => Math.abs(x - o.x) < o.hw && Math.abs(z - o.z) < o.hd) || null;
+
+    // 집을 수 있는 물건 (on: 올려 둔 가구)
     const TOYS = [
       { kind: 'cube', color: 0xf08a7e, x: -1.6, z: -0.9 },
-      { kind: 'ball', color: 0x7aa7f0, x: 0.4, z: 1.2 },
-      { kind: 'can', color: 0xf5cd5b, x: 1.5, z: 0.3 },
-      { kind: 'cube', color: 0x76c99b, x: -0.6, z: 1.45 },
-      { kind: 'donut', color: 0xf4a3c2, x: 0.9, z: -1.0 },
-      { kind: 'cone', color: 0xab92e6, x: -2.2, z: 0.9 },
+      { kind: 'ball', color: 0x7aa7f0, x: 0.3, z: 1.2 },
+      { kind: 'cube', color: 0x76c99b, x: -0.7, z: 1.45 },
+      { kind: 'cone', color: 0xab92e6, x: -2.1, z: 0.6 },
+      { kind: 'mug', color: 0xf5cd5b, x: DESK.x + 0.18, z: DESK.z + DESK.hd - 0.09, on: 'desk' },
+      { kind: 'donut', color: 0xf4a3c2, x: DESK.x - 0.08, z: DESK.z + DESK.hd - 0.09, on: 'desk' },
+      { kind: 'block', color: 0x7aa7f0, x: DESK.x - 0.3, z: DESK.z + DESK.hd - 0.09, on: 'desk' },
+      { kind: 'apple', color: 0xe86b5f, x: SIDE.x - 0.08, z: SIDE.z, on: 'side' },
     ];
     const toys = TOYS.map((d, i) => {
       let geo, h, w;
       if (d.kind === 'cube') { geo = new T.BoxGeometry(0.09, 0.09, 0.09); h = 0.09; w = 0.045; }
+      else if (d.kind === 'block') { geo = new T.BoxGeometry(0.07, 0.07, 0.07); h = 0.07; w = 0.035; }
       else if (d.kind === 'ball') { geo = new T.SphereGeometry(0.05, 24, 16); h = 0.1; w = 0.05; }
-      else if (d.kind === 'can') { geo = new T.CylinderGeometry(0.04, 0.04, 0.11, 24); h = 0.11; w = 0.04; }
+      else if (d.kind === 'mug') { geo = new T.CylinderGeometry(0.038, 0.034, 0.085, 24); h = 0.085; w = 0.04; }
+      else if (d.kind === 'apple') { geo = new T.SphereGeometry(0.045, 24, 16); h = 0.09; w = 0.045; }
       else if (d.kind === 'donut') { geo = new T.TorusGeometry(0.045, 0.022, 14, 28); geo.rotateX(Math.PI / 2); h = 0.044; w = 0.045; }
       else { geo = new T.ConeGeometry(0.05, 0.1, 24); h = 0.1; w = 0.04; }
       const m = mesh(geo, std(d.color, { roughness: 0.4 }), scene);
-      const toy = { mesh: m, h, w, home: d, held: false, inBin: false, vy: 0, rest: h / 2, id: i };
+      if (d.kind === 'mug') { const hd = mesh(new T.TorusGeometry(0.022, 0.007, 8, 16), std(d.color, { roughness: 0.4 }), m, 0.04, 0, 0); hd.rotation.y = Math.PI / 2; mesh(new T.CircleGeometry(0.032, 20), std(0x6b4a33), m, 0, 0.038, 0).rotation.x = -Math.PI / 2; }
+      if (d.kind === 'apple') { mesh(new T.CylinderGeometry(0.004, 0.004, 0.025, 6), std(0x6b4a33), m, 0, 0.048, 0); mesh(new T.SphereGeometry(0.014, 8, 6), std(0x6fae78), m, 0.012, 0.05, 0).scale.set(1.4, 0.4, 0.8); }
+      const base = d.on ? SURF[d.on].h : 0;
+      const toy = { mesh: m, h, w, home: d, base, held: false, inBin: false, vy: 0, rest: base + h / 2, id: i };
       m.userData.toy = toy;
       return toy;
     });
     function resetToys() {
       toys.forEach(t => {
         if (t.held) scene.attach(t.mesh);
-        t.held = false; t.inBin = false; t.vy = 0; t.rest = t.h / 2;
-        t.mesh.position.set(t.home.x, t.h / 2, t.home.z);
+        t.held = false; t.inBin = false; t.vy = 0; t.rest = t.base + t.h / 2;
+        t.mesh.position.set(t.home.x, t.rest, t.home.z);
         t.mesh.rotation.set(0, (t.id * 1.3) % 3, 0);
       });
     }
@@ -307,6 +358,67 @@
     const BOUND = { x0: -FX + 0.22, x1: FX - 0.2, z0: -FZ + 0.22, z1: FZ - 0.2 };
     const inBounds = p => ({ x: clamp(p.x, BOUND.x0, BOUND.x1), z: clamp(p.z, BOUND.z0, BOUND.z1) });
 
+    // 0.1 m 격자 A* + 시야 확보 구간 합치기 (가구를 돌아서 감)
+    const CELL = 0.1, INFL = 0.15, RR = 0.12;
+    const freeAt = (x, z, r) => x > BOUND.x0 - 1e-6 && x < BOUND.x1 + 1e-6 && z > BOUND.z0 - 1e-6 && z < BOUND.z1 + 1e-6 && !OBST.some(o => Math.abs(x - o.x) < o.hw + r && Math.abs(z - o.z) < o.hd + r);
+    const GX = Math.round(FX * 2 / CELL), GZ = Math.round(FZ * 2 / CELL);
+    const cellPos = (ix, iz) => new T.Vector3(-FX + (ix + 0.5) * CELL, 0.03, -FZ + (iz + 0.5) * CELL);
+    const grid = new Uint8Array(GX * GZ);
+    for (let iz = 0; iz < GZ; iz++) for (let ix = 0; ix < GX; ix++) { const p = cellPos(ix, iz); grid[iz * GX + ix] = freeAt(p.x, p.z, INFL) ? 1 : 0; }
+    const cellOf = p => [clamp(Math.floor((p.x + FX) / CELL), 0, GX - 1), clamp(Math.floor((p.z + FZ) / CELL), 0, GZ - 1)];
+    function nearestFreeCell(p) {
+      let best = null, bd = 1e9;
+      for (let iz = 0; iz < GZ; iz++) for (let ix = 0; ix < GX; ix++) if (grid[iz * GX + ix]) { const c = cellPos(ix, iz), d = c.distanceTo(p); if (d < bd) { bd = d; best = [ix, iz]; } }
+      return best;
+    }
+    function lineFree(a, b) {
+      const n = Math.max(1, Math.ceil(a.distanceTo(b) / 0.04));
+      for (let i = 1; i <= n; i++) { const x = lerp(a.x, b.x, i / n), z = lerp(a.z, b.z, i / n); if (!freeAt(x, z, RR)) return false; }
+      return true;
+    }
+    function findPath(sx, sz, tx, tz) {
+      const s0 = new T.Vector3(sx, 0.03, sz);
+      let g = new T.Vector3(tx, 0.03, tz);
+      if (!freeAt(g.x, g.z, RR)) { const c = nearestFreeCell(g); if (c) g = cellPos(c[0], c[1]); }
+      if (lineFree(s0, g)) return [g];
+      let [sx0, sz0] = cellOf(s0); if (!grid[sz0 * GX + sx0]) [sx0, sz0] = nearestFreeCell(s0);
+      let [gx0, gz0] = cellOf(g); if (!grid[gz0 * GX + gx0]) [gx0, gz0] = nearestFreeCell(g);
+      const start = sz0 * GX + sx0, goal = gz0 * GX + gx0;
+      const gs = new Float32Array(GX * GZ).fill(Infinity), from = new Int32Array(GX * GZ).fill(-1), closed = new Uint8Array(GX * GZ);
+      const h = k => { const dx = Math.abs(k % GX - gx0), dz = Math.abs(Math.floor(k / GX) - gz0); return Math.max(dx, dz) + 0.414 * Math.min(dx, dz); };
+      const open = [start]; gs[start] = 0;
+      while (open.length) {
+        let bi = 0; for (let i = 1; i < open.length; i++) if (gs[open[i]] + h(open[i]) < gs[open[bi]] + h(open[bi])) bi = i;
+        const k = open.splice(bi, 1)[0];
+        if (k === goal) break;
+        if (closed[k]) continue; closed[k] = 1;
+        const kx = k % GX, kz = Math.floor(k / GX);
+        for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+          if (!dx && !dz) continue;
+          const nx = kx + dx, nz = kz + dz; if (nx < 0 || nz < 0 || nx >= GX || nz >= GZ) continue;
+          const n = nz * GX + nx; if (!grid[n] || closed[n]) continue;
+          if (dx && dz && (!grid[kz * GX + nx] || !grid[nz * GX + kx])) continue;
+          const ng = gs[k] + (dx && dz ? 1.414 : 1);
+          if (ng < gs[n]) { gs[n] = ng; from[n] = k; open.push(n); }
+        }
+      }
+      if (from[goal] < 0 && goal !== start) return [g];
+      const cells = []; for (let k = goal; k !== start && k >= 0; k = from[k]) cells.unshift(cellPos(k % GX, Math.floor(k / GX)));
+      const pts = [s0, ...cells, g], out = [];
+      for (let cur = 0; cur < pts.length - 1;) {
+        let j = cur + 1;
+        for (let k = pts.length - 1; k > cur + 1; k--) if (lineFree(pts[cur], pts[k])) { j = k; break; }
+        out.push(pts[j]); cur = j;
+      }
+      return out;
+    }
+    function lookAhead(path, wi, pos, L) {
+      let p = pos.clone(), rem = L;
+      for (let i = wi; i < path.length; i++) { const d = p.distanceTo(path[i]); if (d >= rem) return p.lerp(path[i], rem / d); rem -= d; p = path[i].clone(); }
+      return path[path.length - 1].clone();
+    }
+    function pathLeft(path, wi, pos) { let d = 0, p = pos; for (let i = wi; i < path.length; i++) { d += p.distanceTo(path[i]); p = path[i]; } return d; }
+
     function nearestToy() {
       let best = null, bd = 1e9;
       for (const t of toys) { if (t.held || t.inBin) continue; const d = Math.hypot(t.mesh.position.x - R.x, t.mesh.position.z - R.z); if (d < bd) { bd = d; best = t; } }
@@ -322,6 +434,8 @@
         st = standFor(p.x, p.z, yaw);
       }
       if (t.inBin) { yaw = Math.PI; st = standFor(p.x, p.z, yaw, 0.3); }
+      const sf = surfaceAt(p.x, p.z);
+      if (sf && p.y > sf.h) { yaw = Math.atan2(-sf.nx, -sf.nz); st = standFor(p.x, p.z, yaw); }
       const s2 = inBounds(st);
       return [{ k: 'go', x: s2.x, z: s2.z }, { k: 'turn', yaw: Math.atan2(p.x - s2.x, p.z - s2.z) - Math.atan2(REACH_X, REACH_Z) * 0.9 }, { k: 'pick', toy: t }];
     }
@@ -468,19 +582,23 @@
     }
     // 걷기: 목표 지점까지
     function baseStep(t, dt) {
-      const goal = new T.Vector3(t.x, 0.03, t.z), pos = new T.Vector3(R.x, 0.03, R.z), dist = pos.distanceTo(goal);
+      const pos = new T.Vector3(R.x, 0.03, R.z);
+      if (!t.path) { t.path = findPath(R.x, R.z, t.x, t.z); t.wi = 0; }
+      while (t.wi < t.path.length - 1 && pos.distanceTo(t.path[t.wi]) < 0.25) t.wi++;
+      const end = t.path[t.path.length - 1], dist = pathLeft(t.path, t.wi, pos);
       const heading = () => new T.Vector3(Math.sin(R.yaw), 0, Math.cos(R.yaw));
       if (POL.mode === 'diffusion') {
         if (dist < 0.03 && !baseCtl.cur) return true;
-        const target = runChunks(baseCtl, 'base', dt, pos, goal, heading);
+        const target = runChunks(baseCtl, 'base', dt, pos, lookAhead(t.path, t.wi, pos, 0.9), heading);
         if (target) {
           R.direct = target;
           const dir = target.clone().sub(pos);
           if (dir.length() > 0.004) R.yaw += angDiff(R.yaw, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 10);
         }
-        return !baseCtl.cur && dist < 0.05;
+        return !baseCtl.cur && pos.distanceTo(end) < 0.05;
       }
       if (dist < 0.04) { R.v = 0; R.w = 0; return true; }
+      const goal = lookAhead(t.path, t.wi, pos, 0.35);
       baseCtl.tick -= dt;
       if (baseCtl.tick <= 0) {
         baseCtl.tick += DT_A;
@@ -563,7 +681,7 @@
         const toy = t.toy, p = toy.mesh.position;
         if (R.held || toy.held) { tasks.shift(); return; }
         if (!t.s) {
-          const gy = toy.inBin ? p.y + toy.h * 0.1 : Math.max(toy.h * 0.55, 0.04);
+          const gy = toy.inBin ? p.y + toy.h * 0.1 : p.y - toy.h / 2 + Math.max(toy.h * 0.55, 0.04);
           t.grip = new T.Vector3(p.x, gy, p.z);
           t.above = new T.Vector3(p.x, gy + 0.09, p.z);
           t.c = crouchFor(t.grip, qTop());
@@ -590,7 +708,9 @@
           if (t.bin) {
             t.grip = new T.Vector3(BIN.x, BIN.h + toy.h * 0.55 + 0.04, BIN.z);
           } else {
-            t.grip = local(REACH_X, toy.h * 0.55 + 0.004, REACH_Z);
+            t.grip = local(REACH_X, 0, REACH_Z);
+            const sf = surfaceAt(t.grip.x, t.grip.z);
+            t.grip.y = (sf ? sf.h : 0) + toy.h * 0.55 + 0.004;
           }
           t.above = t.grip.clone(); t.above.y += 0.08;
           t.c = crouchFor(t.grip, qTop());
@@ -611,7 +731,7 @@
               pos.x = clamp(pos.x, BIN.x - BIN.hw + toy.w + 0.02, BIN.x + BIN.hw - toy.w - 0.02);
               pos.z = clamp(pos.z, BIN.z - BIN.hd + toy.w + 0.02, BIN.z + BIN.hd - toy.w - 0.02);
               toy.rest = 0.02 + toy.h / 2 + n * 0.035;
-            } else toy.rest = toy.h / 2;
+            } else { const sf = surfaceAt(pos.x, pos.z); toy.rest = (sf ? sf.h : 0) + toy.h / 2; }
             t.s = 4; t.st = 0;
           }
         } else if (t.s === 4) {
@@ -675,10 +795,10 @@
       if (insets.some(el => { const b = el.getBoundingClientRect(); return e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom; })) return;
       ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       ray.setFromCamera(ndc, cam);
-      const hits = ray.intersectObjects([...toys.map(t => t.mesh), bin, floor], true);
+      const hits = ray.intersectObjects([...toys.map(t => t.mesh), bin, furniture, floor], true);
       if (!hits.length) return;
       let o = hits[0].object;
-      while (o && !o.userData.toy && o !== bin && o !== floor) o = o.parent;
+      while (o && !o.userData.toy && o !== bin && o !== floor && o !== furniture) o = o.parent;
       if (o && o.userData.toy) {
         const toy = o.userData.toy;
         if (toy.held) return;
@@ -690,6 +810,10 @@
         return speak('That is the toy basket.');
       }
       const p = hits[0].point, b = inBounds(p);
+      if (o === furniture && R.held) {   // 들고 있을 때 가구 윗면을 누르면 거기에 올려 둠
+        const sf = surfaceAt(p.x, p.z);
+        if (sf) { const yaw = Math.atan2(-sf.nx, -sf.nz), st = standFor(clamp(p.x, sf.x - sf.hw + 0.08, sf.x + sf.hw - 0.08) * Math.abs(sf.nz) + (sf.x + sf.nx * (sf.hw - 0.09)) * Math.abs(sf.nx), clamp(p.z, sf.z - sf.hd + 0.08, sf.z + sf.hd - 0.08) * Math.abs(sf.nx) + (sf.z + sf.nz * (sf.hd - 0.09)) * Math.abs(sf.nz), yaw); return command([{ k: 'go', x: st.x, z: st.z }, { k: 'turn', yaw }, { k: 'place' }]); }
+      }
       command([{ k: 'go', x: b.x, z: b.z }], '');
     }
     stage.querySelectorAll('[data-rb]').forEach(btn => btn.addEventListener('click', () => {
@@ -698,7 +822,7 @@
       if (a === 'pick') { if (R.held) return speak('Already holding something.'); const n = nearestToy(); return n ? command(planPick(n), 'Going for the closest one.') : speak('Nothing left on the floor.'); }
       if (a === 'drop') { if (!R.held) return speak('My hand is empty.'); return command([{ k: 'place' }]); }
       if (a === 'tidy') return command([{ k: 'tidy' }], "Let's tidy up!");
-      if (a === 'reset') { cancel(); if (R.held) { R.held = null; } resetToys(); Object.assign(R, { x: -0.3, z: 0.2, yaw: 0.6, v: 0, w: 0, crouchGoal: 0 }); R.fingersGoal = 0.035; speak('Fresh start.'); }
+      if (a === 'reset') { cancel(); R.held = null; resetToys(); Object.assign(R, { x: -0.3, z: 0.2, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
     }));
 
     // ── 매 프레임 ──
@@ -717,11 +841,13 @@
       let nx, nz;
       if (R.direct) { nx = R.direct.x; nz = R.direct.z; R.v = 0; R.w = 0; }
       else { R.yaw += R.w * dt; nx = R.x + Math.sin(R.yaw) * R.v * dt; nz = R.z + Math.cos(R.yaw) * R.v * dt; }
-      // 벽·바구니에 막힘
+      // 벽·가구에 막힘
       nx = clamp(nx, BOUND.x0, BOUND.x1); nz = clamp(nz, BOUND.z0, BOUND.z1);
-      const rr = 0.13, ex = BIN.hw + rr, ez = BIN.hd + rr, bx = nx - BIN.x, bz = nz - BIN.z;
-      if (Math.abs(bx) < ex && Math.abs(bz) < ez) {
-        if (ex - Math.abs(bx) < ez - Math.abs(bz)) nx = BIN.x + Math.sign(bx || 1) * ex; else nz = BIN.z + Math.sign(bz || 1) * ez;
+      for (const o of OBST) {
+        const ex = o.hw + RR, ez = o.hd + RR, bx = nx - o.x, bz = nz - o.z;
+        if (Math.abs(bx) < ex && Math.abs(bz) < ez) {
+          if (ex - Math.abs(bx) < ez - Math.abs(bz)) nx = o.x + Math.sign(bx || 1) * ex; else nz = o.z + Math.sign(bz || 1) * ez;
+        }
       }
       const moved = Math.hypot(nx - R.x, nz - R.z);
       R.x = nx; R.z = nz;
@@ -732,7 +858,7 @@
       if (!walking && R.amp < 0.05) R.phase = lerp(R.phase, Math.round(R.phase / Math.PI) * Math.PI, Math.min(1, dt * 4));
       // 장난감 밀어내기
       for (const t of toys) {
-        if (t.held || t.inBin) continue;
+        if (t.held || t.inBin || t.mesh.position.y > t.h / 2 + 0.02) continue;
         const p = t.mesh.position, dx = p.x - R.x, dz = p.z - R.z, d = Math.hypot(dx, dz), min = 0.1 + t.w;
         if (d < min && d > 1e-4 && !(tasks[0] && tasks[0].toy === t)) { p.x = R.x + dx / d * min; p.z = R.z + dz / d * min; }
       }
@@ -842,6 +968,6 @@
     requestAnimationFrame(loop);
     stage.classList.add('ready');
     // 테스트·디버그용
-    window.RobotLab = { POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
+    window.RobotLab = { findPath, OBST, SURF, surfaceAt, POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
   }
 })();

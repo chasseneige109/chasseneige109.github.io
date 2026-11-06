@@ -1893,27 +1893,32 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 @media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.gallery-grid{grid-template-columns:1fr;gap:32px}.gallery-title{font-size:32px;line-height:40px}.gallery-head{padding-top:28px}}
 
-/* ══ 홈: 로봇 방 ══ */
-.robot-lab-wrap{margin:0 0 44px}
-.robot-lab{position:relative;aspect-ratio:16/10;min-height:340px;border-radius:18px;overflow:hidden;outline:none;
-  background:radial-gradient(110% 90% at 35% 20%,#fbf8f3 0%,#efe9df 75%)}
+/* ══ 홈: 로봇 방 — 블로그와 같은 흑백·얇은 선 ══ */
+.robot-lab-wrap{margin:0 0 56px}
+.robot-lab{position:relative;aspect-ratio:16/10;min-height:340px;overflow:hidden;outline:none;background:#f6f6f5;border:1px solid var(--rule);border-radius:6px}
+.robot-lab:focus-visible{border-color:#000}
 .robot-lab canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:pan-y}
 .robot-lab canvas:active{cursor:grabbing}
-.rb-policy{position:absolute;left:14px;bottom:14px;display:flex;gap:2px;padding:4px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px rgba(60,45,25,.08),0 6px 18px rgba(60,45,25,.14)}
-.rb-policy button{font:600 13px/1 var(--sans);letter-spacing:-.01em;color:#7a7368;background:none;border:0;border-radius:999px;padding:9px 16px;cursor:pointer;transition:background .2s,color .2s}
-.rb-policy button:hover{color:#1d1b18}
-.rb-policy button[aria-pressed="true"]{background:#1d1b18;color:#fff}
-.rb-insets{position:absolute;right:14px;bottom:14px;display:flex;gap:10px;pointer-events:none}
-.rb-inset{position:relative;width:184px;aspect-ratio:4/3;border-radius:10px;box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 6px 18px rgba(60,45,25,.14)}
-.rb-inset span{position:absolute;left:7px;top:6px;font:500 10px/1 var(--sans);color:#fff;background:rgba(29,27,24,.45);padding:3px 6px;border-radius:5px}
-.robot-lab.nogl canvas,.robot-lab.nogl .rb-insets,.robot-lab.nogl .rb-policy{display:none}
-.robot-lab.nogl::after{content:"This little robot room needs WebGL, which isn't available in this browser.";position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:#888;font-size:13px}
+.rb-cmds,.rb-policy{position:absolute;display:flex;gap:6px}
+.rb-cmds{left:14px;top:14px}
+.rb-policy{left:14px;bottom:14px}
+.rb-cmds button,.rb-policy button{font:500 13px/1 var(--sans);letter-spacing:-.01em;color:#000;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:8px 13px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.rb-cmds button:hover,.rb-policy button:hover{border-color:#000}
+.rb-cmds button:active{background:#eee}
+.rb-policy button[aria-pressed="true"]{background:#000;border-color:#000;color:#fff}
+.rb-insets{position:absolute;right:14px;bottom:14px;display:flex;gap:8px;pointer-events:none}
+.rb-inset{position:relative;width:184px;aspect-ratio:4/3;border:1px solid var(--rule);border-radius:6px}
+.rb-inset span{position:absolute;left:6px;top:6px;font:500 11px/1 var(--sans);color:#000;background:#fff;padding:4px 7px;border-radius:4px}
+.robot-lab.nogl canvas,.robot-lab.nogl .rb-insets,.robot-lab.nogl .rb-policy,.robot-lab.nogl .rb-cmds{display:none}
+.robot-lab.nogl::after{content:"This little robot room needs WebGL, which isn't available in this browser.";position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted);font-size:13px}
 @media(max-width:1200px){.rb-inset{width:140px}}
 @media(max-width:700px){
   .robot-lab{aspect-ratio:auto;height:460px}
   .rb-insets{left:12px;right:12px;bottom:12px}
   .rb-inset{flex:1;width:auto;aspect-ratio:auto;height:110px}
-  .rb-policy{left:50%;transform:translateX(-50%);bottom:134px}
+  .rb-policy{left:12px;bottom:134px}
+  .rb-cmds{left:12px;top:12px}
+  .rb-cmds button,.rb-policy button{font-size:12px;padding:7px 10px}
 }
 
 /* ══ 글 페이지 — 참고 사이트 project 페이지: 왼쪽 목차 320 + 본문 930 ══ */
@@ -2168,10 +2173,16 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
       <div class="landing-main">
         <!-- 로봇 방 (assets/robot.js) -->
         <section class="robot-lab-wrap" aria-label="Interactive humanoid robot demo">
+          <div class="landing-section-label">Robot Playground</div>
           <div class="robot-lab" id="robot-lab">
             <div class="rb-policy" role="group" aria-label="Policy">
               <button type="button" data-policy="diffusion" aria-pressed="true">Diffusion</button>
               <button type="button" data-policy="mlp" aria-pressed="false">MLP</button>
+            </div>
+            <div class="rb-cmds">
+              <button type="button" data-rb="pick">Pick up</button>
+              <button type="button" data-rb="drop">Put down</button>
+              <button type="button" data-rb="reset">Reset</button>
             </div>
             <div class="rb-insets">
               <div class="rb-inset"><span>Robot view</span></div>
