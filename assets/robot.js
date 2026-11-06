@@ -604,8 +604,8 @@
       }
     }
 
-    let camAz = 0.55, camEl = 0.58, camDist = 5.6, down = null;
-    const camTarget = new T.Vector3(0.35, 0.15, -0.1);
+    let camAz = 0.5, camEl = 0.82, camDist = 9.2, down = null;
+    const camTarget = new T.Vector3(0.3, 0, 0.4);
     canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: camAz, el: camEl, moved: false }; stage.focus({ preventScroll: true }); });
     window.addEventListener('pointermove', e => {
       if (!down) return;
@@ -751,7 +751,7 @@
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
       renderer.setSize(W, H, false);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-      cam.aspect = W / H; cam.fov = W < 560 ? 42 : 32; cam.updateProjectionMatrix();
+      cam.aspect = W / H; cam.fov = W < 560 ? 50 : 32; cam.updateProjectionMatrix();
     }
     new ResizeObserver(resize).observe(stage);
     resize();
