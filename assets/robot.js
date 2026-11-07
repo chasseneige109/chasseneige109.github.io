@@ -209,7 +209,7 @@
     function resetToys() {
       toys.forEach(t => {
         if (t.held) scene.attach(t.mesh);
-        t.held = false; t.inBin = false; t.vy = 0; t.rest = t.base + t.h / 2;
+        t.held = false; t.inBin = false; t.vy = 0; t.fly = null; t.rest = t.base + t.h / 2;
         t.mesh.position.set(t.home.x, t.rest, t.home.z);
         t.mesh.rotation.set(0, (t.id * 1.3) % 3, 0);
       });
@@ -421,7 +421,7 @@
 
     function nearestToy() {
       let best = null, bd = 1e9;
-      for (const t of toys) { if (t.held || t.inBin) continue; const d = Math.hypot(t.mesh.position.x - R.x, t.mesh.position.z - R.z); if (d < bd) { bd = d; best = t; } }
+      for (const t of toys) { if (t.held || t.inBin || t.fly) continue; const d = Math.hypot(t.mesh.position.x - R.x, t.mesh.position.z - R.z); if (d < bd) { bd = d; best = t; } }
       return best;
     }
     function planPick(t) {
@@ -785,6 +785,43 @@
         }
         return;
       }
+      if (t.k === 'throw') {
+        const toy = t.toy || R.held;
+        if (!toy) { tasks.shift(); return; }
+        if (!t.s) {
+          t.toy = toy; t.s = 1; t.st = 0;
+          const dBin = Math.hypot(BIN.x - R.x, BIN.z - R.z);
+          if (dBin < 4) { t.aim = new T.Vector3(BIN.x, BIN.h + toy.h / 2, BIN.z); t.bin = true; }   // 입구 높이를 지날 때 바구니 중심
+          else t.aim = local(0, 0, 1.6).setY(0.05);
+          tasks.unshift({ k: 'turn', yaw: Math.atan2(t.aim.x - R.x, t.aim.z - R.z) + 0.25 });
+          return;
+        }
+        R.crouchGoal = 0; R.look = t.aim;
+        t.st += dt;
+        if (t.s === 1) {   // 뒤로 젖히기
+          R.swing = 9; local(-0.2, 0.6, -0.12, R.gripGoal); R.qGoal.copy(yawQ(R.yaw, -1.1));
+          setStatus('Throw · wind up');
+          if (t.st > 0.45) { t.s = 2; t.st = 0; }
+        } else if (t.s === 2) {   // 휘두르기, 앞으로 올 때 놓기
+          R.swing = 26; local(-0.14, 0.62, 0.34, R.gripGoal); R.qGoal.copy(yawQ(R.yaw, 0.4));
+          setStatus('Throw · release');
+          if (t.st > 0.09) {
+            scene.attach(toy.mesh); toy.held = false; R.held = null; R.fingersGoal = 0.035;
+            const p0 = toy.mesh.position.clone(), d = Math.hypot(t.aim.x - p0.x, t.aim.z - p0.z);
+            const miss = t.bin ? 0.05 + d * 0.045 : 0.1;   // 멀수록 덜 정확
+            const aim = t.aim.clone().add(new T.Vector3(gauss() * miss, 0, gauss() * miss));
+            const T_ = 0.5 + d * 0.14, v = aim.sub(p0).divideScalar(T_);
+            v.y += 0.5 * 9.8 * T_;
+            toy.fly = { v, spin: new T.Vector3(gauss() * 8, gauss() * 4, gauss() * 8), bin: t.bin, bounces: 0 };
+            t.s = 3; t.st = 0;
+          }
+        } else if (t.s === 3) {   // 팔 내려놓기
+          setStatus('Throw · follow through');
+          if (t.st > 0.3) { R.swing = 0; tasks.shift(); }
+          else local(-0.16, 0.4, 0.3, R.gripGoal);
+        }
+        return;
+      }
       if (t.k === 'tidy') {
         tasks.shift();
         if (R.held) { tasks.unshift(...planBin(), { k: 'tidy' }); return; }
@@ -862,8 +899,13 @@
       stage.focus({ preventScroll: true });
       if (a === 'pick') { if (R.held) return speak('Already holding something.'); const n = nearestToy(); return n ? command(planPick(n), 'Going for the closest one.') : speak('Nothing left on the floor.'); }
       if (a === 'drop') { if (!R.held) return speak('My hand is empty.'); return command(planPlace()); }
+      if (a === 'throw') {
+        if (R.held) return command([{ k: 'throw' }], Math.hypot(BIN.x - R.x, BIN.z - R.z) < 4 ? 'Shooting for the basket!' : 'Heads up!');
+        const n = nearestToy();
+        return n ? command([...planPick(n), { k: 'throw' }], 'Grab and throw!') : speak('Nothing left to throw.');
+      }
       if (a === 'tidy') return command([{ k: 'tidy' }], "Let's tidy up!");
-      if (a === 'reset') { cancel(); R.held = null; resetToys(); Object.assign(R, { x: -0.6, z: 1.0, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
+      if (a === 'reset') { cancel(); R.held = null; R.swing = 0; resetToys(); Object.assign(R, { x: -0.6, z: 1.0, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
     }));
 
     // ── 매 프레임 ──
@@ -871,7 +913,7 @@
       viz.children.forEach(o => { o.visible = false; });
       R.direct = null;
       step(dt);
-      if (!tasks.length || !['go', 'pick', 'place'].includes(tasks[0].k)) setStatus(POL.mode === 'diffusion' ? 'Diffusion Policy · idle' : 'Autoregressive Policy · idle');
+      if (!tasks.length || !['go', 'pick', 'place', 'throw'].includes(tasks[0].k)) setStatus(POL.mode === 'diffusion' ? 'Diffusion Policy · idle' : 'Autoregressive Policy · idle');
       // 직접 운전
       if (keys.size) {
         const f = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
@@ -903,9 +945,44 @@
         const p = t.mesh.position, dx = p.x - R.x, dz = p.z - R.z, d = Math.hypot(dx, dz), min = 0.1 + t.w;
         if (d < min && d > 1e-4 && !(tasks[0] && tasks[0].toy === t)) { p.x = R.x + dx / d * min; p.z = R.z + dz / d * min; }
       }
+      // 던진 장난감
+      for (const t of toys) {
+        if (!t.fly) continue;
+        const f = t.fly, p = t.mesh.position, py = p.y;
+        f.v.y -= 9.8 * dt; p.addScaledVector(f.v, dt);
+        t.mesh.rotation.x += f.spin.x * dt; t.mesh.rotation.y += f.spin.y * dt; t.mesh.rotation.z += f.spin.z * dt;
+        const lx = FX - 0.03 - t.w, lz = FZ - 0.03 - t.w;
+        if (Math.abs(p.x) > lx) { p.x = Math.sign(p.x) * lx; f.v.x *= -0.45; }
+        if (Math.abs(p.z) > lz) { p.z = Math.sign(p.z) * lz; f.v.z *= -0.45; }
+        const bx = p.x - BIN.x, bz = p.z - BIN.z, br = Math.hypot(bx, bz);
+        if (p.y - t.h / 2 < BIN.h && py - t.h / 2 >= BIN.h - 0.03 && br < 0.15 - t.w * 0.4) {   // 바구니 안으로
+          t.fly = null; t.inBin = true; t.vy = Math.min(0, f.v.y);
+          const n = toys.filter(o => o !== t && o.inBin).length;
+          t.rest = 0.02 + t.h / 2 + n * 0.035;
+          const left = toys.filter(o => !o.inBin).length;
+          speak(left ? `Swish! ${left} left.` : 'All tidy! ✨');
+          continue;
+        }
+        if (p.y - t.h / 2 < BIN.h && br < 0.17 + t.w && br > 1e-4) {   // 테에 맞고 튕김
+          const nx = bx / br, nz = bz / br, vn = f.v.x * nx + f.v.z * nz;
+          p.x = BIN.x + nx * (0.17 + t.w); p.z = BIN.z + nz * (0.17 + t.w);
+          if (vn < 0) { f.v.x -= 1.6 * vn * nx; f.v.z -= 1.6 * vn * nz; }
+          f.v.multiplyScalar(0.6);
+          if (f.bin && !f.rimSaid) { f.rimSaid = true; speak('Ooh, off the rim!'); }
+        }
+        const sf = surfaceAt(p.x, p.z), ground = sf && py - t.h / 2 >= sf.h - 0.02 ? sf.h : 0;
+        if (p.y - t.h / 2 <= ground && f.v.y < 0) {
+          p.y = ground + t.h / 2;
+          f.v.y *= -0.35; f.v.x *= 0.55; f.v.z *= 0.55; f.spin.multiplyScalar(0.5); f.bounces++;
+          if (f.v.y < 0.5 || f.bounces > 3) {
+            t.fly = null; t.vy = 0; t.rest = ground + t.h / 2;
+            if (f.bin) speak(['So close!', 'Missed it.', 'Next one goes in.'][Math.floor(Math.random() * 3)]);
+          }
+        }
+      }
       // 떨어지는 장난감
       for (const t of toys) {
-        if (t.held) continue;
+        if (t.held || t.fly) continue;
         const p = t.mesh.position;
         if (p.y > t.rest + 1e-4) { t.vy -= 9.8 * dt; p.y = Math.max(t.rest, p.y + t.vy * dt); if (p.y === t.rest) t.vy = 0; }
         else p.y = t.rest;
@@ -931,12 +1008,13 @@
       armL.elbow.rotation.x = -0.35 - R.crouch * 2;
       armL.wrist.rotation.set(0, 0, 0);
       // 오른팔
-      if (!R.handManual) {
+      if (!R.handManual && !R.swing) {
         if (R.held) { carryGrip(R.gripGoal); R.qGoal.copy(qCarry()); }
         else { idleGrip(R.gripGoal); R.qGoal.copy(qTop()); }
       }
       if (!R.inited) { R.grip.copy(R.gripGoal); R.q.copy(R.qGoal); R.inited = true; }
-      if (R.handManual) armStep(dt, R.gripGoal);
+      if (R.swing) R.grip.lerp(R.gripGoal, Math.min(1, dt * R.swing));
+      else if (R.handManual) armStep(dt, R.gripGoal);
       else { R.grip.lerp(R.gripGoal, Math.min(1, dt * 10)); armCtl.cur = armCtl.next = armCtl.cmd = null; armCtl.trail = []; }
       R.q.slerp(R.qGoal, Math.min(1, dt * (R.handManual ? 8 : 10)));
       robot.updateMatrixWorld(true);
