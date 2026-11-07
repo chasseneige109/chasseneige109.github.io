@@ -790,15 +790,7 @@
         const toy = t.toy || R.held;
         if (!toy) { tasks.shift(); return; }
         if (!t.s) {
-          t.toy = toy;
-          const dBin = Math.hypot(BIN.x - R.x, BIN.z - R.z);
-          if (dBin > 2 && !t.walked) {   // 멀면 바구니에서 1.5m 거리까지 걸어간 뒤 던짐
-            t.walked = true;
-            const k = 1.5 / dBin, g = inBounds(new T.Vector3(BIN.x + (R.x - BIN.x) * k, 0, BIN.z + (R.z - BIN.z) * k));
-            tasks.unshift({ k: 'go', x: g.x, z: g.z });
-            return;
-          }
-          t.s = 1; t.st = 0;
+          t.toy = toy; t.s = 1; t.st = 0;
           t.aim = new T.Vector3(BIN.x, BIN.h + toy.h / 2, BIN.z); t.bin = true;   // 입구 높이를 지날 때 바구니 중심
           tasks.unshift({ k: 'turn', yaw: Math.atan2(t.aim.x - R.x, t.aim.z - R.z) + 0.25 });
           return;
@@ -815,7 +807,7 @@
           if (t.st > 0.09) {
             scene.attach(toy.mesh); toy.held = false; R.held = null; R.fingersGoal = 0.035;
             const p0 = toy.mesh.position.clone(), d = Math.hypot(t.aim.x - p0.x, t.aim.z - p0.z);
-            const miss = t.bin ? 0.02 + d * 0.022 : 0.1;   // 멀수록 덜 정확
+            const miss = 0.02 + d * 0.016;   // 멀수록 덜 정확
             const aim = t.aim.clone().add(new T.Vector3(gauss() * miss, 0, gauss() * miss));
             const T_ = 0.5 + d * 0.14, v = aim.sub(p0).divideScalar(T_);
             v.y += 0.5 * 9.8 * T_;
@@ -922,21 +914,66 @@
     const confGeo = new T.PlaneGeometry(0.024, 0.013);
     let confetti = [], bursts = [];
     function celebrate(x, y, z) {
-      for (let i = 0; i < 70; i++) {
+      for (let i = 0; i < 120; i++) {
         const m = new T.Mesh(confGeo, confMats[i % confMats.length]);
         m.position.set(x + gauss() * 0.03, y + 0.04, z + gauss() * 0.03);
         m.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
         fx.add(m);
-        const a = Math.random() * Math.PI * 2, r = 0.3 + Math.random() * 0.8;
-        confetti.push({ m, v: new T.Vector3(Math.cos(a) * r, 2 + Math.random() * 1.5, Math.sin(a) * r), s: new T.Vector3(gauss() * 12, gauss() * 12, gauss() * 12), life: 0 });
+        const a = Math.random() * Math.PI * 2, r = 0.3 + Math.random() * 1.1;
+        confetti.push({ m, v: new T.Vector3(Math.cos(a) * r, 2.4 + Math.random() * 1.8, Math.sin(a) * r), s: new T.Vector3(gauss() * 12, gauss() * 12, gauss() * 12), life: 0 });
       }
-      for (let k = 0; k < 3; k++) bursts.push({ t: -0.12 - k * 0.22, c: new T.Vector3(x + gauss() * 0.3, y + 0.85 + Math.random() * 0.45, z + gauss() * 0.3), color: FX_COLORS[(k * 2 + Math.floor(Math.random() * 6)) % 5], pts: null });
+      for (let k = 0; k < 6; k++) bursts.push({ t: -0.1 - k * 0.16 - Math.random() * 0.06, c: new T.Vector3(x + gauss() * 0.45, y + 0.8 + Math.random() * 0.6, z + 0.25 + gauss() * 0.45), color: FX_COLORS[(k + Math.floor(Math.random() * 5)) % 5], pts: null, R: 0.4 + Math.random() * 0.25 });
+      textBurst(new T.Vector3(x, y + 0.3, z));
+    }
+    // 불꽃 입자가 날아올라 방 위 하늘에 글자를 만들었다가 반짝이며 떨어짐 (카메라를 향한 평면)
+    const TEXT_PTS = (() => {
+      const c = document.createElement('canvas'); c.width = 720; c.height = 110;
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      const msg = 'Welcome to My Blog!!', font = px => `800 ${px}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+      x.font = font(80); const fs = Math.min(80, 80 * 680 / x.measureText(msg).width); x.font = font(fs); x.fillText(msg, 360, 58);
+      const d = x.getImageData(0, 0, 720, 110).data, out = [];
+      for (let py = 0; py < 110; py += 3) for (let px = 0; px < 720; px += 3) if (d[(py * 720 + px) * 4 + 3] > 128) out.push([(px - 360) / 720, (55 - py) / 720]);
+      return out;
+    })();
+    let textFx = null;
+    function textBurst(from) {
+      if (textFx) { fx.remove(textFx.pts); textFx.pts.geometry.dispose(); textFx.pts.material.dispose(); }
+      const N = TEXT_PTS.length, geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(new Float32Array(N * 3), 3));
+      geo.setAttribute('color', new T.BufferAttribute(new Float32Array(N * 3), 3));
+      const right = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      const center = camTarget.clone().addScaledVector(up, 1.2), W = 4.6;
+      const cols = [0xff5a4e, 0xffb020, 0x1fb5c9, 0x7a5cff, 0x2fbf63].map(c => new T.Color(c));
+      const items = TEXT_PTS.map(([u, v], i) => ({ to: center.clone().addScaledVector(right, u * W).addScaledVector(up, v * W), delay: Math.random() * 0.25, c: cols[Math.floor((u + 0.5) * 5 + Math.random() * 0.8) % 5], ph: Math.random() * 6, fall: 0.2 + Math.random() * 0.5 }));
+      const pts = new T.Points(geo, new T.PointsMaterial({ size: 3.6 * renderer.getPixelRatio(), sizeAttenuation: false, vertexColors: true, transparent: true, depthTest: false, depthWrite: false }));
+      pts.renderOrder = 13; fx.add(pts);
+      textFx = { pts, items, from: from.clone(), t: -0.35 };
+    }
+    function updateText(dt) {
+      if (!textFx) return;
+      const f = textFx; f.t += dt;
+      if (f.t < 0) { f.pts.visible = false; return; }
+      f.pts.visible = true;
+      const pos = f.pts.geometry.attributes.position, col = f.pts.geometry.attributes.color, _p = new T.Vector3();
+      f.items.forEach((it, i) => {
+        const k = clamp((f.t - it.delay) / 0.7, 0, 1), e = 1 - Math.pow(1 - k, 3);
+        _p.lerpVectors(f.from, it.to, e); _p.y += Math.sin(k * Math.PI) * 0.5;   // 포물선으로 솟아오름
+        if (f.t > 2.4) _p.y -= it.fall * (f.t - 2.4) * (f.t - 2.4) * 2;
+        pos.setXYZ(i, _p.x, _p.y, _p.z);
+        const tw = k < 1 ? 1 : 0.7 + 0.3 * Math.sin(f.t * 14 + it.ph);   // 반짝임
+        col.setXYZ(i, it.c.r * tw + (1 - tw) * 0.2, it.c.g * tw + (1 - tw) * 0.2, it.c.b * tw + (1 - tw) * 0.2);
+      });
+      pos.needsUpdate = true; col.needsUpdate = true;
+      f.pts.material.opacity = f.t > 2.4 ? Math.max(0, 1 - (f.t - 2.4) / 0.9) : 1;
+      if (f.t > 3.3) { fx.remove(f.pts); f.pts.geometry.dispose(); f.pts.material.dispose(); textFx = null; }
     }
     function clearFx() {
+      if (textFx) { fx.remove(textFx.pts); textFx.pts.geometry.dispose(); textFx.pts.material.dispose(); textFx = null; }
       confetti.forEach(c => fx.remove(c.m)); confetti = [];
       bursts.forEach(b => { if (b.pts) { fx.remove(b.pts); b.pts.geometry.dispose(); b.pts.material.dispose(); } }); bursts = [];
     }
     function updateFx(dt) {
+      updateText(dt);
       confetti = confetti.filter(c => {
         c.life += dt;
         const p = c.m.position;
@@ -953,14 +990,14 @@
         b.t += dt;
         if (b.t < 0) return true;
         if (!b.pts) {
-          const N = 46, dirs = [];
+          const N = 80, dirs = [];
           for (let i = 0; i < N; i++) { const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u); dirs.push(new T.Vector3(r * Math.cos(a), u, r * Math.sin(a)).multiplyScalar(0.8 + Math.random() * 0.4)); }
           const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(new Float32Array(N * 3), 3));
           b.dirs = dirs;
-          b.pts = new T.Points(geo, new T.PointsMaterial({ color: b.color, size: 4 * renderer.getPixelRatio(), sizeAttenuation: false, transparent: true, depthWrite: false }));
+          b.pts = new T.Points(geo, new T.PointsMaterial({ color: b.color, size: 4.5 * renderer.getPixelRatio(), sizeAttenuation: false, transparent: true, depthWrite: false }));
           b.pts.renderOrder = 12; fx.add(b.pts);
         }
-        const r = 0.42 * (1 - Math.exp(-b.t * 6)), drop = 0.35 * b.t * b.t, pos = b.pts.geometry.attributes.position;
+        const r = b.R * (1 - Math.exp(-b.t * 6)), drop = 0.35 * b.t * b.t, pos = b.pts.geometry.attributes.position;
         b.dirs.forEach((d, i) => pos.setXYZ(i, b.c.x + d.x * r, b.c.y + d.y * r - drop, b.c.z + d.z * r));
         pos.needsUpdate = true;
         b.pts.material.opacity = Math.max(0, 1 - b.t / 1.1);
