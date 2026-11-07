@@ -1003,6 +1003,8 @@
         const h = Math.tan(cam.fov * Math.PI / 360) * camDist;
         camTarget.addScaledVector(_right, cx * h * cam.aspect).addScaledVector(_up, cy * h);
       }
+      camDist *= 0.88;   // 방 모서리는 살짝 잘려도 조금 더 가깝게
+      placeCam(camDist);
       camAz = az; camEl = el;
     }
     let dtFrame = 0.016;
