@@ -531,12 +531,12 @@
       const sig = kind === 'base' ? 0.32 : 0.09, dims = kind === 'base' ? 2 : 3;
       return { kind, from: from.clone(), clean, eps: [smoothNoise(HORIZON, sig, dims), smoothNoise(HORIZON, sig, dims), smoothNoise(HORIZON, sig, dims)],
                t: 0, k: 0, s: 0, ready: false, final: total >= dist - 1e-4,
-               rate: kind === 'arm' ? clamp(stepLen * HORIZON / Math.max(total, 1e-3), 1, 2.2) : 1 };   // 팔의 짧은 이동은 같은 16스텝을 더 빨리 실행
+               rate: kind === 'arm' ? clamp(1.5 * stepLen * HORIZON / Math.max(total, 1e-3), 1.5, 3.5) : 1 };   // 팔의 짧은 이동은 같은 16스텝을 더 빨리 실행
     }
     function denoise(ch, dt) {
       if (ch.ready) return;
       ch.t += dt;
-      ch.k = Math.min(K_STEPS, Math.floor(ch.t / ((ch.kind === 'arm' ? 0.25 : DENOISE_T) / K_STEPS)));
+      ch.k = Math.min(K_STEPS, Math.floor(ch.t / ((ch.kind === 'arm' ? 0.15 : DENOISE_T) / K_STEPS)));
       if (ch.k >= K_STEPS) ch.ready = true;
     }
     const noisy = (ch, j) => { const sg = Math.pow(1 - ch.k / K_STEPS, 1.5); return ch.clean.map((p, i) => p.clone().addScaledVector(ch.eps[j][i], sg)); };
@@ -712,7 +712,7 @@
         const da = angDiff(R.yaw, t.yaw);
         R.v = lerp(R.v, 0, Math.min(1, dt * 8));
         if (Math.abs(da) < 0.02 || t.time > 3) { R.w = 0; tasks.shift(); return; }
-        R.w = clamp(da * 5, -2.4, 2.4);
+        R.w = clamp(da * 6, -3.2, 3.2);
         return;
       }
       if (t.k === 'wait') { if (t.time > t.t) tasks.shift(); return; }
@@ -933,7 +933,7 @@
       x.font = font(90); const fs = Math.min(90, 90 * 690 / x.measureText(msg).width); x.font = font(fs);
       x.fillText(msg, CW / 2, CH / 2 + 4);
       const d = x.getImageData(0, 0, CW, CH).data, out = [];
-      for (let py = 0; py < CH; py += 5) for (let px = (py / 5) % 2 ? 2 : 0; px < CW; px += 5) if (d[(py * CW + px) * 4 + 3] > 140) out.push([(px - CW / 2) / CW, (CH / 2 - py) / CW]);
+      for (let py = 0; py < CH; py += 4) for (let px = (py / 4) % 2 ? 2 : 0; px < CW; px += 4) if (d[(py * CW + px) * 4 + 3] > 140) out.push([(px - CW / 2) / CW, (CH / 2 - py) / CW]);
       return out;
     })();
     let textFx = null;
@@ -949,7 +949,7 @@
       }
       const cols = [0xff5a4e, 0xffb020, 0x1fb5c9, 0x7a5cff, 0x2fbf63].map(c => new T.Color(c));
       const items = TEXT_PTS.map(([u, v], i) => ({ to: center.clone().addScaledVector(right, u * W).addScaledVector(up, v * W), delay: Math.random() * 0.25, c: cols[Math.floor((u + 0.5) * 10) % 5], ph: Math.random() * 6, fall: 0.2 + Math.random() * 0.5 }));
-      const pts = new T.Points(geo, new T.PointsMaterial({ size: 2.4 * renderer.getPixelRatio(), sizeAttenuation: false, vertexColors: true, transparent: true, depthTest: false, depthWrite: false }));
+      const pts = new T.Points(geo, new T.PointsMaterial({ size: 1.6 * renderer.getPixelRatio(), sizeAttenuation: false, vertexColors: true, transparent: true, depthTest: false, depthWrite: false }));
       pts.renderOrder = 13; fx.add(pts);
       textFx = { pts, items, from: from.clone(), t: -0.35 };
     }
