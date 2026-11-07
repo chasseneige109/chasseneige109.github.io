@@ -519,7 +519,7 @@
       return p0.clone().multiplyScalar(2 * t3 - 3 * t2 + 1).add(m0.clone().multiplyScalar(t3 - 2 * t2 + t)).add(p1.clone().multiplyScalar(-2 * t3 + 3 * t2)).add(m1.clone().multiplyScalar(t3 - t2));
     }
     function makeChunk(kind, from, goal, heading) {
-      const stepLen = kind === 'base' ? 0.072 : 0.036;
+      const stepLen = kind === 'base' ? 0.072 : 0.05;
       const dist = from.distanceTo(goal), total = Math.min(dist, stepLen * HORIZON);
       const end = from.clone().lerp(goal, dist > 1e-6 ? total / dist : 1);
       const d = end.clone().sub(from);
@@ -530,12 +530,13 @@
       for (let i = 1; i <= HORIZON; i++) clean.push(hermite(from, m0, end, m1, i / HORIZON));
       const sig = kind === 'base' ? 0.32 : 0.09, dims = kind === 'base' ? 2 : 3;
       return { kind, from: from.clone(), clean, eps: [smoothNoise(HORIZON, sig, dims), smoothNoise(HORIZON, sig, dims), smoothNoise(HORIZON, sig, dims)],
-               t: 0, k: 0, s: 0, ready: false, final: total >= dist - 1e-4 };
+               t: 0, k: 0, s: 0, ready: false, final: total >= dist - 1e-4,
+               rate: kind === 'arm' ? clamp(stepLen * HORIZON / Math.max(total, 1e-3), 1, 2.2) : 1 };   // 팔의 짧은 이동은 같은 16스텝을 더 빨리 실행
     }
     function denoise(ch, dt) {
       if (ch.ready) return;
       ch.t += dt;
-      ch.k = Math.min(K_STEPS, Math.floor(ch.t / (DENOISE_T / K_STEPS)));
+      ch.k = Math.min(K_STEPS, Math.floor(ch.t / ((ch.kind === 'arm' ? 0.25 : DENOISE_T) / K_STEPS)));
       if (ch.k >= K_STEPS) ch.ready = true;
     }
     const noisy = (ch, j) => { const sg = Math.pow(1 - ch.k / K_STEPS, 1.5); return ch.clean.map((p, i) => p.clone().addScaledVector(ch.eps[j][i], sg)); };
@@ -567,7 +568,7 @@
         return null;
       }
       const limit = cur.final ? HORIZON : EXEC;
-      cur.s = Math.min(limit, cur.s + dt / DT_A);
+      cur.s = Math.min(limit, cur.s + dt * cur.rate / DT_A);
       if (!cur.final && cur.s >= EXEC - 4 && !ctl.next) {
         const hand = cur.clean[EXEC - 1], prev = cur.clean[EXEC - 2];
         ctl.next = makeChunk(kind, hand, goalFn(hand), hand.clone().sub(prev).setY(0).normalize());
@@ -591,7 +592,7 @@
     function runTokens(ctl, kind, dt, pos, goalFn, end) {
       scaleTracks(kind);
       if (!ctl.toks) { ctl.toks = []; ctl.from = pos.clone(); ctl.exec = 0; ctl.genT = 0; ctl.done = false; ctl.born = 0; }
-      const q = kind === 'base' ? 0.05 : 0.015, stepLen = kind === 'base' ? 0.072 : 0.036;
+      const q = kind === 'base' ? 0.05 : 0.015, stepLen = kind === 'base' ? 0.072 : 0.05;
       const qz = v => Math.round(v / q) * q;
       ctl.genT += dt;
       while (!ctl.done && ctl.genT >= TOK_T && ctl.toks.length - ctl.exec < AHEAD) {
@@ -732,7 +733,7 @@
         else if (t.s === 2) { R.gripGoal.copy(t.grip); if (handReached(0.008) || t.st > 3) { t.s = 3; t.st = 0; } }
         else if (t.s === 3) {
           R.fingersGoal = toy.w + 0.007;
-          if (t.st > 0.2) {
+          if (t.st > 0.14) {
             if (gripPos().distanceTo(p) > 0.09) { speak("Hmm, I can't reach that one."); R.fingersGoal = 0.035; tasks.shift(); R.look = null; return; }
             armR.wrist.attach(toy.mesh); toy.held = true; toy.inBin = false; R.held = toy;
             t.s = 4; t.st = 0;
@@ -762,7 +763,7 @@
         else if (t.s === 2) { R.gripGoal.copy(t.grip); if (handReached(0.008) || t.st > 3) { t.s = 3; t.st = 0; } }
         else if (t.s === 3) {
           R.fingersGoal = toy.w + 0.03;
-          if (t.st > 0.15) {
+          if (t.st > 0.1) {
             scene.attach(toy.mesh); toy.held = false; R.held = null; toy.vy = 0;
             const pos = toy.mesh.position;
             if (t.bin && Math.abs(pos.x - BIN.x) < BIN.hw && Math.abs(pos.z - BIN.z) < BIN.hd) {
@@ -776,7 +777,7 @@
           }
         } else if (t.s === 4) {
           R.gripGoal.copy(t.above);
-          if (t.st > 0.25) {
+          if (t.st > 0.18) {
             tasks.shift(); R.look = null; R.crouchGoal = 0;
             const left = toys.filter(o => !o.inBin).length;
             if (t.bin) speak(left ? `In the basket! ${left} left.` : 'All tidy! ✨');
@@ -789,10 +790,16 @@
         const toy = t.toy || R.held;
         if (!toy) { tasks.shift(); return; }
         if (!t.s) {
-          t.toy = toy; t.s = 1; t.st = 0;
+          t.toy = toy;
           const dBin = Math.hypot(BIN.x - R.x, BIN.z - R.z);
-          if (dBin < 4) { t.aim = new T.Vector3(BIN.x, BIN.h + toy.h / 2, BIN.z); t.bin = true; }   // 입구 높이를 지날 때 바구니 중심
-          else t.aim = local(0, 0, 1.6).setY(0.05);
+          if (dBin > 2 && !t.walked) {   // 멀면 바구니에서 1.5m 거리까지 걸어간 뒤 던짐
+            t.walked = true;
+            const k = 1.5 / dBin, g = inBounds(new T.Vector3(BIN.x + (R.x - BIN.x) * k, 0, BIN.z + (R.z - BIN.z) * k));
+            tasks.unshift({ k: 'go', x: g.x, z: g.z });
+            return;
+          }
+          t.s = 1; t.st = 0;
+          t.aim = new T.Vector3(BIN.x, BIN.h + toy.h / 2, BIN.z); t.bin = true;   // 입구 높이를 지날 때 바구니 중심
           tasks.unshift({ k: 'turn', yaw: Math.atan2(t.aim.x - R.x, t.aim.z - R.z) + 0.25 });
           return;
         }
@@ -808,7 +815,7 @@
           if (t.st > 0.09) {
             scene.attach(toy.mesh); toy.held = false; R.held = null; R.fingersGoal = 0.035;
             const p0 = toy.mesh.position.clone(), d = Math.hypot(t.aim.x - p0.x, t.aim.z - p0.z);
-            const miss = t.bin ? 0.05 + d * 0.045 : 0.1;   // 멀수록 덜 정확
+            const miss = t.bin ? 0.02 + d * 0.022 : 0.1;   // 멀수록 덜 정확
             const aim = t.aim.clone().add(new T.Vector3(gauss() * miss, 0, gauss() * miss));
             const T_ = 0.5 + d * 0.14, v = aim.sub(p0).divideScalar(T_);
             v.y += 0.5 * 9.8 * T_;
@@ -900,16 +907,71 @@
       if (a === 'pick') { if (R.held) return speak('Already holding something.'); const n = nearestToy(); return n ? command(planPick(n), 'Going for the closest one.') : speak('Nothing left on the floor.'); }
       if (a === 'drop') { if (!R.held) return speak('My hand is empty.'); return command(planPlace()); }
       if (a === 'throw') {
-        if (R.held) return command([{ k: 'throw' }], Math.hypot(BIN.x - R.x, BIN.z - R.z) < 4 ? 'Shooting for the basket!' : 'Heads up!');
+        if (R.held) return command([{ k: 'throw' }], 'Shooting for the basket!');
         const n = nearestToy();
         return n ? command([...planPick(n), { k: 'throw' }], 'Grab and throw!') : speak('Nothing left to throw.');
       }
       if (a === 'tidy') return command([{ k: 'tidy' }], "Let's tidy up!");
-      if (a === 'reset') { cancel(); R.held = null; R.swing = 0; resetToys(); Object.assign(R, { x: -0.6, z: 1.0, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
+      if (a === 'reset') { cancel(); clearFx(); R.held = null; R.swing = 0; resetToys(); Object.assign(R, { x: -0.6, z: 1.0, yaw: 0.6, v: 0, w: 0, crouch: 0, crouchGoal: 0, look: null, inited: false }); R.fingersGoal = 0.035; speak('Fresh start.'); }
     }));
+
+    // ── 골인 축하: 색종이 + 작은 불꽃 ──
+    const fx = new T.Group(); scene.add(fx);
+    const FX_COLORS = [0xf08a7e, 0xf2c14e, 0x7ec4cf, 0x9b8cf0, 0x7fcf8e, 0x1a1a1a];
+    const confMats = FX_COLORS.map(c => new T.MeshBasicMaterial({ color: c, side: T.DoubleSide }));
+    const confGeo = new T.PlaneGeometry(0.024, 0.013);
+    let confetti = [], bursts = [];
+    function celebrate(x, y, z) {
+      for (let i = 0; i < 70; i++) {
+        const m = new T.Mesh(confGeo, confMats[i % confMats.length]);
+        m.position.set(x + gauss() * 0.03, y + 0.04, z + gauss() * 0.03);
+        m.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+        fx.add(m);
+        const a = Math.random() * Math.PI * 2, r = 0.3 + Math.random() * 0.8;
+        confetti.push({ m, v: new T.Vector3(Math.cos(a) * r, 2 + Math.random() * 1.5, Math.sin(a) * r), s: new T.Vector3(gauss() * 12, gauss() * 12, gauss() * 12), life: 0 });
+      }
+      for (let k = 0; k < 3; k++) bursts.push({ t: -0.12 - k * 0.22, c: new T.Vector3(x + gauss() * 0.3, y + 0.85 + Math.random() * 0.45, z + gauss() * 0.3), color: FX_COLORS[(k * 2 + Math.floor(Math.random() * 6)) % 5], pts: null });
+    }
+    function clearFx() {
+      confetti.forEach(c => fx.remove(c.m)); confetti = [];
+      bursts.forEach(b => { if (b.pts) { fx.remove(b.pts); b.pts.geometry.dispose(); b.pts.material.dispose(); } }); bursts = [];
+    }
+    function updateFx(dt) {
+      confetti = confetti.filter(c => {
+        c.life += dt;
+        const p = c.m.position;
+        c.v.y -= 6 * dt; c.v.multiplyScalar(1 - Math.min(1, dt * 1.6));
+        if (c.v.y < -0.55) c.v.y = -0.55;   // 팔랑팔랑 천천히 떨어짐
+        p.addScaledVector(c.v, dt);
+        if (p.y <= 0.004) { p.y = 0.004; c.v.set(0, 0, 0); c.s.set(0, 0, 0); c.m.rotation.x = -Math.PI / 2; }
+        else { c.m.rotation.x += c.s.x * dt; c.m.rotation.y += c.s.y * dt; c.m.rotation.z += c.s.z * dt; }
+        if (c.life > 2.4) c.m.scale.setScalar(Math.max(0.001, 1 - (c.life - 2.4) / 0.5));
+        if (c.life > 2.9) { fx.remove(c.m); return false; }
+        return true;
+      });
+      bursts = bursts.filter(b => {
+        b.t += dt;
+        if (b.t < 0) return true;
+        if (!b.pts) {
+          const N = 46, dirs = [];
+          for (let i = 0; i < N; i++) { const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u); dirs.push(new T.Vector3(r * Math.cos(a), u, r * Math.sin(a)).multiplyScalar(0.8 + Math.random() * 0.4)); }
+          const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(new Float32Array(N * 3), 3));
+          b.dirs = dirs;
+          b.pts = new T.Points(geo, new T.PointsMaterial({ color: b.color, size: 4 * renderer.getPixelRatio(), sizeAttenuation: false, transparent: true, depthWrite: false }));
+          b.pts.renderOrder = 12; fx.add(b.pts);
+        }
+        const r = 0.42 * (1 - Math.exp(-b.t * 6)), drop = 0.35 * b.t * b.t, pos = b.pts.geometry.attributes.position;
+        b.dirs.forEach((d, i) => pos.setXYZ(i, b.c.x + d.x * r, b.c.y + d.y * r - drop, b.c.z + d.z * r));
+        pos.needsUpdate = true;
+        b.pts.material.opacity = Math.max(0, 1 - b.t / 1.1);
+        if (b.t > 1.1) { fx.remove(b.pts); b.pts.geometry.dispose(); b.pts.material.dispose(); return false; }
+        return true;
+      });
+    }
 
     // ── 매 프레임 ──
     function update(dt) {
+      updateFx(dt);
       viz.children.forEach(o => { o.visible = false; });
       R.direct = null;
       step(dt);
@@ -955,12 +1017,13 @@
         if (Math.abs(p.x) > lx) { p.x = Math.sign(p.x) * lx; f.v.x *= -0.45; }
         if (Math.abs(p.z) > lz) { p.z = Math.sign(p.z) * lz; f.v.z *= -0.45; }
         const bx = p.x - BIN.x, bz = p.z - BIN.z, br = Math.hypot(bx, bz);
-        if (p.y - t.h / 2 < BIN.h && py - t.h / 2 >= BIN.h - 0.03 && br < 0.15 - t.w * 0.4) {   // 바구니 안으로
+        if (p.y - t.h / 2 < BIN.h && py - t.h / 2 >= BIN.h - 0.03 && br < 0.16 - t.w * 0.3) {   // 바구니 안으로
           t.fly = null; t.inBin = true; t.vy = Math.min(0, f.v.y);
           const n = toys.filter(o => o !== t && o.inBin).length;
           t.rest = 0.02 + t.h / 2 + n * 0.035;
           const left = toys.filter(o => !o.inBin).length;
           speak(left ? `Swish! ${left} left.` : 'All tidy! ✨');
+          celebrate(BIN.x, BIN.h, BIN.z);
           continue;
         }
         if (p.y - t.h / 2 < BIN.h && br < 0.17 + t.w && br > 1e-4) {   // 테에 맞고 튕김
@@ -990,7 +1053,7 @@
       }
 
       // 몸
-      R.crouch = lerp(R.crouch, R.crouchGoal, Math.min(1, dt * 7));
+      R.crouch = lerp(R.crouch, R.crouchGoal, Math.min(1, dt * 10));
       const bob = Math.abs(Math.sin(R.phase)) * 0.012 * R.amp;
       pelvis.position.y = HIP - R.crouch - bob + 0.006 * R.amp;
       pelvis.rotation.z = Math.sin(R.phase) * 0.05 * R.amp;
@@ -1016,7 +1079,7 @@
       if (R.swing) R.grip.lerp(R.gripGoal, Math.min(1, dt * R.swing));
       else if (R.handManual) armStep(dt, R.gripGoal);
       else { R.grip.lerp(R.gripGoal, Math.min(1, dt * 10)); armCtl.cur = armCtl.next = armCtl.cmd = null; armCtl.trail = []; }
-      R.q.slerp(R.qGoal, Math.min(1, dt * (R.handManual ? 8 : 10)));
+      R.q.slerp(R.qGoal, Math.min(1, dt * (R.handManual ? 11 : 10)));
       robot.updateMatrixWorld(true);
       solveArm(armR, wristFromGrip(R.grip, R.q), R.q);
       R.fingers = lerp(R.fingers, R.fingersGoal, Math.min(1, dt * 16));
@@ -1125,6 +1188,6 @@
     requestAnimationFrame(loop);
     stage.classList.add('ready');
     // 테스트·디버그용
-    window.RobotLab = { cam, camState: () => ({ dist: camDist, x: cam.position.x, z: cam.position.z, t: camTarget.toArray().map(v => +v.toFixed(3)) }), planPlace, findPath, OBST, SURF, surfaceAt, POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
+    window.RobotLab = { celebrate, cam, camState: () => ({ dist: camDist, x: cam.position.x, z: cam.position.z, t: camTarget.toArray().map(v => +v.toFixed(3)) }), planPlace, findPath, OBST, SURF, surfaceAt, POL, get status() { return status; }, R, toys, tasks, command, planPick, planBin, nearestToy, gripPos, solveArm, armR, wristFromGrip, update, render, speak, get say() { return say; } };
   }
 })();
