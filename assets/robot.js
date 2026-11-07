@@ -926,13 +926,14 @@
       textBurst(new T.Vector3(x, y + 0.3, z));
     }
     // 불꽃 입자가 날아올라 방 위 하늘에 글자를 만들었다가 반짝이며 떨어짐 (카메라를 향한 평면)
-    const TEXT_PTS = (() => {
-      const c = document.createElement('canvas'); c.width = 720; c.height = 110;
+    const TEXT_PTS = (() => {   // 한 줄, 점 간격을 넉넉히 해서 글자가 또렷하게
+      const CW = 720, CH = 110, c = document.createElement('canvas'); c.width = CW; c.height = CH;
       const x = c.getContext('2d'); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle';
-      const msg = 'Welcome to My Blog!!', font = px => `800 ${px}px system-ui, -apple-system, "Segoe UI", sans-serif`;
-      x.font = font(80); const fs = Math.min(80, 80 * 680 / x.measureText(msg).width); x.font = font(fs); x.fillText(msg, 360, 58);
-      const d = x.getImageData(0, 0, 720, 110).data, out = [];
-      for (let py = 0; py < 110; py += 3) for (let px = 0; px < 720; px += 3) if (d[(py * 720 + px) * 4 + 3] > 128) out.push([(px - 360) / 720, (55 - py) / 720]);
+      const msg = 'Welcome to My Blog!!', font = px => `700 ${px}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+      x.font = font(90); const fs = Math.min(90, 90 * 690 / x.measureText(msg).width); x.font = font(fs);
+      x.fillText(msg, CW / 2, CH / 2 + 4);
+      const d = x.getImageData(0, 0, CW, CH).data, out = [];
+      for (let py = 0; py < CH; py += 5) for (let px = (py / 5) % 2 ? 2 : 0; px < CW; px += 5) if (d[(py * CW + px) * 4 + 3] > 140) out.push([(px - CW / 2) / CW, (CH / 2 - py) / CW]);
       return out;
     })();
     let textFx = null;
@@ -942,10 +943,13 @@
       geo.setAttribute('position', new T.BufferAttribute(new Float32Array(N * 3), 3));
       geo.setAttribute('color', new T.BufferAttribute(new Float32Array(N * 3), 3));
       const right = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
-      const center = camTarget.clone().addScaledVector(up, 1.2), W = 4.6;
+      const W = 3.6, center = from.clone().addScaledVector(up, 0.75);
+      for (const sx of [-1, 1]) {   // 글자 양 끝이 화면 안에 들어오게
+        for (let n = 0; n < 80 && sx * center.clone().addScaledVector(right, sx * W * 0.53).project(cam).x > 0.94; n++) center.addScaledVector(right, -sx * 0.04);
+      }
       const cols = [0xff5a4e, 0xffb020, 0x1fb5c9, 0x7a5cff, 0x2fbf63].map(c => new T.Color(c));
-      const items = TEXT_PTS.map(([u, v], i) => ({ to: center.clone().addScaledVector(right, u * W).addScaledVector(up, v * W), delay: Math.random() * 0.25, c: cols[Math.floor((u + 0.5) * 5 + Math.random() * 0.8) % 5], ph: Math.random() * 6, fall: 0.2 + Math.random() * 0.5 }));
-      const pts = new T.Points(geo, new T.PointsMaterial({ size: 3.6 * renderer.getPixelRatio(), sizeAttenuation: false, vertexColors: true, transparent: true, depthTest: false, depthWrite: false }));
+      const items = TEXT_PTS.map(([u, v], i) => ({ to: center.clone().addScaledVector(right, u * W).addScaledVector(up, v * W), delay: Math.random() * 0.25, c: cols[Math.floor((u + 0.5) * 10) % 5], ph: Math.random() * 6, fall: 0.2 + Math.random() * 0.5 }));
+      const pts = new T.Points(geo, new T.PointsMaterial({ size: 2.4 * renderer.getPixelRatio(), sizeAttenuation: false, vertexColors: true, transparent: true, depthTest: false, depthWrite: false }));
       pts.renderOrder = 13; fx.add(pts);
       textFx = { pts, items, from: from.clone(), t: -0.35 };
     }
@@ -957,10 +961,10 @@
       const pos = f.pts.geometry.attributes.position, col = f.pts.geometry.attributes.color, _p = new T.Vector3();
       f.items.forEach((it, i) => {
         const k = clamp((f.t - it.delay) / 0.7, 0, 1), e = 1 - Math.pow(1 - k, 3);
-        _p.lerpVectors(f.from, it.to, e); _p.y += Math.sin(k * Math.PI) * 0.5;   // 포물선으로 솟아오름
+        _p.lerpVectors(f.from, it.to, e); _p.y += Math.sin(k * Math.PI) * 0.3;   // 포물선으로 솟아오름
         if (f.t > 2.4) _p.y -= it.fall * (f.t - 2.4) * (f.t - 2.4) * 2;
         pos.setXYZ(i, _p.x, _p.y, _p.z);
-        const tw = k < 1 ? 1 : 0.7 + 0.3 * Math.sin(f.t * 14 + it.ph);   // 반짝임
+        const tw = k < 1 ? 1 : 0.88 + 0.12 * Math.sin(f.t * 14 + it.ph);   // 반짝임
         col.setXYZ(i, it.c.r * tw + (1 - tw) * 0.2, it.c.g * tw + (1 - tw) * 0.2, it.c.b * tw + (1 - tw) * 0.2);
       });
       pos.needsUpdate = true; col.needsUpdate = true;
