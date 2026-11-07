@@ -555,10 +555,10 @@
       drawTrack(tr, ch.clean, i => (i <= done ? C_DONE : i <= EXEC || (ch.final && ch.clean.length) ? C_EXEC : C_TAIL), ch.from);
     }
     // 실행 중인 묶음을 따라가고, 끝나기 4스텝 전에 다음 묶음을 미리 디노이징
-    function runChunks(ctl, kind, dt, pos, goal, heading) {
+    function runChunks(ctl, kind, dt, pos, goalFn, heading) {
       scaleTracks(kind);
       const label = kind === 'base' ? 'walking' : 'arm';
-      if (!ctl.cur) ctl.cur = makeChunk(kind, pos, goal, heading());
+      if (!ctl.cur) ctl.cur = makeChunk(kind, pos, goalFn(pos), heading());
       const cur = ctl.cur;
       if (!cur.ready) {
         denoise(cur, dt);
@@ -570,7 +570,7 @@
       cur.s = Math.min(limit, cur.s + dt / DT_A);
       if (!cur.final && cur.s >= EXEC - 4 && !ctl.next) {
         const hand = cur.clean[EXEC - 1], prev = cur.clean[EXEC - 2];
-        ctl.next = makeChunk(kind, hand, goal, hand.clone().sub(prev).setY(0).normalize());
+        ctl.next = makeChunk(kind, hand, goalFn(hand), hand.clone().sub(prev).setY(0).normalize());
       }
       if (ctl.next) { denoise(ctl.next, dt); drawChunk(ctl.next, tracks.next, false); }
       drawChunk(cur, tracks.cur, true);
@@ -646,7 +646,9 @@
       const heading = () => new T.Vector3(Math.sin(R.yaw), 0, Math.cos(R.yaw));
       if (POL.mode === 'diffusion') {
         if (dist < 0.03 && !baseCtl.cur) return true;
-        const target = runChunks(baseCtl, 'base', dt, pos, lookAhead(t.path, t.wi, pos, 1.2), heading);
+        // 다음 묶음은 그 묶음이 시작될 지점(현재 묶음의 8번째 행동)에서 다시 경로를 내다봄
+        const goalFn = p => { let j = t.wi; while (j < t.path.length - 1 && p.distanceTo(t.path[j + 1]) < t.path[j].distanceTo(t.path[j + 1])) j++; return lookAhead(t.path, j, p, 1.2); };
+        const target = runChunks(baseCtl, 'base', dt, pos, goalFn, heading);
         if (target) {
           R.direct = target;
           const dir = target.clone().sub(pos);
@@ -666,7 +668,7 @@
         if (R.grip.distanceTo(goal) < 0.004 && !armCtl.cur) { R.grip.copy(goal); return; }
         if (armCtl.goal && armCtl.goal.distanceTo(goal) > 0.01) { armCtl.cur = null; armCtl.next = null; }
         armCtl.goal = goal.clone();
-        const target = runChunks(armCtl, 'arm', dt, R.grip, goal, () => new T.Vector3(0, 0, 1));
+        const target = runChunks(armCtl, 'arm', dt, R.grip, () => goal, () => new T.Vector3(0, 0, 1));
         if (target) R.grip.copy(target);
         return;
       }
