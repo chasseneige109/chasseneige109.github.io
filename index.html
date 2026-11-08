@@ -6026,6 +6026,15 @@ const LPE = (() => {
       }),
       // 입력·붙여넣기로 들어오는 특수 공백도 일반 공백으로
       V.EditorView.inputHandler.of((v, from, to, text) => {
+        // 글자를 선택하고 $ → $…$ 로 감싸고 줄바꿈은 공백으로 (한 번 더 누르면 $$…$$)
+        if (text === '$' && v.state.selection.ranges.some(r => !r.empty)) {
+          v.dispatch(v.state.changeByRange(r => {
+            if (r.empty) return { changes: { from: r.from, insert: '$' }, range: S.EditorSelection.cursor(r.from + 1) };
+            const t = v.state.sliceDoc(r.from, r.to).replace(/\s*\n\s*/g, ' ').trim();
+            return { changes: { from: r.from, to: r.to, insert: '$' + t + '$' }, range: S.EditorSelection.range(r.from + 1, r.from + 1 + t.length) };
+          }), { userEvent: 'input.type', scrollIntoView: true });
+          return true;
+        }
         if (!text.match(ODD_SPACE)) return false;
         const t = text.replace(ODD_SPACE, ' ');
         v.dispatch({ changes: { from, to, insert: t }, selection: { anchor: from + t.length }, userEvent: 'input.type', scrollIntoView: true });
