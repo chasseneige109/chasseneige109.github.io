@@ -6063,6 +6063,7 @@ const LPE = (() => {
         }
       }),
       V.EditorView.updateListener.of(u => {
+        if (clickAnchor && (u.selectionSet || u.focusChanged || u.heightChanged || u.geometryChanged)) holdClickAnchor();
         if (!u.docChanged) return;
         syncHidden();
         if (u.transactions.some(t => t.annotation(S.Transaction.userEvent) !== 'lpe.set')) {
@@ -6075,6 +6076,23 @@ const LPE = (() => {
   }
 
   function newState(doc) { return S.EditorState.create({ doc: doc || '', extensions }); }
+
+  // 수식·표를 누르거나 끌면 원문이 열리며 높이가 바뀜 → 누른 블록이 화면에서 제자리에 있게 스크롤을 되돌림
+  // (CodeMirror는 화면 맨 위 줄을 기준으로 맞추기 때문에 누른 곳이 확 위아래로 밀려 보임)
+  let clickAnchor = null, anchorRaf = 0;
+  function fixClickAnchor() {
+    if (!clickAnchor || !view) return;
+    const c = view.coordsAtPos(clickAnchor.from, 1), d = c ? c.top - clickAnchor.y : 0;
+    if (Math.abs(d) > 1) window.scrollBy(0, d);
+  }
+  // 바뀐 화면이 그려지기 전에 바로 맞추고, CodeMirror가 다음 프레임에 높이를 다시 재고 움직이면 한 번 더 맞춤
+  function holdClickAnchor() {
+    fixClickAnchor();
+    cancelAnimationFrame(anchorRaf);
+    let n = 0;
+    anchorRaf = requestAnimationFrame(function f() { fixClickAnchor(); if (++n < 3) anchorRaf = requestAnimationFrame(f); });
+  }
+
 
   function init(wrapEl, hiddenEl) {
     hidden = hiddenEl;
@@ -6092,6 +6110,21 @@ const LPE = (() => {
     let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { probeCache = null; view.dispatch({ effects: remeasure.of(null) }); }, 150); });
     // 수식 글꼴이 늦게 로드돼도 다시 그림
     window.addEventListener('load', () => { probeCache = null; view.dispatch({ effects: remeasure.of(null) }); });
+    view.contentDOM.addEventListener('pointerdown', e => {
+      if (e.button) return;
+      const b = view.lineBlockAtHeight(e.clientY - view.documentTop);
+      const c = view.coordsAtPos(b.from, 1);
+      clickAnchor = { from: b.from, y: c ? c.top : b.top + view.documentTop };
+    }, true);
+    const dropAnchor = () => { const a = clickAnchor; setTimeout(() => { if (clickAnchor === a) clickAnchor = null; }, 400); };
+    const clearAnchor = () => { clickAnchor = null; };
+    window.addEventListener('pointerup', dropAnchor);
+    // 직접 스크롤하거나, 끌다가 화면 끝에 닿아 자동으로 스크롤될 때는 맞추지 않음
+    window.addEventListener('pointercancel', clearAnchor);
+    window.addEventListener('wheel', clearAnchor, { passive: true });
+    window.addEventListener('touchmove', clearAnchor, { passive: true });
+    window.addEventListener('keydown', e => { if (/^(Page|Arrow|Home|End)/.test(e.key)) clearAnchor(); });
+    window.addEventListener('pointermove', e => { if (clickAnchor && e.buttons && (e.clientY < 24 || e.clientY > innerHeight - 24)) clearAnchor(); });
     // 아래 빈 여백을 눌러도 글 끝으로 커서 이동
     wrapEl.addEventListener('mousedown', e => {
       if (e.target !== wrapEl) return;
