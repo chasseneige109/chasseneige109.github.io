@@ -1793,17 +1793,18 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 }
 
 
-/* ── 링크: 차분한 모던 스타일 — 평소엔 살짝 굵은 글자 + 작은 ↗,
-   마우스를 올리면 얇은 선이 왼쪽에서 그어지고 ↗가 2px 움직임 ── */
+/* ── 링크: 차분한 모던 스타일 — 평소엔 살짝 굵은 글자 + 작은 고리(🔗) 아이콘,
+   마우스를 올리면 얇은 선이 왼쪽에서 그어지고 고리가 살짝 기울어짐 ── */
 .news-inline-link,.news-link,.cv-entry-link,.media-link-inline{
   color:#000;font-weight:500;text-decoration:none;border:none;border-radius:0;padding:0 0 1px;margin:0;
   background:linear-gradient(currentColor,currentColor) no-repeat 0 100% / 0 1px;
   transition:background-size .35s cubic-bezier(.22,.61,.36,1)}
 .news-inline-link:hover,.news-link:hover,.cv-entry-link:hover,.media-link-inline:hover{background-size:100% 1px;color:#000}
 .news-inline-link::after,.news-link::after,.cv-entry-link::after,.media-link-inline::after{
-  content:'↗';display:inline-block;margin-left:.15em;font-size:.78em;font-weight:400;color:var(--muted);
-  transition:transform .3s cubic-bezier(.22,.61,.36,1),color .3s}
-.news-inline-link:hover::after,.news-link:hover::after,.cv-entry-link:hover::after,.media-link-inline:hover::after{transform:translate(2px,-2px);color:#000}
+  content:'';display:inline-block;width:.68em;height:.68em;margin-left:.22em;vertical-align:-.02em;
+  background:#a3a3a3;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'/%3E%3C/svg%3E") center/contain no-repeat;
+  transition:transform .3s cubic-bezier(.22,.61,.36,1),background-color .3s}
+.news-inline-link:hover::after,.news-link:hover::after,.cv-entry-link:hover::after,.media-link-inline:hover::after{transform:rotate(-20deg);background:#000}
 .cv-entry-link{justify-self:start;align-self:start;width:fit-content;margin-top:8px}
 
 
