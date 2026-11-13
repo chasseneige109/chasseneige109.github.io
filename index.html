@@ -1724,6 +1724,9 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
   .posts-grid-wrap[class*="cols-"] .post-card:hover::after,.post-row:hover .pr-arrow,.news-row:hover .news-arrow{transform:rotate(90deg)}
   .recent-card:active::after,.landing-card:active::after,.post-row:active .pr-arrow,.news-row:active .news-arrow{transform:rotate(90deg) scale(.9);transition-duration:.1s}
 }
+/* 목록·카드 오른쪽 ↗ 숨김 */
+.recent-card::after,.landing-card::after,.landing-section-label.is-link::after,.posts-grid-wrap .post-card::after{content:none !important;display:none !important}
+.pr-arrow,.news-arrow{display:none !important}
 
 
 /* ── News: 글자 안 링크 ── */
