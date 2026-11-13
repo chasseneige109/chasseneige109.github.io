@@ -1541,10 +1541,6 @@ body:not(.admin-mode) .landing-btns{display:none} /* 방문자에겐 빈 버튼 
 @media(max-width:600px){.hero-logo{height:84px;margin-bottom:20px}.hero-logo svg{width:76px;height:76px}}
 
 /* ── 마우스를 따라다니는 원 (흰 원 + difference 블렌드 → 흰 배경에선 검정) ── */
-.sticky-cursor{position:fixed;left:0;top:0;width:15px;height:15px;border-radius:50%;background:#fff;mix-blend-mode:difference;pointer-events:none;z-index:2147483647;opacity:0;will-change:transform;transition:opacity .3s ease,width .2s cubic-bezier(.25,1,.5,1),height .2s cubic-bezier(.25,1,.5,1)}
-.sticky-cursor.is-active{opacity:1}
-.sticky-cursor.is-hidden{opacity:0}
-@media (hover:none),(pointer:coarse){.sticky-cursor{display:none}}
 
 
 /* ── POSTS / PAPER: publications 스타일 ── */
@@ -2114,7 +2110,6 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
   </div>
 </div>
 <div id="particles-js"></div>
-<div class="sticky-cursor" aria-hidden="true"></div>
 <div class="z1">
 
 <nav class="topnav">
@@ -7298,65 +7293,6 @@ particlesJS("particles-js",{
 </script>
 
 <script>
-// ── 마우스를 따라다니는 원: 약간 늦게 따라오고, 메뉴 근처에선 커지며 달라붙음 ──
-(function(){
-  var dot = document.querySelector('.sticky-cursor');
-  if (!dot) return;
-  if (window.matchMedia('(hover:none),(pointer:coarse)').matches) return;
-  var mouse = {x:-100, y:-100}, pos = {x:-100, y:-100}, scale = {x:1, y:1}, angle = 0;
-  var targets = [], snap = null, started = false, overLink = false;
-  var EASE = .15, SMALL = 15, BIG = 40;
-  function measure(){
-    targets = Array.prototype.map.call(document.querySelectorAll('.nav-tab, .nav-logo'), function(el){
-      var r = el.getBoundingClientRect();
-      return {el:el, cx:r.left + r.width/2, cy:r.top + r.height/2, range:Math.max(r.width, r.height)/2 + 36};
-    }).filter(function(t){ return t.cx > 0; });
-  }
-  window.addEventListener('resize', measure);
-  window.addEventListener('scroll', measure, {passive:true});
-  setInterval(measure, 1000); measure();
-  window.addEventListener('mousemove', function(e){
-    mouse.x = e.clientX; mouse.y = e.clientY;
-    if (!started){ started = true; pos.x = mouse.x; pos.y = mouse.y; dot.classList.add('is-active'); }
-    var best = null, bestD = Infinity;
-    targets.forEach(function(t){
-      var d = Math.hypot(mouse.x - t.cx, mouse.y - t.cy);
-      if (d < t.range && d < bestD){ bestD = d; best = t; }
-    });
-    if (snap && snap !== best){ snap.el.style.transition = 'transform .3s cubic-bezier(.25,1,.5,1)'; snap.el.style.transform = ''; }
-    snap = best;
-    // 입력칸 위에서는 숨겨서 글쓰기에 방해되지 않게
-    var tag = e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], [contenteditable="plaintext-only"], .lp-editor');
-    overLink = !!(e.target.closest && e.target.closest('.news-inline-link,.news-link,.cv-entry-link,.media-link-inline,.lau-icon'));
-    // 입력칸과 링크 위에서는 원을 숨김 (링크는 자체 효과가 있으므로)
-    dot.classList.toggle('is-hidden', !!tag || overLink);
-  });
-  document.addEventListener('mouseleave', function(){ dot.classList.remove('is-active'); started = false; });
-  function tick(){
-    var tx = mouse.x, ty = mouse.y, sx = 1, sy = 1, a = angle, size = SMALL;
-    if (snap){
-      var dx = mouse.x - snap.cx, dy = mouse.y - snap.cy, d = Math.hypot(dx, dy);
-      tx = snap.cx + dx * .3; ty = snap.cy + dy * .3;
-      a = Math.atan2(dy, dx);
-      var k = Math.min(d / (snap.range * .6), 1);
-      sx = Math.min(1 + .25 * k, 1.3); sy = Math.max(1 - .15 * k, .8);
-      snap.el.style.transition = 'none';
-      snap.el.style.transform = 'translate3d(' + dx * .15 + 'px,' + dy * .15 + 'px,0)';
-      size = BIG;
-    }
-    dot.style.width = dot.style.height = size + 'px';
-    pos.x += (tx - pos.x) * EASE; pos.y += (ty - pos.y) * EASE;
-    scale.x += (sx - scale.x) * EASE; scale.y += (sy - scale.y) * EASE;
-    var da = a - angle;
-    while (da > Math.PI) da -= 2 * Math.PI;
-    while (da < -Math.PI) da += 2 * Math.PI;
-    angle += da * EASE;
-    dot.style.transform = 'translate3d(' + pos.x + 'px,' + pos.y + 'px,0) translate(-50%,-50%) rotate(' + angle + 'rad) scale(' + scale.x + ',' + scale.y + ')';
-    requestAnimationFrame(tick);
-  }
-  tick();
-})();
-
 // ── Home 로고 점들: 마우스 쪽으로 살짝 끌려오고, 가장 가까운 점은 늘어남 ──
 (function(){
   var svg = document.querySelector('.hero-logo-dots');
