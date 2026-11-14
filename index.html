@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,400&family=Hanken+Grotesk:ital,wght@0,300..700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -1303,14 +1303,14 @@ button, a, label { touch-action: manipulation; }
 
 /* ══════════════════════════════════════════════════════════════
    REDESIGN — al-folio 스타일 (seooyxx.com 참고)
-   흑백 · SF Pro/Inter · 카드 대신 얇은 구분선 목록 · 가운데 1220px
+   흑백 · Instrument Sans · 카드 대신 얇은 구분선 목록 · 가운데 1220px
    기능/JS는 그대로, 아래 규칙이 위의 스타일을 덮어씀
    ══════════════════════════════════════════════════════════════ */
 :root{
   --s900:#000;--s800:#1a1a1a;--s700:#333;--s600:#555;--s500:#767676;--s400:#999;--s300:#ccc;--s200:#e6e6e6;--s100:#f2f2f2;
   --blue:#111;--blue-l:#333;--blue-bg:#f2f2f2;
   --bg:#fff;--rule:rgba(0,0,0,.12);--tag:#eee;--muted:#767676;
-  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter','Pretendard Variable',Pretendard,'Segoe UI',system-ui,sans-serif;
+  --sans:'Instrument Sans','Pretendard Variable',Pretendard,system-ui,-apple-system,'Segoe UI',sans-serif;
   --serif:var(--sans);
   --r:6px;--r2:8px;--r3:10px;
   --shadow:none;--shadow-lg:0 8px 28px rgba(0,0,0,.08);
@@ -2150,11 +2150,6 @@ textarea.w-inp-block{display:block;width:100%;resize:none;overflow:hidden}
   #page-landing .recent-card{grid-template-columns:minmax(0,1fr) 74px;column-gap:12px}
   #page-landing .landing-section-label{font-size:28px}
 }
-/* Home 글꼴: It's Nice That의 Labil Grotesk(유료)와 비슷한 무료 Hanken Grotesk, 한글은 Pretendard */
-#page-landing{--sans:'Hanken Grotesk','Pretendard Variable',Pretendard,-apple-system,'Segoe UI',sans-serif;font-family:var(--sans);letter-spacing:.005em}
-#page-landing .rb-title,#page-landing .lau-name{font-weight:400}
-/* 글꼴: Apple 기기는 SF Pro, 그 외엔 Inter (한글은 Pretendard) — 자간을 살짝 좁게 */
-body{letter-spacing:-.011em;font-optical-sizing:auto}
 
 </style>
 <script>
