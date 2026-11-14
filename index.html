@@ -2122,6 +2122,35 @@ textarea.w-inp-block{display:block;width:100%;resize:none;overflow:hidden}
   .rc-date,.pc-date,.cv-entry-date{font-size:.78rem !important}
 }
 
+/* ══ Home: 참고 사이트와 덜 닮게 — 작은 로고, 작은 대문자 섹션 라벨(검은 밑줄),
+   표 머리줄 없음, 날짜는 오른쪽 끝 ══ */
+#page-landing .landing-hero{padding:28px 0 8px;border-bottom:none}
+#page-landing .hero-logo{height:64px}
+#page-landing .hero-logo svg{width:56px;height:56px}
+#page-landing .landing-grid{padding-top:24px}
+#page-landing .landing-section-label{font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;margin:0;padding:0 0 12px;border-bottom:1px solid #000}
+#page-landing .landing-section-label.is-link:hover{color:var(--muted)}
+#page-landing .list-head{display:none}
+#page-landing .landing-cards{border-top:none}
+#page-landing .news-row,#page-landing .recent-card,#page-landing .landing-card{border-bottom-color:var(--rule)}
+#page-landing .news-row{grid-template-columns:minmax(0,1fr) 96px;column-gap:24px}
+#page-landing .news-list.has-thumbs .news-row{grid-template-columns:64px minmax(0,1fr) 96px}
+#page-landing .news-date{order:3;text-align:right;font-variant-numeric:tabular-nums}
+#page-landing .news-row .item-thumb{order:1}
+#page-landing .news-text{order:2}
+#page-landing .recent-card{grid-template-columns:minmax(0,1fr) auto 96px;column-gap:20px}
+#page-landing .recent-card .rc-title{order:1}
+#page-landing .recent-card .rc-type{order:2;background:none;padding:0;color:var(--muted);font-size:.82rem}
+#page-landing .recent-card .rc-date{order:3;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:600px){
+  #page-landing .hero-logo{height:52px}
+  #page-landing .hero-logo svg{width:44px;height:44px}
+  #page-landing .news-row{grid-template-columns:minmax(0,1fr) 74px;column-gap:12px}
+  #page-landing .news-list.has-thumbs .news-row{grid-template-columns:48px minmax(0,1fr) 74px}
+  #page-landing .recent-card{grid-template-columns:minmax(0,1fr) 74px;column-gap:12px}
+  #page-landing .landing-section-label{font-size:12px}
+}
+
 </style>
 <script>
 // 핀치줌, 더블탭줌 완전 차단
