@@ -1901,9 +1901,10 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 @media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.gallery-grid{grid-template-columns:1fr;gap:32px}.gallery-title{font-size:32px;line-height:40px}.gallery-head{padding-top:28px}}
 
-/* ══ Projects: 한 줄에 하나씩 — 왼쪽 작은 커버, 오른쪽 기간·제목·설명·팀·태그 ══ */
-#projects-grid{display:block;border-bottom:1px solid var(--rule)}
-#projects-grid .g-card{display:grid;grid-template-columns:200px minmax(0,1fr);column-gap:32px;align-items:start;padding:24px 0;border-top:1px solid var(--rule)}
+/* ══ Projects: 2열, 카테고리 필터 없음 — 왼쪽 작은 커버, 오른쪽 기간·제목·설명·팀·태그 ══ */
+#projects-filters{display:none}
+#projects-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:48px;row-gap:0;margin-top:28px}
+#projects-grid .g-card{display:grid;grid-template-columns:168px minmax(0,1fr);column-gap:24px;align-items:start;padding:24px 0;border-top:1px solid var(--rule)}
 #projects-grid .g-cover{aspect-ratio:4/3;border-radius:4px;background:#f4f4f3}
 #projects-grid .g-info{margin:0;display:flex;flex-direction:column}
 #projects-grid .g-date{order:-2;font-size:12.5px;color:var(--muted);margin:0 0 6px}
@@ -1916,6 +1917,7 @@ body.sorting-now,body.sorting-now *{cursor:grabbing !important;user-select:none 
 #projects-grid .g-card:hover .g-title{text-decoration:none;color:var(--muted)}
 #projects-grid .g-card:hover .g-cover img{transform:scale(1.03)}
 #projects-grid .g-empty{padding:60px 0}
+@media(max-width:900px){#projects-grid{grid-template-columns:1fr}}
 @media(max-width:600px){
   #projects-grid .g-card{grid-template-columns:104px minmax(0,1fr);column-gap:16px;padding:18px 0}
   #projects-grid .g-cover{aspect-ratio:1/1}
@@ -3747,7 +3749,7 @@ async function renderProjectsPage() {
   all.forEach(p => { if (p.body != null && !p.meta) p.meta = splitProjectMeta(p.body).meta; });
   const tags = [...new Set(all.flatMap(p => p.tags || []))].sort((a, b) => a.localeCompare(b));
   document.getElementById('projects-filters').innerHTML = tags.length ? pillsHTML(tags.map(t => [t, t]), projectTag, 'setProjectTag') : '';
-  const list = projectTag ? all.filter(p => (p.tags || []).includes(projectTag)) : all;
+  const list = all;   // 카테고리 필터 없음
   const grid = document.getElementById('projects-grid');
   grid.innerHTML = list.length ? list.map(p => galleryCardHTML(p, 'projects')).join('')
     : `<div class="g-empty">No projects yet.${isAdmin ? ' Use <b>New Post</b> and choose <b>Projects</b>.' : ''}</div>`;
