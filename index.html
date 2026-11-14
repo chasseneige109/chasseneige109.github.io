@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,400&family=Hanken+Grotesk:ital,wght@0,300..700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -2128,7 +2128,7 @@ textarea.w-inp-block{display:block;width:100%;resize:none;overflow:hidden}
 #page-landing .hero-logo{height:64px}
 #page-landing .hero-logo svg{width:56px;height:56px}
 #page-landing .landing-grid{padding-top:24px}
-#page-landing .landing-section-label{font-size:24px;font-weight:600;letter-spacing:-.022em;text-transform:none;line-height:1.15;margin:0;padding:0 0 14px;border-bottom:1px solid #000}
+#page-landing .landing-section-label{font-size:36px;font-weight:400;letter-spacing:-.01em;text-transform:none;line-height:1.1;margin:0;padding:0 0 16px;border-bottom:1px solid #000}
 #page-landing .landing-section-label.is-link:hover{color:var(--muted)}
 #page-landing .list-head{display:none}
 #page-landing .landing-cards{border-top:none}
@@ -2148,8 +2148,11 @@ textarea.w-inp-block{display:block;width:100%;resize:none;overflow:hidden}
   #page-landing .news-row{grid-template-columns:minmax(0,1fr) 74px;column-gap:12px}
   #page-landing .news-list.has-thumbs .news-row{grid-template-columns:48px minmax(0,1fr) 74px}
   #page-landing .recent-card{grid-template-columns:minmax(0,1fr) 74px;column-gap:12px}
-  #page-landing .landing-section-label{font-size:21px}
+  #page-landing .landing-section-label{font-size:28px}
 }
+/* Home 글꼴: It's Nice That의 Labil Grotesk(유료)와 비슷한 무료 Hanken Grotesk, 한글은 Pretendard */
+#page-landing{--sans:'Hanken Grotesk','Pretendard Variable',Pretendard,-apple-system,'Segoe UI',sans-serif;font-family:var(--sans);letter-spacing:.005em}
+#page-landing .rb-title,#page-landing .lau-name{font-weight:400}
 /* 글꼴: Apple 기기는 SF Pro, 그 외엔 Inter (한글은 Pretendard) — 자간을 살짝 좁게 */
 body{letter-spacing:-.011em;font-optical-sizing:auto}
 
