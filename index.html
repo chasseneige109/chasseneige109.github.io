@@ -2145,6 +2145,18 @@ textarea.w-inp-block{display:block;width:100%;resize:none;overflow:hidden}
   #page-landing .landing-section-label{font-size:28px}
 }
 
+/* CV 항목 링크 버튼: [PDF] [arXiv] [Code] */
+.cv-entry-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-self:start}
+.cv-link-btn{display:inline-flex;align-items:center;height:24px;padding:0 10px;border:1px solid var(--rule);border-radius:999px;font-size:12px;font-weight:500;line-height:1;color:#000;text-decoration:none;background:#fff;transition:background .15s,color .15s,border-color .15s}
+.cv-link-btn:hover{background:#000;border-color:#000;color:#fff}
+.entry-link-row{display:flex;gap:6px;margin-bottom:6px}
+.entry-link-row .form-input{margin-bottom:0}
+.entry-link-row .el-label{width:34%}
+.entry-link-row .el-url{flex:1;min-width:0}
+.entry-link-rm{flex:none;width:34px;border:1px solid var(--s200);border-radius:8px;background:none;color:var(--s400);cursor:pointer}
+.entry-link-rm:hover{color:#000;border-color:#000}
+.entry-link-add{margin:2px 0 0;padding:6px 12px;border:1px dashed var(--s300);border-radius:8px;background:none;font-size:.75rem;color:var(--s500);cursor:pointer}
+.entry-link-add:hover{border-color:#000;color:#000}
 </style>
 <script>
 // 핀치줌, 더블탭줌 완전 차단
@@ -2829,11 +2841,10 @@ document.addEventListener('gestureend',    function(e){e.preventDefault();},{pas
     <input class="form-input" id="inp-entry-date" placeholder="e.g. 2023 ~ Present">
     <label class="form-label">Description (optional)</label>
     <textarea class="form-textarea" id="inp-entry-desc" placeholder="Details..."></textarea>
-    <label class="form-label">Link (optional)</label>
-    <div style="display:flex;gap:6px">
-      <input class="form-input" id="inp-entry-link-label" placeholder="Link name (e.g. GitHub)" style="width:36%;margin-bottom:0">
-      <input class="form-input" id="inp-entry-link-url" placeholder="https://..." style="flex:1;margin-bottom:0">
-    </div>
+    <label class="form-label">Links (optional — PDF, arXiv, Code, Project…)</label>
+    <div id="entry-links"></div>
+    <button type="button" class="entry-link-add" onclick="addEntryLinkRow()">+ Add link</button>
+    <datalist id="entry-link-names"><option value="PDF"><option value="arXiv"><option value="Code"><option value="Project"><option value="Video"><option value="Slides"><option value="Poster"><option value="BibTeX"><option value="OpenReview"></datalist>
     <div style="margin-bottom:11px"></div>
     <label class="form-label">Tags (comma-separated, optional)</label>
     <input class="form-input" id="inp-entry-tags" placeholder="e.g. ML, PyTorch, Computer Vision">
@@ -4193,7 +4204,7 @@ ${isAdmin ? `<div class="layout-toggle">
           ${entry.tags && entry.tags.length
             ? `<div class="cv-entry-tags">${entry.tags.map(t=>`<span class="cv-entry-tag">${esc(t)}</span>`).join('')}</div>`
             : ''}
-          ${entry.linkUrl ? `<a class="cv-entry-link" href="${esc(entry.linkUrl)}" target="_blank" onclick="event.stopPropagation()">${esc(entry.linkLabel||entry.linkUrl)}</a>` : ''}
+          ${entryLinksHTML(entry)}
         </div>`;
       });
       html += `</div>`;
@@ -4325,13 +4336,13 @@ function saveSection() {
 function openAddEntry(secId) {
   editingEntrySectionId=secId; editingEntryId=null;
   document.getElementById('add-entry-title').textContent='Add Entry';
-  ['inp-entry-title','inp-entry-sub','inp-entry-affil','inp-entry-date','inp-entry-desc','inp-entry-tags','inp-entry-link-label','inp-entry-link-url','inp-entry-icon'].forEach(id=>document.getElementById(id).value='');
+  ['inp-entry-title','inp-entry-sub','inp-entry-affil','inp-entry-date','inp-entry-desc','inp-entry-tags','inp-entry-icon'].forEach(id=>document.getElementById(id).value='');
   selectEntryStyle('default', document.querySelector('.entry-style-opt[data-style="default"]'));
   selectHeight('auto', document.querySelector('.height-btn[data-height="auto"]'));
   selectColStart('auto', document.querySelector('.colstart-btn[data-col="auto"]'));
   selectColor('', document.querySelector('.color-swatch[data-color=""]'));
   selectSpan(1, document.querySelector('.span-btn[data-span="1"]'));
-  setThumb('entry', '');
+  setThumb('entry', ''); setEntryLinks([]);
   document.getElementById('modal-add-entry').style.display='flex';
   setTimeout(()=>document.getElementById('inp-entry-title').focus(),100);
 }
@@ -4347,8 +4358,7 @@ function openEditEntry(secId,entryId) {
   document.getElementById('inp-entry-date').value=entry.date||'';
   document.getElementById('inp-entry-desc').value=entry.desc||'';
   document.getElementById('inp-entry-tags').value=(entry.tags||[]).join(', ');
-  document.getElementById('inp-entry-link-label').value=entry.linkLabel||'';
-  document.getElementById('inp-entry-link-url').value=entry.linkUrl||'';
+  setEntryLinks(entryLinks(entry));
   // 구 스타일 → 새 스타일 매핑
   var mappedStyle = entry.style||'default';
   if(mappedStyle==='badge'||mappedStyle==='highlight'||mappedStyle==='card') mappedStyle='default';
@@ -4363,6 +4373,50 @@ function openEditEntry(secId,entryId) {
   selectColStart(entry.colStart||'auto', document.querySelector(`.colstart-btn[data-col="${entry.colStart||'auto'}"]`));
   document.getElementById('modal-add-entry').style.display='flex';
 }
+// ── CV 항목 링크 여러 개 (PDF / arXiv / Code …). 예전 항목의 linkLabel·linkUrl 하나도 그대로 읽음 ──
+function entryLinks(e) {
+  if (Array.isArray(e.links)) return e.links.filter(l => l && l.url);
+  return e.linkUrl ? [{ label: e.linkLabel || '', url: e.linkUrl }] : [];
+}
+function guessLinkLabel(u) {
+  if (/arxiv\.org\/(abs|pdf)\//i.test(u)) return /\/pdf\//i.test(u) ? 'PDF' : 'arXiv';
+  if (/\.pdf(\?|#|$)/i.test(u)) return 'PDF';
+  if (/github\.com|gitlab\.com/i.test(u)) return 'Code';
+  if (/openreview\.net/i.test(u)) return 'OpenReview';
+  if (/youtube\.com|youtu\.be|vimeo\.com/i.test(u)) return 'Video';
+  return 'Link';
+}
+function entryLinksHTML(e) {
+  const ls = entryLinks(e);
+  if (!ls.length) return '';
+  return `<div class="cv-entry-links">${ls.map(l => `<a class="cv-link-btn" href="${esc(l.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(l.label || guessLinkLabel(l.url))}</a>`).join('')}</div>`;
+}
+function addEntryLinkRow(label, url) {
+  const row = document.createElement('div');
+  row.className = 'entry-link-row';
+  row.innerHTML = `<input class="form-input el-label" list="entry-link-names" placeholder="Name (PDF, arXiv…)"><input class="form-input el-url" placeholder="https://..."><button type="button" class="entry-link-rm" title="Remove">✕</button>`;
+  const [li, ui] = row.querySelectorAll('input');
+  li.value = label || ''; ui.value = url || '';
+  ui.addEventListener('change', () => {   // 이름을 비워 두면 주소를 보고 채움 (arXiv abs 주소면 PDF 줄도 하나 더)
+    const u = ui.value.trim(); if (!u) return;
+    if (!li.value.trim()) li.value = guessLinkLabel(u);
+    const m = u.match(/arxiv\.org\/abs\/([^?#\s]+)/i);
+    if (m && ![...document.querySelectorAll('#entry-links .el-url')].some(x => /arxiv\.org\/pdf\//i.test(x.value) || /\.pdf/i.test(x.value))) addEntryLinkRow('PDF', 'https://arxiv.org/pdf/' + m[1]);
+  });
+  row.querySelector('.entry-link-rm').onclick = () => row.remove();
+  document.getElementById('entry-links').appendChild(row);
+  return row;
+}
+function setEntryLinks(ls) {
+  document.getElementById('entry-links').innerHTML = '';
+  (ls.length ? ls : [{}]).forEach(l => addEntryLinkRow(l.label, l.url));
+}
+function readEntryLinks() {
+  return [...document.querySelectorAll('#entry-links .entry-link-row')].map(r => {
+    const url = r.querySelector('.el-url').value.trim(), label = r.querySelector('.el-label').value.trim();
+    return url ? { label: label || guessLinkLabel(url), url } : null;
+  }).filter(Boolean);
+}
 function saveEntry() {
   const title=document.getElementById('inp-entry-title').value.trim();
   if(!title){toast('Enter a title.');return;}
@@ -4372,8 +4426,7 @@ function saveEntry() {
   const desc =document.getElementById('inp-entry-desc').value.trim();
   const tagsRaw=document.getElementById('inp-entry-tags').value;
   const tags=tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
-  const linkLabel=document.getElementById('inp-entry-link-label').value.trim();
-  const linkUrl=document.getElementById('inp-entry-link-url').value.trim();
+  const links=readEntryLinks(), linkLabel='', linkUrl='';
   const entryStyle=document.getElementById('inp-entry-style').value||'default';
   const entryIcon=document.getElementById('inp-entry-icon').value.trim();
   const entryColor=document.getElementById('inp-entry-color').value;
@@ -4386,9 +4439,9 @@ function saveEntry() {
   if(!sec) return;
   if(editingEntryId) {
     const i=sec.entries.findIndex(e=>e.id===editingEntryId);
-    if(i>=0) sec.entries[i]={...sec.entries[i],title,sub,affil,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage};
+    if(i>=0) sec.entries[i]={...sec.entries[i],title,sub,affil,date,desc,tags,links,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage};
   } else {
-    sec.entries.push({id:'e'+Date.now(),title,sub,affil,date,desc,tags,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage});
+    sec.entries.push({id:'e'+Date.now(),title,sub,affil,date,desc,tags,links,linkLabel,linkUrl,style:entryStyle,icon:entryIcon,color:entryColor,span:entrySpan,height:entryHeight,colStart:entryColStart,image:entryImage});
   }
   save();saveCvSections();closeModal('modal-add-entry');renderCvArea();
 }
@@ -6052,6 +6105,7 @@ const LPE = (() => {
         { key:'Mod-b', run: wrapSel('**', '**') },
         { key:'Mod-i', run: wrapSel('*', '*') },
         { key:'Mod-e', run: wrapSel('`', '`') },
+        { key:'Mod-k', run: () => { if (typeof insertMedia === 'function') insertMedia('link'); return true; } },
         ...C.historyKeymap, C.indentWithTab, ...C.defaultKeymap
       ]),
       // 지우는 키 없이 커서 앞 공백이 사라지는 입력은 공백을 되살림 (직접 누른 Backspace·Delete·잘라내기·실행취소는 제외)
@@ -6100,6 +6154,18 @@ const LPE = (() => {
         paste(e, v) {
           const items = [...(e.clipboardData?.items || [])];
           if (items.some(i => i.type.startsWith('image/'))) return true;   // 이미지 붙여넣기는 아래 업로드 처리기로
+          // 글자를 선택하고 주소를 붙여넣으면 → [글자](주소)
+          const pt = (e.clipboardData?.getData('text/plain') || '').trim();
+          const sel = v.state.selection.main;
+          if (!sel.empty && /^(https?:\/\/|mailto:)\S+$/.test(pt)) {
+            const t = v.state.sliceDoc(sel.from, sel.to);
+            if (!t.includes('\n') && !/^(https?:\/\/)/.test(t.trim())) {
+              e.preventDefault();
+              const ins = '[' + t + '](' + pt + ')';
+              v.dispatch({ changes: { from: sel.from, to: sel.to, insert: ins }, selection: { anchor: sel.from + ins.length }, scrollIntoView: true, userEvent: 'input.paste' });
+              return true;
+            }
+          }
           const html = e.clipboardData?.getData('text/html');
           if (html && /katex|<math|mwe-math|math\/tex|data-latex/.test(html)) {   // 다른 곳에서 복사한 수식 → $..$ 원문으로
             e.preventDefault();
@@ -6198,6 +6264,16 @@ const LPE = (() => {
     view.focus();
     view.dispatch({ ...spec, effects: setFocus.of(true), scrollIntoView: true, userEvent: 'input' });
   }
+  function selectedText() {
+    if (!view) return '';
+    const r = view.state.selection.main;
+    return view.state.sliceDoc(r.from, r.to);
+  }
+  function replaceSelection(text) {
+    if (!view) return;
+    const r = view.state.selection.main;
+    edit({ changes: { from: r.from, to: r.to, insert: text }, selection: { anchor: r.from + text.length } });
+  }
   function insertAtCursor(before, after) {
     if (!view) return;
     const r = view.state.selection.main, t = view.state.sliceDoc(r.from, r.to);
@@ -6262,7 +6338,7 @@ const LPE = (() => {
   function focus() { if (view) view.focus(); }
   function select(a, b) { if (view) view.dispatch({ selection: { anchor: a, head: b ?? a } }); }
 
-  return { init, getValue, setValue, insertAtCursor, insertBlock, linePrefix, select, syncHidden, commit(){}, headings, scrollToLine, focus };
+  return { init, getValue, setValue, insertAtCursor, insertBlock, selectedText, replaceSelection, linePrefix, select, syncHidden, commit(){}, headings, scrollToLine, focus };
 })();
 
 
@@ -6563,6 +6639,10 @@ function insertMedia(type) {
   document.getElementById('media-pdf-name').textContent = '';
   document.getElementById('media-link-url').value = '';
   document.getElementById('media-link-text').value = '';
+  if (type === 'link' && typeof LPE !== 'undefined' && LPE.selectedText) {   // 선택한 글자를 링크 글자로
+    const st = LPE.selectedText();
+    if (st && !st.includes('\n')) document.getElementById('media-link-text').value = st;
+  }
   document.getElementById('media-preview').style.display = 'none';
   // reset uploaded images
   uploadedImageUrls = [];
@@ -6699,6 +6779,10 @@ function confirmInsertMedia() {
     const text = document.getElementById('media-link-text').value.trim() || url;
     if (!url) { toast('Enter a URL.'); return; }
     tag = `[${text}](${url})`;
+    closeModal('modal-media');
+    LPE.replaceSelection(tag);   // 선택한 글자를 링크로 바꿈 (선택이 없으면 커서 자리에 넣음)
+    toast('Inserted.');
+    return;
   }
 
   closeModal('modal-media');
